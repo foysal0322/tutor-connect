@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { requestPasswordReset } from '../actions/passwordReset';
+import Spinner from '@/components/Spinner';
 import styles from '../auth.module.css';
 
 export default function ForgotPasswordForm() {
@@ -62,8 +63,8 @@ export default function ForgotPasswordForm() {
             />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading || !identifier}>
-            {loading ? 'Sending Request...' : 'Send Reset Link'}
+          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading || !identifier} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            {loading ? <><Spinner size={18} /> Sending Request...</> : 'Send Reset Link'}
           </button>
         </form>
 
