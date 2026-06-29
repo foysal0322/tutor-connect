@@ -1,0 +1,74 @@
+.authContainer {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: var(--bg-color);
+}
+
+.authCard {
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 500px;
+}
+
+.authTitle {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--primary);
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  font-size: 1rem;
+}
+
+.errorMsg {
+  color: var(--error);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.authLinks {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.authLinks a {
+  color: var(--primary);
+  font-weight: 600;
+}
