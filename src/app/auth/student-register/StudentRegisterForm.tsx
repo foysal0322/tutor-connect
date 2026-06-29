@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Spinner from '@/components/Spinner';
 import { registerUser } from '../actions';
 import styles from '../auth.module.css';
 
@@ -84,8 +85,8 @@ export default function StudentRegisterForm({ departments }: { departments: any[
             <input name="confirmPassword" type="password" required className={styles.input} />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading}>
-            {loading ? 'Registering...' : 'Register as Student'}
+          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            {loading ? <><Spinner size={18} /> Registering...</> : 'Register as Student'}
           </button>
         </form>
 

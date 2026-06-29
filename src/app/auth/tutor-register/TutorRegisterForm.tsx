@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerUser } from '../actions';
+import Spinner from '@/components/Spinner';
 import styles from '../auth.module.css';
 
 export default function TutorRegisterForm({ departments }: { departments: any[] }) {
@@ -89,8 +90,8 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
             <input name="confirmPassword" type="password" required className={styles.input} />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading}>
-            {loading ? 'Registering...' : 'Register as Tutor'}
+          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            {loading ? <><Spinner size={18} /> Registering...</> : 'Register as Tutor'}
           </button>
         </form>
 

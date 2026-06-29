@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Spinner from '@/components/Spinner';
 import styles from '../auth.module.css';
 
 export default function TutorSignInForm() {
@@ -58,8 +59,8 @@ export default function TutorSignInForm() {
             <input name="password" type="password" required className={styles.input} />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            {loading ? <><Spinner size={18} /> Signing in...</> : 'Sign In'}
           </button>
         </form>
 
