@@ -12,6 +12,7 @@ interface Counts {
   departments: number;
   courses: number;
   expertises: number;
+  passwordResets: number;
 }
 
 export default function AdminSidebar({ currentCounts, userName }: { currentCounts: Counts, userName?: string | null }) {
@@ -24,7 +25,8 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
     support: 0,
     departments: 0,
     courses: 0,
-    expertises: 0
+    expertises: 0,
+    passwordResets: 0
   });
 
   // Load seen counts from localStorage on mount
