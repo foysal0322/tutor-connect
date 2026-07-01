@@ -17,8 +17,7 @@ export async function requestPasswordReset(identifier: string) {
     });
 
     if (!user) {
-      // Don't leak whether user exists or not, just return success
-      return { success: true, message: 'Your request has been submitted to the admin for manual verification.' };
+      return { success: false, message: 'User does not exist with that email or NSU ID.' };
     }
 
     // 2. Check if there's already a pending request
