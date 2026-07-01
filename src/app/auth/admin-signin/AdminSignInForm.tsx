@@ -30,11 +30,11 @@ export default function AdminSignInForm() {
 
     if (res?.error) {
       setError(res.error);
+      setLoading(false);
     } else {
-      router.push('/admin/dashboard');
+      router.push('/admin'); // Redirect to admin dashboard
       router.refresh();
     }
-    setLoading(false);
   }
 
   return (

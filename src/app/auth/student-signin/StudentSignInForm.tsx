@@ -33,11 +33,11 @@ export default function StudentSignInForm() {
 
     if (res?.error) {
       setError(res.error);
+      setLoading(false);
     } else {
       router.push('/student'); // Redirect to student dashboard
       router.refresh();
     }
-    setLoading(false);
   }
 
   return (

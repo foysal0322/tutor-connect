@@ -33,11 +33,11 @@ export default function TutorSignInForm() {
 
     if (res?.error) {
       setError(res.error);
+      setLoading(false);
     } else {
       router.push('/tutor'); // Redirect to tutor dashboard
       router.refresh();
     }
-    setLoading(false);
   }
 
   return (
