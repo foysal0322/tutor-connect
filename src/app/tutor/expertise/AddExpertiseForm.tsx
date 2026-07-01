@@ -11,6 +11,10 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  
+  const [isGradeOpen, setIsGradeOpen] = useState(false);
+  const [selectedGrade, setSelectedGrade] = useState(initialData?.courseGrade || '');
+  const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F', 'I', 'W'];
 
   function parseDays(str: string) {
     if (!str) return [];
@@ -139,22 +143,44 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
 
         <div className={authStyles.formGroup}>
           <label className={authStyles.label}>Course Grade</label>
-          <select name="courseGrade" defaultValue={initialData?.courseGrade} required className={authStyles.select}>
-            <option value="">Select Grade</option>
-            <option value="A">A</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B">B</option>
-            <option value="B-">B-</option>
-            <option value="C+">C+</option>
-            <option value="C">C</option>
-            <option value="C-">C-</option>
-            <option value="D+">D+</option>
-            <option value="D">D</option>
-            <option value="F">F</option>
-            <option value="I">I</option>
-            <option value="W">W</option>
-          </select>
+          <input type="hidden" name="courseGrade" value={selectedGrade} required />
+          <div style={{ position: 'relative' }}>
+            <div 
+              className={authStyles.input} 
+              onClick={() => setIsGradeOpen(!isGradeOpen)}
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <span style={{ color: selectedGrade ? 'inherit' : 'var(--text-muted)' }}>{selectedGrade || 'Select Grade'}</span>
+              <span style={{ transform: isGradeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', fontSize: '0.8rem' }}>▼</span>
+            </div>
+            {isGradeOpen && (
+              <ul style={{
+                position: 'absolute', top: '100%', left: 0, right: 0,
+                background: 'var(--card-bg)', border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)', zIndex: 50,
+                maxHeight: '180px', overflowY: 'auto',
+                listStyle: 'none', padding: 0, margin: '4px 0 0 0',
+                boxShadow: 'var(--shadow-md)'
+              }}>
+                {grades.map(g => (
+                  <li 
+                    key={g} 
+                    onClick={() => { setSelectedGrade(g); setIsGradeOpen(false); }}
+                    style={{ 
+                      padding: '0.75rem 1rem', 
+                      cursor: 'pointer', 
+                      borderBottom: '1px solid var(--border-color)', 
+                      background: selectedGrade === g ? 'var(--primary-light)' : 'transparent',
+                      color: selectedGrade === g ? 'var(--primary)' : 'var(--text-main)',
+                      fontWeight: selectedGrade === g ? 600 : 400
+                    }}
+                  >
+                    {g}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className={authStyles.formGroup}>
