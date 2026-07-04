@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation';
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'STUDENT') {
-    throw new Error('Not authorized');
+    return { error: 'Not authorized.' };
   }
 
   const studentId = (session.user as any).id;
@@ -17,18 +17,20 @@ export async function submitTutorRequest(formData: FormData) {
   const facultyName = formData.get('facultyName') as string;
   const preferredMode = formData.get('preferredMode') as string;
   const budget = parseFloat(formData.get('budget') as string);
+  const tutorId = formData.get('tutorId') as string || null;
+  const status = tutorId ? 'MATCHED' : 'PENDING';
 
-  // Prevent duplicate pending requests for the same course
+  // Prevent duplicate requests for the same course
   const existing = await prisma.tutorRequest.findFirst({
     where: {
       studentId,
       courseId,
-      status: 'PENDING'
+      status: status
     }
   });
 
   if (existing) {
-    return { error: 'You already have a pending request for this course.' };
+    return { error: `You already have a ${status.toLowerCase()} request for this course.` };
   }
 
   await prisma.tutorRequest.create({
@@ -38,7 +40,9 @@ export async function submitTutorRequest(formData: FormData) {
       topic,
       facultyName,
       preferredMode,
-      budget
+      budget,
+      assignedTutorId: tutorId,
+      status
     }
   });
 
@@ -81,7 +85,7 @@ export async function submitTutorRequest(formData: FormData) {
 export async function cancelTutorRequest(id: string) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'STUDENT') {
-    throw new Error('Not authorized');
+    return { error: 'Not authorized.' };
   }
 
   const studentId = (session.user as any).id;
@@ -136,5 +140,116 @@ export async function cancelTutorRequest(id: string) {
     return { success: true };
   } catch (err: any) {
     return { error: 'Failed to cancel request.' };
+  }
+}
+
+export async function submitPayment(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'STUDENT') {
+    return { error: 'Not authorized.' };
+  }
+
+  const requestId = formData.get('requestId') as string;
+  const mfsType = formData.get('mfsType') as string;
+  const accountNumber = formData.get('accountNumber') as string;
+  const amount = parseFloat(formData.get('amount') as string);
+  const transactionId = formData.get('transactionId') as string;
+
+  if (!requestId || !mfsType || !accountNumber || isNaN(amount) || !transactionId) {
+    return { error: 'All fields are required.' };
+  }
+
+  try {
+    await prisma.payment.upsert({
+      where: { requestId },
+      update: {
+        mfsType,
+        accountNumber,
+        amount,
+        transactionId
+      },
+      create: {
+        requestId,
+        mfsType,
+        accountNumber,
+        amount,
+        transactionId
+      }
+    });
+
+    await prisma.tutorRequest.update({
+      where: { id: requestId },
+      data: { status: 'PAYMENT_PENDING' }
+    });
+
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/student');
+    return { success: true };
+  } catch (err) {
+    console.error('Submit payment error:', err);
+    return { error: 'Failed to submit payment details.' };
+  }
+}
+
+export async function completeTutorRequest(requestId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'STUDENT') {
+    return { error: 'Not authorized.' };
+  }
+
+  try {
+    await prisma.tutorRequest.update({
+      where: { id: requestId },
+      data: { status: 'COMPLETED' }
+    });
+
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/student');
+    return { success: true };
+  } catch (err) {
+    console.error('Complete request error:', err);
+    return { error: 'Failed to mark session as completed.' };
+  }
+}
+
+export async function submitRefundRequest(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'STUDENT') {
+    return { error: 'Not authorized.' };
+  }
+
+  const studentId = (session.user as any).id;
+  const requestId = formData.get('requestId') as string;
+  const details = formData.get('details') as string;
+
+  if (!requestId || !details) {
+    return { error: 'Details/Reason is required.' };
+  }
+
+  try {
+    // Check if there is already a refund request
+    const existing = await prisma.refundRequest.findFirst({
+      where: { requestId }
+    });
+
+    if (existing) {
+      return { error: 'A refund request has already been submitted for this session.' };
+    }
+
+    await prisma.refundRequest.create({
+      data: {
+        requestId,
+        studentId,
+        details,
+        status: 'PENDING'
+      }
+    });
+
+    const { revalidatePath } = await import('next/cache');
+    revalidatePath('/student');
+    return { success: true };
+  } catch (err) {
+    console.error('Refund request error:', err);
+    return { error: 'Failed to submit refund request.' };
   }
 }
