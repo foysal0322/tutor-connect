@@ -46,9 +46,10 @@ export default function TutorSidebar({ userName }: { userName?: string | null })
           )}
         </div>
         
-        <Link href="/tutor" className={styles.navLink}>Dashboard</Link>
-        <Link href="/tutor/expertise" className={styles.navLink}>My Expertise</Link>
-        <Link href="/tutor/profile" className={styles.navLink}>My Profile</Link>
+        <Link href="/tutor" className={`${styles.navLink} ${pathname === '/tutor' ? styles.navLinkActive : ''}`}>Dashboard</Link>
+        <Link href="/tutor/expertise" className={`${styles.navLink} ${pathname === '/tutor/expertise' ? styles.navLinkActive : ''}`}>My Expertise</Link>
+        <Link href="/tutor/earnings" className={`${styles.navLink} ${pathname === '/tutor/earnings' ? styles.navLinkActive : ''}`}>Earnings & Withdrawals</Link>
+        <Link href="/tutor/profile" className={`${styles.navLink} ${pathname === '/tutor/profile' ? styles.navLinkActive : ''}`}>My Profile</Link>
         <Link href="/api/auth/signout" className={styles.navLink} style={{ marginTop: 'auto', color: 'var(--error)' }}>Sign Out</Link>
       </aside>
     </>

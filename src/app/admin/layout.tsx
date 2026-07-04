@@ -13,8 +13,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   // Fetch counts in parallel
-  const [requests, users, support, departments, courses, expertises, passwordResets] = await Promise.all([
+  const [requests, withdrawals, users, support, departments, courses, expertises, passwordResets] = await Promise.all([
     prisma.tutorRequest.count(),
+    prisma.withdrawalRequest.count(),
     prisma.user.count(),
     prisma.supportTicket.count(),
     prisma.department.count(),
@@ -23,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     prisma.passwordResetRequest.count({ where: { status: 'PENDING' } }),
   ]);
 
-  const currentCounts = { requests, users, support, departments, courses, expertises, passwordResets };
+  const currentCounts = { requests, withdrawals, users, support, departments, courses, expertises, passwordResets };
 
   return (
     <div className={styles.dashboardContainer}>

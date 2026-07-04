@@ -6,6 +6,11 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding Database...');
 
+  // Delete existing dependent records to avoid foreign key violations
+  await prisma.tutorExpertise.deleteMany();
+  await prisma.tutorRequest.deleteMany();
+  await prisma.course.deleteMany();
+
   // Create Departments
   const deptEce = await prisma.department.upsert({
     where: { name: 'Electrical & Computer Engineering' },
@@ -26,7 +31,6 @@ async function main() {
   });
 
   // Create Courses
-  await prisma.course.deleteMany(); // Clear existing courses before insert to avoid duplicates
   await prisma.course.createMany({
     data: [
       { name: 'CSE115: Programming Language I', departmentId: deptEce.id },
@@ -54,6 +58,76 @@ async function main() {
       role: 'ADMIN',
     },
   });
+
+  // Create Tutors
+  const tutorPassword = await bcrypt.hash('tutor123', 10);
+  
+  const tutor1 = await prisma.user.upsert({
+    where: { email: 'tanvir@northsouth.edu' },
+    update: { role: 'TUTOR' },
+    create: {
+      email: 'tanvir@northsouth.edu',
+      name: 'Tanvir Rahman',
+      nsuId: '1912345042',
+      contact: '01812345678',
+      gender: 'Male',
+      departmentId: deptEce.id,
+      cgpa: 3.85,
+      password: tutorPassword,
+      role: 'TUTOR',
+    },
+  });
+
+  const tutor2 = await prisma.user.upsert({
+    where: { email: 'farhana@northsouth.edu' },
+    update: { role: 'TUTOR' },
+    create: {
+      email: 'farhana@northsouth.edu',
+      name: 'Farhana Yasmin',
+      nsuId: '2012345043',
+      contact: '01912345678',
+      gender: 'Female',
+      departmentId: deptMath.id,
+      cgpa: 3.92,
+      password: tutorPassword,
+      role: 'TUTOR',
+    },
+  });
+
+  // Find newly created courses to link to expertises
+  const cse115 = await prisma.course.findFirst({ where: { name: { startsWith: 'CSE115' } } });
+  const mat120 = await prisma.course.findFirst({ where: { name: { startsWith: 'MAT120' } } });
+
+  // Create expertises
+  if (cse115) {
+    await prisma.tutorExpertise.create({
+      data: {
+        tutorId: tutor1.id,
+        courseId: cse115.id,
+        semesterCompleted: 'Spring 2024',
+        facultyName: 'Dr. Mizanur Rahman',
+        courseGrade: 'A',
+        availability: 'Sun, Tue 4 PM - 6 PM',
+        sessionFee: 4000,
+        isActive: true,
+      }
+    });
+  }
+
+  if (mat120) {
+    await prisma.tutorExpertise.create({
+      data: {
+        tutorId: tutor2.id,
+        courseId: mat120.id,
+        semesterCompleted: 'Fall 2023',
+        facultyName: 'Dr. Md. Sahadet Hossain',
+        courseGrade: 'A',
+        availability: 'Mon, Wed 2 PM - 4 PM',
+        sessionFee: 3500,
+        isActive: true,
+      }
+    });
+  }
 
   console.log('Database seeding completed successfully!');
 }

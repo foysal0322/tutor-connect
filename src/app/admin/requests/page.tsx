@@ -3,7 +3,15 @@ import RequestManager from './RequestManager';
 
 export default async function AdminRequestsPage() {
   const requests = await prisma.tutorRequest.findMany({
-    include: { course: true, student: true, assignedTutor: true },
+    include: {
+      course: true,
+      student: true,
+      assignedTutor: true,
+      payment: true,
+      refundRequests: {
+        orderBy: { createdAt: 'desc' }
+      }
+    },
     orderBy: { createdAt: 'desc' }
   });
 

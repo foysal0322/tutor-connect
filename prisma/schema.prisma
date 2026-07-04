@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -50,6 +50,7 @@ model User {
   consultancyRequests ConsultancyRequest[]
   refundRequests        RefundRequest[]
   passwordResetRequests PasswordResetRequest[]
+  withdrawalRequests    WithdrawalRequest[]
 }
 
 model TutorExpertise {
@@ -84,6 +85,7 @@ model TutorRequest {
   assignedTutor User?  @relation("AssignedRequests", fields: [assignedTutorId], references: [id])
   course        Course @relation(fields: [courseId], references: [id])
   
+  payment         Payment?
   refundRequests RefundRequest[]
 }
 
@@ -128,4 +130,31 @@ model PasswordResetRequest {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  requestId     String   @unique
+  mfsType       String   // BKASH, NAGAD, ROCKET
+  accountNumber String
+  amount        Float
+  transactionId String
+  createdAt     DateTime @default(now())
+
+  request       TutorRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model WithdrawalRequest {
+  id            String   @id @default(cuid())
+  tutorId       String
+  amount        Float    // Gross amount requested
+  platformFee   Float    // Platform fee deducted (5%)
+  netAmount     Float    // Net amount paid (95%)
+  mfsType       String   // BKASH, NAGAD, ROCKET
+  accountNumber String
+  transferType  String   // SEND_MONEY, PAYMENT
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt     DateTime @default(now())
+
+  tutor         User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
 }

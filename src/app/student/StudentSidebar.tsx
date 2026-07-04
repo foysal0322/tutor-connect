@@ -46,9 +46,10 @@ export default function StudentSidebar({ userName }: { userName?: string | null 
           )}
         </div>
         
-        <Link href="/student" className={styles.navLink}>My Requests</Link>
-        <Link href="/student/request-tutor" className={styles.navLink}>Request a Tutor</Link>
-        <Link href="/student/profile" className={styles.navLink}>My Profile</Link>
+        <Link href="/student" className={`${styles.navLink} ${pathname === '/student' ? styles.navLinkActive : ''}`}>My Requests</Link>
+        <Link href="/student/request-tutor" className={`${styles.navLink} ${pathname === '/student/request-tutor' ? styles.navLinkActive : ''}`}>Request a Tutor</Link>
+        <Link href="/student/payments" className={`${styles.navLink} ${pathname === '/student/payments' ? styles.navLinkActive : ''}`}>Payment History</Link>
+        <Link href="/student/profile" className={`${styles.navLink} ${pathname === '/student/profile' ? styles.navLinkActive : ''}`}>My Profile</Link>
         <Link href="/api/auth/signout" className={styles.navLink} style={{ marginTop: 'auto', color: 'var(--error)' }}>Sign Out</Link>
       </aside>
     </>

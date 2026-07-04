@@ -11,6 +11,7 @@ export default function StudentSignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
+  const callbackUrl = searchParams.get('callbackUrl') || '/student';
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export default function StudentSignInForm() {
       setError(res.error);
       setLoading(false);
     } else {
-      router.push('/student'); // Redirect to student dashboard
+      router.push(callbackUrl);
       router.refresh();
     }
   }
@@ -66,7 +67,7 @@ export default function StudentSignInForm() {
 
         <div className={styles.authLinks}>
           <Link href="/auth/forgot-password" style={{ display: 'block', marginBottom: '1rem' }}>Forgot Password?</Link>
-          Don't have an account? <Link href="/auth/student-register">Register Here</Link>
+          Don't have an account? <Link href={`/auth/student-register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}>Register Here</Link>
         </div>
       </div>
     </div>

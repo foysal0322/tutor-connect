@@ -3,10 +3,17 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import ProfileForm from '@/components/ProfileForm';
 
+import { redirect } from 'next/navigation';
+
 export default async function StudentProfilePage() {
   const session = await getServerSession(authOptions);
+
+  if (!session || (session.user as any).role !== 'STUDENT') {
+    redirect('/auth/student-signin?callbackUrl=/student/profile');
+  }
+
   const user = await prisma.user.findUnique({
-    where: { id: (session?.user as any).id }
+    where: { id: (session.user as any).id }
   });
   
   const departments = await prisma.department.findMany({

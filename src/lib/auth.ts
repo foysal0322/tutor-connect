@@ -82,5 +82,30 @@ export const authOptions: NextAuthOptions = {
       return session;
     }
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token.tutor-connect`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url.tutor-connect`,
+      options: {
+        path: '/',
+        secure: false
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token.tutor-connect`,
+      options: {
+        path: '/',
+        secure: false
+      }
+    }
+  },
   secret: process.env.NEXTAUTH_SECRET || "nsu-tutor-secret-key-12345",
 };

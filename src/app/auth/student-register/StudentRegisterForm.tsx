@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import { registerUser } from '../actions';
@@ -9,6 +9,8 @@ import styles from '../auth.module.css';
 
 export default function StudentRegisterForm({ departments }: { departments: any[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '';
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,8 @@ export default function StudentRegisterForm({ departments }: { departments: any[
       if (res?.error) {
         setError(res.error);
       } else {
-        router.push('/auth/student-signin?registered=true');
+        const target = `/auth/student-signin?registered=true${callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`;
+        router.push(target);
       }
     } catch (err) {
       setError('An unexpected error occurred.');
@@ -91,7 +94,7 @@ export default function StudentRegisterForm({ departments }: { departments: any[
         </form>
 
         <div className={styles.authLinks}>
-          Already have an account? <Link href="/auth/student-signin">Sign In</Link>
+          Already have an account? <Link href={`/auth/student-signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}>Sign In</Link>
         </div>
       </div>
     </div>

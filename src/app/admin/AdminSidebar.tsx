@@ -7,6 +7,7 @@ import styles from '../dashboard.module.css';
 
 interface Counts {
   requests: number;
+  withdrawals: number;
   users: number;
   support: number;
   departments: number;
@@ -21,6 +22,7 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [seenCounts, setSeenCounts] = useState<Counts>({
     requests: 0,
+    withdrawals: 0,
     users: 0,
     support: 0,
     departments: 0,
@@ -51,11 +53,13 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
     let keyToUpdate: keyof Counts | null = null;
 
     if (pathname === '/admin/requests') keyToUpdate = 'requests';
+    if (pathname === '/admin/withdrawals') keyToUpdate = 'withdrawals';
     if (pathname === '/admin/users') keyToUpdate = 'users';
     if (pathname === '/admin/support') keyToUpdate = 'support';
     if (pathname === '/admin/departments') keyToUpdate = 'departments';
     if (pathname === '/admin/courses') keyToUpdate = 'courses';
     if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
+    if (pathname === '/admin/password-resets') keyToUpdate = 'passwordResets';
 
     if (keyToUpdate) {
       setSeenCounts(prev => {
@@ -131,6 +135,9 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
         </Link>
         <Link href="/admin/requests" className={styles.navLink} style={{ display: 'flex', alignItems: 'center' }}>
           Tutor Requests {getBadge('requests')}
+        </Link>
+        <Link href="/admin/withdrawals" className={styles.navLink} style={{ display: 'flex', alignItems: 'center' }}>
+          Tutor Withdrawals {getBadge('withdrawals')}
         </Link>
         <Link href="/admin/users" className={styles.navLink} style={{ display: 'flex', alignItems: 'center' }}>
           Manage Users {getBadge('users')}

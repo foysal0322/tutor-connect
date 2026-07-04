@@ -9,7 +9,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as any).role !== 'STUDENT') {
-    redirect('/auth/student-signin');
+    return <>{children}</>;
   }
 
   return (
