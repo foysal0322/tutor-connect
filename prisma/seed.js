@@ -94,6 +94,39 @@ async function main() {
     },
   });
 
+  // Create Students
+  const studentPassword = await bcrypt.hash('student123', 10);
+  
+  await prisma.user.upsert({
+    where: { email: 'student@northsouth.edu' },
+    update: { role: 'STUDENT' },
+    create: {
+      email: 'student@northsouth.edu',
+      name: 'Test Student',
+      nsuId: '2110000042',
+      contact: '01711112222',
+      gender: 'Male',
+      departmentId: deptEce.id,
+      password: studentPassword,
+      role: 'STUDENT',
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'student2@northsouth.edu' },
+    update: { role: 'STUDENT' },
+    create: {
+      email: 'student2@northsouth.edu',
+      name: 'Verify Student',
+      nsuId: '2110000043',
+      contact: '01722223333',
+      gender: 'Female',
+      departmentId: deptMath.id,
+      password: studentPassword,
+      role: 'STUDENT',
+    }
+  });
+
   // Find newly created courses to link to expertises
   const cse115 = await prisma.course.findFirst({ where: { name: { startsWith: 'CSE115' } } });
   const mat120 = await prisma.course.findFirst({ where: { name: { startsWith: 'MAT120' } } });
