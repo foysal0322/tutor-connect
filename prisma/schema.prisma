@@ -12,8 +12,8 @@ model Department {
   name      String   @unique
   createdAt DateTime @default(now())
 
-  users     User[]
-  courses   Course[]
+  users   User[]
+  courses Course[]
 }
 
 model Course {
@@ -22,9 +22,9 @@ model Course {
   departmentId String?
   createdAt    DateTime @default(now())
 
-  department   Department? @relation(fields: [departmentId], references: [id])
-  expertises   TutorExpertise[]
-  requests     TutorRequest[]
+  department Department?      @relation(fields: [departmentId], references: [id])
+  expertises TutorExpertise[]
+  requests   TutorRequest[]
 }
 
 model User {
@@ -41,13 +41,13 @@ model User {
   isBlocked    Boolean  @default(false)
   createdAt    DateTime @default(now())
 
-  department   Department? @relation(fields: [departmentId], references: [id])
-  
+  department Department? @relation(fields: [departmentId], references: [id])
+
   expertises       TutorExpertise[]
-  studentRequests  TutorRequest[] @relation("StudentRequests")
-  assignedRequests TutorRequest[] @relation("AssignedRequests")
-  
-  consultancyRequests ConsultancyRequest[]
+  studentRequests  TutorRequest[]   @relation("StudentRequests")
+  assignedRequests TutorRequest[]   @relation("AssignedRequests")
+
+  consultancyRequests   ConsultancyRequest[]
   refundRequests        RefundRequest[]
   passwordResetRequests PasswordResetRequest[]
   withdrawalRequests    WithdrawalRequest[]
@@ -65,8 +65,8 @@ model TutorExpertise {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
 
-  tutor   User   @relation(fields: [tutorId], references: [id])
-  course  Course @relation(fields: [courseId], references: [id])
+  tutor  User   @relation(fields: [tutorId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
 }
 
 model TutorRequest {
@@ -84,8 +84,8 @@ model TutorRequest {
   student       User   @relation("StudentRequests", fields: [studentId], references: [id])
   assignedTutor User?  @relation("AssignedRequests", fields: [assignedTutorId], references: [id])
   course        Course @relation(fields: [courseId], references: [id])
-  
-  payment         Payment?
+
+  payment        Payment?
   refundRequests RefundRequest[]
 }
 
@@ -117,7 +117,7 @@ model SupportTicket {
   name      String
   email     String
   contact   String?
-  type      String   // REFUND, COMPLAINT, SUGGESTION
+  type      String // REFUND, COMPLAINT, SUGGESTION
   message   String
   status    String   @default("PENDING") // PENDING, RESOLVED
   createdAt DateTime @default(now())
@@ -135,26 +135,35 @@ model PasswordResetRequest {
 model Payment {
   id            String   @id @default(cuid())
   requestId     String   @unique
-  mfsType       String   // BKASH, NAGAD, ROCKET
+  mfsType       String // BKASH, NAGAD, ROCKET
   accountNumber String
   amount        Float
   transactionId String
   createdAt     DateTime @default(now())
 
-  request       TutorRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  request TutorRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 }
 
 model WithdrawalRequest {
   id            String   @id @default(cuid())
   tutorId       String
-  amount        Float    // Gross amount requested
-  platformFee   Float    // Platform fee deducted (5%)
-  netAmount     Float    // Net amount paid (95%)
-  mfsType       String   // BKASH, NAGAD, ROCKET
+  amount        Float // Gross amount requested
+  platformFee   Float // Platform fee deducted (5%)
+  netAmount     Float // Net amount paid (95%)
+  mfsType       String // BKASH, NAGAD, ROCKET
   accountNumber String
-  transferType  String   // SEND_MONEY, PAYMENT
+  transferType  String // SEND_MONEY, PAYMENT
   status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt     DateTime @default(now())
 
-  tutor         User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+}
+
+model PaymentInfo {
+  id       String   @id @default(cuid())
+  provider String
+  amount   Float
+  sender   String
+  trxId    String   @unique
+  time     DateTime @default(now())
 }

@@ -162,9 +162,36 @@ async function main() {
     });
   }
 
+  // Create dummy PaymentInfo data
+  await prisma.paymentInfo.deleteMany();
+  await prisma.paymentInfo.createMany({
+    data: [
+      {
+        provider: 'bKash',
+        amount: 1500,
+        sender: '01711223344',
+        trxId: 'BKASH12345678',
+        time: new Date('2026-07-05T10:21:34Z'),
+      },
+      {
+        provider: 'Nagad',
+        amount: 2500,
+        sender: '01999887766',
+        trxId: 'NAGAD87654321',
+        time: new Date('2026-07-04T15:45:00Z'),
+      },
+      {
+        provider: 'Rocket',
+        amount: 3000,
+        sender: '01555443322',
+        trxId: 'ROCKET5555555',
+        time: new Date('2026-07-01T09:15:20Z'),
+      }
+    ]
+  });
+
   console.log('Database seeding completed successfully!');
 }
-
 main()
   .catch((e) => {
     console.error(e);
