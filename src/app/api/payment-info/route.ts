@@ -46,3 +46,21 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const payments = await prisma.paymentInfo.findMany({
+      orderBy: {
+        time: 'desc'
+      }
+    });
+    
+    return NextResponse.json({ data: payments }, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching payment info:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
