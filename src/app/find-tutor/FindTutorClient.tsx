@@ -19,6 +19,16 @@ interface Expertise {
     name: string;
     cgpa: number | null;
     gender: string | null;
+    studentsTaught?: number;
+    averageRating?: string | null;
+    reviews?: {
+      id: string;
+      rating: number;
+      review: string;
+      studentName: string;
+      courseName: string;
+      date: string;
+    }[];
     department: {
       name: string;
     } | null;
@@ -45,6 +55,7 @@ export default function FindTutorClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
+  const [activeReviewsTutor, setActiveReviewsTutor] = useState<any>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Filter logic — uses debounced search to avoid filtering on every keystroke
@@ -129,11 +140,22 @@ export default function FindTutorClient({
                 </div>
 
                 <div className={styles.courseHeader}>{exp.course.name}</div>
+                
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)' }}>
+                    🎓 {exp.tutor.studentsTaught || 0} students taught
+                  </span>
+                  {exp.tutor.averageRating && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#b45309' }}>
+                      <span style={{ color: '#fbbf24' }}>★</span> {exp.tutor.averageRating}
+                    </span>
+                  )}
+                </div>
 
                 <ul className={styles.detailsList}>
                   <li>
                     <span>Grade Obtained:</span>
-                    <strong>{exp.courseGrade}</strong>
+                    <strong>{exp.courseGrade || 'Not specified'}</strong>
                   </li>
                   <li>
                     <span>Taken Under:</span>
@@ -144,17 +166,13 @@ export default function FindTutorClient({
                     <strong>{exp.availability}</strong>
                   </li>
                   <li>
-                    <span>Gender:</span>
-                    <strong>{exp.tutor.gender || 'Not Specified'}</strong>
-                  </li>
-                  <li>
                     <span>Session Fee:</span>
                     <strong>{exp.sessionFee} BDT / Month</strong>
                   </li>
                 </ul>
               </div>
 
-              <div className={styles.footerActions}>
+              <div className={styles.footerActions} style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
                 <Link
                   href={`/student/request-tutor?courseId=${exp.course.id}&tutorId=${exp.tutor.id}`}
                   className={`btn-primary ${styles.requestBtn}`}
@@ -162,6 +180,15 @@ export default function FindTutorClient({
                 >
                   Request Tutor for this Course
                 </Link>
+                {exp.tutor.reviews && exp.tutor.reviews.length > 0 && (
+                  <button 
+                    className="btn" 
+                    onClick={() => setActiveReviewsTutor(exp.tutor)}
+                    style={{ background: '#f1f5f9', color: 'var(--text-main)', width: '100%', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.75rem' }}
+                  >
+                    See {exp.tutor.reviews.length} Review{exp.tutor.reviews.length !== 1 ? 's' : ''}
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -187,6 +214,42 @@ export default function FindTutorClient({
           Request a Specific Tutor
         </Link>
       </div>
+      
+      {/* Reviews Modal */}
+      {activeReviewsTutor && (
+        <div className={styles.modalOverlay} onClick={() => setActiveReviewsTutor(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Reviews for {activeReviewsTutor.name}</h3>
+              <button className={styles.closeBtn} onClick={() => setActiveReviewsTutor(null)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              {activeReviewsTutor.reviews && activeReviewsTutor.reviews.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {activeReviewsTutor.reviews.map((r: any) => (
+                    <div key={r.id} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: 600 }}>{r.studentName} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.85rem' }}>({r.courseName})</span></span>
+                        <span style={{ color: '#fbbf24', fontSize: '1.1rem' }}>
+                          {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
+                        {r.review ? `"${r.review}"` : 'No written review provided.'}
+                      </p>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', textAlign: 'right' }}>
+                        {new Date(r.date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '2rem 0' }}>No reviews yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

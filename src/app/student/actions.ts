@@ -203,7 +203,7 @@ export async function submitPayment(formData: FormData) {
   }
 }
 
-export async function completeTutorRequest(requestId: string) {
+export async function completeTutorRequest(requestId: string, rating?: number | null, review?: string | null) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'STUDENT') {
     return { error: 'Not authorized.' };
@@ -221,9 +221,17 @@ export async function completeTutorRequest(requestId: string) {
     if (!request) return { error: 'Request not found.' };
     if (request.status !== 'ACCEPTED') return { error: 'Only active sessions can be marked as completed.' };
 
+    const updateData: any = { status: 'COMPLETED' };
+    if (rating !== undefined && rating !== null) {
+      updateData.rating = rating;
+    }
+    if (review !== undefined && review !== null) {
+      updateData.review = review.trim();
+    }
+
     await prisma.tutorRequest.update({
       where: { id: requestId },
-      data: { status: 'COMPLETED' }
+      data: updateData
     });
 
     revalidatePath('/student');

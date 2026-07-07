@@ -16,6 +16,7 @@ export default async function FindTutorPage() {
         semesterCompleted: true,
         facultyName: true,
         courseGrade: true,
+        hideGrade: true,
         availability: true,
         sessionFee: true,
         tutor: {
@@ -23,9 +24,21 @@ export default async function FindTutorPage() {
             id: true,
             name: true,
             cgpa: true,
+            hideCgpa: true,
             gender: true,
             department: {
               select: { name: true }
+            },
+            assignedRequests: {
+              where: { status: 'COMPLETED' },
+              select: {
+                id: true,
+                rating: true,
+                review: true,
+                createdAt: true,
+                student: { select: { name: true } },
+                course: { select: { name: true } }
+              }
             }
           }
         },
@@ -45,9 +58,53 @@ export default async function FindTutorPage() {
     getDepartments(),
   ]);
 
+  const mappedExpertises = expertises.map((exp: any) => {
+    const mappedTutor = { ...exp.tutor };
+    
+    // 1. Privacy for CGPA
+    if (mappedTutor.hideCgpa) {
+      mappedTutor.cgpa = null;
+    }
+    
+    // 2. Stats calculation
+    const completedRequests = mappedTutor.assignedRequests || [];
+    mappedTutor.studentsTaught = completedRequests.length;
+    
+    // 3. Extract and map reviews
+    const validReviews = completedRequests
+      .filter((r: any) => (r.rating !== null && r.rating > 0) || (r.review && r.review.trim() !== ''))
+      .map((r: any) => ({
+         id: r.id,
+         rating: r.rating || 0,
+         review: r.review || '',
+         studentName: r.student?.name || 'Anonymous',
+         courseName: r.course?.name || 'Unknown Course',
+         date: r.createdAt
+      }));
+      
+    mappedTutor.reviews = validReviews;
+    
+    const ratedReviews = validReviews.filter((r: any) => r.rating > 0);
+    mappedTutor.averageRating = ratedReviews.length > 0 
+      ? (ratedReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / ratedReviews.length).toFixed(1)
+      : null;
+
+    // Clean up
+    delete mappedTutor.assignedRequests;
+    delete mappedTutor.hideCgpa;
+    
+    const { hideGrade, ...restExp } = exp;
+
+    return {
+      ...restExp,
+      courseGrade: hideGrade ? null : exp.courseGrade,
+      tutor: mappedTutor
+    };
+  });
+
   return (
     <FindTutorClient
-      initialExpertises={expertises as any}
+      initialExpertises={mappedExpertises as any}
       departments={departments}
     />
   );

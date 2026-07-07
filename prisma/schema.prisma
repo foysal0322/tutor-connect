@@ -42,6 +42,7 @@ model User {
   cgpa         Float?
   password     String
   isBlocked    Boolean  @default(false)
+  hideCgpa     Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   department Department? @relation(fields: [departmentId], references: [id])
@@ -71,6 +72,7 @@ model TutorExpertise {
   availability      String
   sessionFee        Float
   isActive          Boolean  @default(true)
+  hideGrade         Boolean  @default(false)
   createdAt         DateTime @default(now())
 
   tutor  User   @relation(fields: [tutorId], references: [id])
@@ -92,6 +94,8 @@ model TutorRequest {
   budget          Float
   status          String   @default("PENDING") // PENDING, MATCHED, ACCEPTED, PAYMENT_PENDING, COMPLETED, CANCELLED
   assignedTutorId String?
+  rating          Int?
+  review          String?
   createdAt       DateTime @default(now())
 
   student       User   @relation("StudentRequests", fields: [studentId], references: [id])

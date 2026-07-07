@@ -34,6 +34,7 @@ export async function updateUserProfile(formData: FormData) {
     if (cgpa) {
       updateData.cgpa = parseFloat(cgpa as string);
     }
+    updateData.hideCgpa = formData.get('hideCgpa') === 'on';
   }
 
   if (password) {

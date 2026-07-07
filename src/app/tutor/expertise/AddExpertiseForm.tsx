@@ -11,7 +11,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   const [isGradeOpen, setIsGradeOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(initialData?.courseGrade || '');
   const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F', 'I', 'W'];
@@ -44,7 +44,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
 
   useEffect(() => {
     if (initialData?.availability) {
-      const isAll = initialData.availability === 'Everyday (All Day)';
+      const isAll = initialData.availability === 'Everyday';
       setIsAllDay(isAll);
       if (isAll) {
         setSelectedDays([]);
@@ -95,7 +95,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
       return;
     }
 
-    const availabilityString = isAllDay ? 'Everyday (All Day)' : `${selectedDays.join(', ')} (${startTime}-${endTime})`;
+    const availabilityString = isAllDay ? 'Everyday' : `${selectedDays.join(', ')} (${startTime}-${endTime})`;
     formData.set('availability', availabilityString);
 
     if (initialData) {
@@ -145,8 +145,8 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           <label className={authStyles.label}>Course Grade</label>
           <input type="hidden" name="courseGrade" value={selectedGrade} required />
           <div style={{ position: 'relative' }}>
-            <div 
-              className={authStyles.input} 
+            <div
+              className={authStyles.input}
               onClick={() => setIsGradeOpen(!isGradeOpen)}
               style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
@@ -163,13 +163,13 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
                 boxShadow: 'var(--shadow-md)'
               }}>
                 {grades.map(g => (
-                  <li 
-                    key={g} 
+                  <li
+                    key={g}
                     onClick={() => { setSelectedGrade(g); setIsGradeOpen(false); }}
-                    style={{ 
-                      padding: '0.75rem 1rem', 
-                      cursor: 'pointer', 
-                      borderBottom: '1px solid var(--border-color)', 
+                    style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid var(--border-color)',
                       background: selectedGrade === g ? 'var(--primary-light)' : 'transparent',
                       color: selectedGrade === g ? 'var(--primary)' : 'var(--text-main)',
                       fontWeight: selectedGrade === g ? 600 : 400
@@ -181,6 +181,10 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
               </ul>
             )}
           </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            <input type="checkbox" name="hideGrade" defaultChecked={initialData?.hideGrade} value="true" />
+            Hide my acquired grade for this course from students
+          </label>
         </div>
 
         <div className={authStyles.formGroup}>

@@ -18,6 +18,7 @@ export async function addTutorExpertise(formData: FormData) {
   const courseGrade = formData.get('courseGrade') as string;
   const availability = formData.get('availability') as string;
   const sessionFee = parseFloat(formData.get('sessionFee') as string);
+  const hideGrade = formData.get('hideGrade') === 'true';
 
   if (!courseId || !semesterCompleted || !facultyName || !courseGrade || !availability || isNaN(sessionFee)) {
     return { error: 'All fields are required.' };
@@ -41,7 +42,8 @@ export async function addTutorExpertise(formData: FormData) {
       facultyName: facultyName.trim(),
       courseGrade: courseGrade.trim(),
       availability: availability.trim(),
-      sessionFee
+      sessionFee,
+      hideGrade
     }
   });
 
@@ -61,6 +63,7 @@ export async function updateTutorExpertise(formData: FormData) {
   const courseGrade = formData.get('courseGrade') as string;
   const availability = formData.get('availability') as string;
   const sessionFee = parseFloat(formData.get('sessionFee') as string);
+  const hideGrade = formData.get('hideGrade') === 'true';
 
   try {
     const existing = await prisma.tutorExpertise.findFirst({
@@ -77,7 +80,8 @@ export async function updateTutorExpertise(formData: FormData) {
         facultyName: facultyName?.trim(),
         courseGrade: courseGrade?.trim(),
         availability: availability?.trim(),
-        sessionFee
+        sessionFee,
+        hideGrade
       }
     });
     
@@ -130,5 +134,24 @@ export async function toggleTutorExpertise(id: string, isActive: boolean) {
     return { success: true };
   } catch {
     return { error: 'Failed to toggle expertise' };
+  }
+}
+
+export async function updatePrivacySettings(hideCgpa: boolean) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'TUTOR') throw new Error('Not authorized');
+  const tutorId = (session.user as any).id;
+
+  try {
+    await prisma.user.update({
+      where: { id: tutorId },
+      data: { hideCgpa }
+    });
+    
+    revalidatePath('/tutor/profile');
+    revalidatePath('/student/profile');
+    return { success: true };
+  } catch {
+    return { error: 'Failed to update privacy settings' };
   }
 }
