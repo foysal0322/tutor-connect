@@ -3,14 +3,30 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import styles from '../dashboard.module.css';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function TutorDashboard() {
   const session = await getServerSession(authOptions);
-  const tutorId = (session?.user as any)?.id;
 
+  if (!session || (session.user as any).role !== 'TUTOR') {
+    redirect('/auth/tutor-signin');
+  }
+
+  const tutorId = (session.user as any).id;
+
+  // Only select the columns actually rendered in the table
   const assignedRequests = await prisma.tutorRequest.findMany({
     where: { assignedTutorId: tutorId },
-    include: { course: true, student: true },
+    select: {
+      id: true,
+      topic: true,
+      preferredMode: true,
+      budget: true,
+      status: true,
+      createdAt: true,
+      course: { select: { name: true } },
+      student: { select: { name: true } },
+    },
     orderBy: { createdAt: 'desc' }
   });
 
@@ -23,7 +39,7 @@ export default async function TutorDashboard() {
       <h2 style={{ marginBottom: '1rem' }}>My Assigned Students</h2>
       <div className={styles.card}>
         {assignedRequests.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>You don't have any assigned students yet. Add your expertise to get matched!</p>
+          <p style={{ color: 'var(--text-muted)' }}>You don&apos;t have any assigned students yet. Add your expertise to get matched!</p>
         ) : (
           <table className={styles.table}>
             <thead>

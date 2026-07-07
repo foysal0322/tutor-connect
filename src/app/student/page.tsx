@@ -14,15 +14,48 @@ export default async function StudentDashboard() {
 
   const studentId = (session.user as any).id;
 
+  // Select only the columns StudentRequestList actually renders
   const requests = await prisma.tutorRequest.findMany({
     where: { studentId },
-    include: {
-      course: true,
-      assignedTutor: {
-        include: { department: true }
+    select: {
+      id: true,
+      topic: true,
+      facultyName: true,
+      preferredMode: true,
+      budget: true,
+      status: true,
+      courseId: true,
+      createdAt: true,
+      course: {
+        select: { id: true, name: true }
       },
-      payment: true,
+      assignedTutor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contact: true,
+          cgpa: true,
+          gender: true,
+          department: { select: { name: true } }
+        }
+      },
+      payment: {
+        select: {
+          id: true,
+          mfsType: true,
+          accountNumber: true,
+          amount: true,
+          transactionId: true,
+        }
+      },
       refundRequests: {
+        select: {
+          id: true,
+          status: true,
+          details: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' }
       }
     },
@@ -36,7 +69,7 @@ export default async function StudentDashboard() {
         <Link href="/student/request-tutor" className="btn-primary">New Request</Link>
       </div>
 
-      <StudentRequestList initialRequests={requests} />
+      <StudentRequestList initialRequests={requests as any} />
     </div>
   );
 }

@@ -4,12 +4,17 @@ import { useState, useMemo, useEffect } from 'react';
 import styles from '../../dashboard.module.css';
 import AssignTutorForm from './AssignTutorForm';
 import { verifyPaymentAction, verifyRefundAction } from './actions';
+import { useToast } from '@/components/ToastProvider';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function RequestManager({ initialRequests, tutors }: { initialRequests: any[], tutors: any[] }) {
   const [requests, setRequests] = useState(initialRequests);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; extra?: any } | null>(null);
+  const { toast } = useToast();
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Sync state with incoming server props
   useEffect(() => {
@@ -27,8 +32,8 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
       }
     }
 
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const lowerQuery = debouncedSearch.toLowerCase();
       result = result.filter(req => 
         req.course.name.toLowerCase().includes(lowerQuery) ||
         req.student.name.toLowerCase().includes(lowerQuery) ||
@@ -55,17 +60,17 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
     });
 
     return result;
-  }, [requests, searchQuery, statusFilter]);
+  }, [requests, debouncedSearch, statusFilter]);
+
 
   const handleVerifyPayment = async (requestId: string, approve: boolean) => {
-    const action = approve ? 'approve' : 'reject';
-    if (!confirm(`Are you sure you want to ${action} this payment?`)) return;
-
+    setConfirmAction(null);
     setLoadingId(requestId);
     const res = await verifyPaymentAction(requestId, approve);
     if (res?.error) {
-      alert(res.error);
+      toast.error(res.error);
     } else {
+      toast.success(approve ? 'Payment approved — session is now active.' : 'Payment rejected.');
       setRequests(prev => prev.map(r => {
         if (r.id === requestId) {
           return {
@@ -81,14 +86,13 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
   };
 
   const handleVerifyRefund = async (refundRequestId: string, requestId: string, approve: boolean) => {
-    const action = approve ? 'approve' : 'reject';
-    if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
-
+    setConfirmAction(null);
     setLoadingId(refundRequestId);
     const res = await verifyRefundAction(refundRequestId, approve);
     if (res?.error) {
-      alert(res.error);
+      toast.error(res.error);
     } else {
+      toast.success(approve ? 'Refund approved.' : 'Refund rejected.');
       setRequests(prev => prev.map(r => {
         if (r.id === requestId) {
           return {
@@ -225,23 +229,25 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                           <p style={{ margin: '0 0 0.5rem 0' }}><strong>Account:</strong> {req.payment.accountNumber}</p>
                           <p style={{ margin: '0 0 0.5rem 0' }}><strong>Amount:</strong> {req.payment.amount} BDT</p>
                           <p style={{ margin: '0 0 0.75rem 0' }}><strong>Txn ID:</strong> <code style={{ background: '#e2e8f0', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>{req.payment.transactionId}</code></p>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              onClick={() => handleVerifyPayment(req.id, true)}
-                              disabled={loadingId === req.id}
-                              className="btn"
-                              style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleVerifyPayment(req.id, false)}
-                              disabled={loadingId === req.id}
-                              className="btn"
-                              style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                            >
-                              Reject
-                            </button>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {confirmAction?.type === `pay-approve-${req.id}` ? (
+                              <>
+                                <span style={{ fontSize: '0.85rem', color: '#166534', alignSelf: 'center' }}>Approve this payment?</span>
+                                <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === req.id ? '⏳' : 'Yes, Approve'}</button>
+                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                              </>
+                            ) : confirmAction?.type === `pay-reject-${req.id}` ? (
+                              <>
+                                <span style={{ fontSize: '0.85rem', color: '#991b1b', alignSelf: 'center' }}>Reject this payment?</span>
+                                <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === req.id ? '⏳' : 'Yes, Reject'}</button>
+                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Approve</button>
+                                <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Reject</button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
@@ -251,23 +257,25 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                         <div style={{ background: '#fffbeb', padding: '0.75rem', borderRadius: '8px', border: '1px solid #fde68a', fontSize: '0.9rem', marginTop: '0.5rem' }}>
                           <p style={{ margin: '0 0 0.5rem 0', color: '#b45309' }}><strong>Refund Reason:</strong></p>
                           <p style={{ margin: '0 0 0.75rem 0', fontStyle: 'italic', background: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fef3c7' }}>"{pendingRefund.details}"</p>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)}
-                              disabled={loadingId === pendingRefund.id}
-                              className="btn"
-                              style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                            >
-                              Approve Refund
-                            </button>
-                            <button
-                              onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)}
-                              disabled={loadingId === pendingRefund.id}
-                              className="btn"
-                              style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                            >
-                              Reject Refund
-                            </button>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
+                              <>
+                                <span style={{ fontSize: '0.85rem', color: '#166534', alignSelf: 'center' }}>Approve refund?</span>
+                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === pendingRefund.id ? '⏳' : 'Yes, Approve'}</button>
+                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                              </>
+                            ) : confirmAction?.type === `ref-reject-${pendingRefund.id}` ? (
+                              <>
+                                <span style={{ fontSize: '0.85rem', color: '#991b1b', alignSelf: 'center' }}>Reject refund?</span>
+                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === pendingRefund.id ? '⏳' : 'Yes, Reject'}</button>
+                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Approve Refund</button>
+                                <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Reject Refund</button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}

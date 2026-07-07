@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from './find-tutor.module.css';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface Expertise {
   id: string;
@@ -44,12 +45,13 @@ export default function FindTutorClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Filter logic
+  // Filter logic — uses debounced search to avoid filtering on every keystroke
   const filteredExpertises = initialExpertises.filter((exp) => {
     const tutorName = exp.tutor.name.toLowerCase();
     const courseName = exp.course.name.toLowerCase();
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearch.toLowerCase();
 
     const matchesSearch = tutorName.includes(query) || courseName.includes(query);
     const matchesDept = selectedDept === '' || exp.course.departmentId === selectedDept || (exp.tutor.department && exp.tutor.department.name === selectedDept);

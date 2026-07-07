@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getDepartments } from '@/lib/cache';
 import ProfileForm from '@/components/ProfileForm';
 
 import { redirect } from 'next/navigation';
@@ -16,9 +17,7 @@ export default async function StudentProfilePage() {
     where: { id: (session.user as any).id }
   });
   
-  const departments = await prisma.department.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const departments = await getDepartments();
 
   return (
     <div className="animate-fade-in">

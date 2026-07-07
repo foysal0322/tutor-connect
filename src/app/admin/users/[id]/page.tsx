@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getDepartments } from '@/lib/cache';
 import ProfileForm from '@/components/ProfileForm';
 import { adminUpdateUser } from '@/app/actions/admin';
 import Link from 'next/link';
@@ -15,9 +16,7 @@ export default async function AdminUserEditPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const departments = await prisma.department.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const departments = await getDepartments();
 
   async function handleAdminUpdate(formData: FormData) {
     'use server';

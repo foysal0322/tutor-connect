@@ -3,21 +3,48 @@ import { prisma } from '@/lib/prisma';
 import styles from './page.module.css';
 import SupportForm from './components/SupportForm';
 
-export default async function Home() {
-  // Fetch latest tutor requests
-  const requests = await prisma.tutorRequest.findMany({
-    where: { status: 'PENDING' },
-    include: { course: { include: { department: true } } },
-    orderBy: { createdAt: 'desc' },
-    take: 6,
-  });
+// Cache homepage data for 5 minutes — stats don't need to be real-time
+export const revalidate = 300;
 
-  // Fetch available tutors
-  const tutors = await prisma.user.findMany({
-    where: { role: 'TUTOR' },
-    include: { expertises: { include: { course: true } } },
-    take: 6,
-  });
+export default async function Home() {
+  // Batch both queries in parallel — only fetch columns we actually render
+  const [requests, tutors] = await Promise.all([
+    prisma.tutorRequest.findMany({
+      where: { status: 'PENDING' },
+      select: {
+        id: true,
+        topic: true,
+        preferredMode: true,
+        budget: true,
+        createdAt: true,
+        course: {
+          select: {
+            name: true,
+            department: { select: { name: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    }),
+    prisma.user.findMany({
+      where: { role: 'TUTOR' },
+      select: {
+        id: true,
+        name: true,
+        cgpa: true,
+        expertises: {
+          where: { isActive: true },
+          select: {
+            sessionFee: true,
+            course: { select: { name: true } }
+          },
+          take: 3,
+        }
+      },
+      take: 6,
+    }),
+  ]);
 
   // Mock student reviews
   const reviews = [

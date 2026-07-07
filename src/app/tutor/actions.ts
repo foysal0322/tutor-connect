@@ -3,7 +3,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export async function addTutorExpertise(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -19,12 +19,14 @@ export async function addTutorExpertise(formData: FormData) {
   const availability = formData.get('availability') as string;
   const sessionFee = parseFloat(formData.get('sessionFee') as string);
 
+  if (!courseId || !semesterCompleted || !facultyName || !courseGrade || !availability || isNaN(sessionFee)) {
+    return { error: 'All fields are required.' };
+  }
+
   // Prevent duplicate expertise for the same course
   const existing = await prisma.tutorExpertise.findFirst({
-    where: {
-      tutorId,
-      courseId
-    }
+    where: { tutorId, courseId },
+    select: { id: true }
   });
 
   if (existing) {
@@ -35,15 +37,14 @@ export async function addTutorExpertise(formData: FormData) {
     data: {
       tutorId,
       courseId,
-      semesterCompleted,
-      facultyName,
-      courseGrade,
-      availability,
+      semesterCompleted: semesterCompleted.trim(),
+      facultyName: facultyName.trim(),
+      courseGrade: courseGrade.trim(),
+      availability: availability.trim(),
       sessionFee
     }
   });
 
-  const { revalidatePath } = await import('next/cache');
   revalidatePath('/tutor/expertise');
   return { success: true };
 }
@@ -63,19 +64,26 @@ export async function updateTutorExpertise(formData: FormData) {
 
   try {
     const existing = await prisma.tutorExpertise.findFirst({
-      where: { id, tutorId }
+      where: { id, tutorId },
+      select: { id: true }
     });
     if (!existing) return { error: 'Expertise not found' };
 
     await prisma.tutorExpertise.update({
       where: { id },
-      data: { courseId, semesterCompleted, facultyName, courseGrade, availability, sessionFee }
+      data: {
+        courseId,
+        semesterCompleted: semesterCompleted?.trim(),
+        facultyName: facultyName?.trim(),
+        courseGrade: courseGrade?.trim(),
+        availability: availability?.trim(),
+        sessionFee
+      }
     });
     
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/tutor/expertise');
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return { error: 'Failed to update expertise' };
   }
 }
@@ -87,16 +95,16 @@ export async function deleteTutorExpertise(id: string) {
 
   try {
     const existing = await prisma.tutorExpertise.findFirst({
-      where: { id, tutorId }
+      where: { id, tutorId },
+      select: { id: true }
     });
     if (!existing) return { error: 'Expertise not found' };
 
     await prisma.tutorExpertise.delete({ where: { id } });
     
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/tutor/expertise');
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return { error: 'Failed to delete expertise' };
   }
 }
@@ -108,7 +116,8 @@ export async function toggleTutorExpertise(id: string, isActive: boolean) {
 
   try {
     const existing = await prisma.tutorExpertise.findFirst({
-      where: { id, tutorId }
+      where: { id, tutorId },
+      select: { id: true }
     });
     if (!existing) return { error: 'Expertise not found' };
 
@@ -117,10 +126,9 @@ export async function toggleTutorExpertise(id: string, isActive: boolean) {
       data: { isActive }
     });
     
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/tutor/expertise');
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return { error: 'Failed to toggle expertise' };
   }
 }

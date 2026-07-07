@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getCourses } from '@/lib/cache';
 import ExpertiseDashboard from './ExpertiseDashboard';
 
 export default async function ExpertisePage() {
@@ -13,9 +14,7 @@ export default async function ExpertisePage() {
     orderBy: { createdAt: 'desc' }
   });
 
-  const allCourses = await prisma.course.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const allCourses = await getCourses();
 
   return (
     <div className="animate-fade-in">

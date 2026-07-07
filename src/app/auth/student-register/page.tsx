@@ -1,11 +1,10 @@
 import { prisma } from '@/lib/prisma';
+import { getDepartments } from '@/lib/cache';
 import StudentRegisterForm from './StudentRegisterForm';
 import { Suspense } from 'react';
 
 export default async function StudentRegisterPage() {
-  const departments = await prisma.department.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const departments = await getDepartments();
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

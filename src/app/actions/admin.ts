@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 
 export async function adminUpdateUser(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -84,6 +84,7 @@ export async function addDepartment(formData: FormData) {
   try {
     await prisma.department.create({ data: { name } });
     revalidatePath('/admin/departments');
+    updateTag('departments');
     return { success: true };
   } catch (err: any) {
     if (err.code === 'P2002') return { error: 'Department already exists' };
@@ -100,6 +101,7 @@ export async function updateDepartment(formData: FormData) {
   try {
     await prisma.department.update({ where: { id }, data: { name } });
     revalidatePath('/admin/departments');
+    updateTag('departments');
     return { success: true };
   } catch (err: any) {
     if (err.code === 'P2002') return { error: 'Department already exists' };
@@ -113,6 +115,7 @@ export async function deleteDepartment(id: string) {
   try {
     await prisma.department.delete({ where: { id } });
     revalidatePath('/admin/departments');
+    updateTag('departments');
     return { success: true };
   } catch (err: any) {
     return { error: 'Cannot delete department. It may have associated courses or users.' };
@@ -127,6 +130,7 @@ export async function addCourse(formData: FormData) {
   try {
     await prisma.course.create({ data: { name } });
     revalidatePath('/admin/courses');
+    updateTag('courses');
     return { success: true };
   } catch (err: any) {
     return { error: 'Failed to add course' };
@@ -142,6 +146,7 @@ export async function updateCourse(formData: FormData) {
   try {
     await prisma.course.update({ where: { id }, data: { name } });
     revalidatePath('/admin/courses');
+    updateTag('courses');
     return { success: true };
   } catch (err: any) {
     return { error: 'Failed to update course' };
@@ -154,6 +159,7 @@ export async function deleteCourse(id: string) {
   try {
     await prisma.course.delete({ where: { id } });
     revalidatePath('/admin/courses');
+    updateTag('courses');
     return { success: true };
   } catch (err: any) {
     return { error: 'Cannot delete course. It may have associated requests or expertises.' };
@@ -182,6 +188,7 @@ export async function importCourses(courses: { name: string }[]) {
     }
 
     revalidatePath('/admin/courses');
+    updateTag('courses');
     return { success: true };
   } catch (err: any) {
     console.error('Import courses error:', err);
@@ -215,6 +222,7 @@ export async function deleteBulkCourses(ids: string[]) {
       where: { id: { in: ids } }
     });
     revalidatePath('/admin/courses');
+    updateTag('courses');
     return { success: true };
   } catch (err: any) {
     return { error: 'Failed to delete some courses. They might be in use.' };

@@ -1,10 +1,9 @@
 import { prisma } from '@/lib/prisma';
+import { getDepartments } from '@/lib/cache';
 import TutorRegisterForm from './TutorRegisterForm';
 
 export default async function TutorRegisterPage() {
-  const departments = await prisma.department.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const departments = await getDepartments();
 
   return <TutorRegisterForm departments={departments} />;
 }

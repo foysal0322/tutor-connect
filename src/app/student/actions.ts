@@ -3,7 +3,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -20,13 +20,14 @@ export async function submitTutorRequest(formData: FormData) {
   const tutorId = formData.get('tutorId') as string || null;
   const status = tutorId ? 'MATCHED' : 'PENDING';
 
+  if (!courseId || !topic || !preferredMode || isNaN(budget)) {
+    return { error: 'Please fill in all required fields.' };
+  }
+
   // Prevent duplicate requests for the same course
   const existing = await prisma.tutorRequest.findFirst({
-    where: {
-      studentId,
-      courseId,
-      status: status
-    }
+    where: { studentId, courseId, status },
+    select: { id: true }
   });
 
   if (existing) {
@@ -37,8 +38,8 @@ export async function submitTutorRequest(formData: FormData) {
     data: {
       studentId,
       courseId,
-      topic,
-      facultyName,
+      topic: topic.trim(),
+      facultyName: facultyName?.trim(),
       preferredMode,
       budget,
       assignedTutorId: tutorId,
@@ -46,16 +47,19 @@ export async function submitTutorRequest(formData: FormData) {
     }
   });
 
-  // Fetch course name for the notification
+  // Send discord notification (fire-and-forget — don't block response)
   try {
-    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { name: true }
+    });
     if (course) {
       const webhookUrl = 'https://discord.com/api/webhooks/1351086319815888916/GkSxw4XAuJDCeshqZ95GBLYiwwgk7VCv3LFL7qDsPBIqXebwBshikJd8HcJm-9OT0H6B';
       const studentName = session.user?.name || 'A student';
       const message = {
         embeds: [{
           title: '📚 New Tutor Request Submitted!',
-          color: 5814783, // blurple
+          color: 5814783,
           fields: [
             { name: 'Student', value: studentName, inline: true },
             { name: 'Course', value: course.name, inline: true },
@@ -77,7 +81,6 @@ export async function submitTutorRequest(formData: FormData) {
     console.error('Failed to send discord notification', err);
   }
 
-  const { revalidatePath } = await import('next/cache');
   revalidatePath('/student');
   return { success: true };
 }
@@ -93,7 +96,12 @@ export async function cancelTutorRequest(id: string) {
   try {
     const existing = await prisma.tutorRequest.findFirst({
       where: { id, studentId },
-      include: { course: true }
+      select: {
+        id: true,
+        status: true,
+        topic: true,
+        course: { select: { name: true } }
+      }
     });
 
     if (!existing) {
@@ -109,14 +117,14 @@ export async function cancelTutorRequest(id: string) {
       data: { status: 'CANCELLED' }
     });
 
-    // Send discord notification
+    // Send discord notification (non-blocking)
     try {
       const webhookUrl = 'https://discord.com/api/webhooks/1351086319815888916/GkSxw4XAuJDCeshqZ95GBLYiwwgk7VCv3LFL7qDsPBIqXebwBshikJd8HcJm-9OT0H6B';
       const studentName = session.user?.name || 'A student';
       const message = {
         embeds: [{
           title: '❌ Tutor Request Cancelled',
-          color: 15158332, // Red
+          color: 15158332,
           fields: [
             { name: 'Student', value: studentName, inline: true },
             { name: 'Course', value: existing.course.name, inline: true },
@@ -135,10 +143,9 @@ export async function cancelTutorRequest(id: string) {
       console.error('Failed to send cancel discord notification', err);
     }
 
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/student');
     return { success: true };
-  } catch (err: any) {
+  } catch {
     return { error: 'Failed to cancel request.' };
   }
 }
@@ -159,30 +166,35 @@ export async function submitPayment(formData: FormData) {
     return { error: 'All fields are required.' };
   }
 
+  // Sanitize inputs
+  const sanitizedAccountNumber = accountNumber.trim();
+  const sanitizedTransactionId = transactionId.trim();
+
   try {
-    await prisma.payment.upsert({
-      where: { requestId },
-      update: {
-        mfsType,
-        accountNumber,
-        amount,
-        transactionId
-      },
-      create: {
-        requestId,
-        mfsType,
-        accountNumber,
-        amount,
-        transactionId
-      }
-    });
+    // Use a transaction to update both records atomically
+    await prisma.$transaction([
+      prisma.payment.upsert({
+        where: { requestId },
+        update: {
+          mfsType,
+          accountNumber: sanitizedAccountNumber,
+          amount,
+          transactionId: sanitizedTransactionId
+        },
+        create: {
+          requestId,
+          mfsType,
+          accountNumber: sanitizedAccountNumber,
+          amount,
+          transactionId: sanitizedTransactionId
+        }
+      }),
+      prisma.tutorRequest.update({
+        where: { id: requestId },
+        data: { status: 'PAYMENT_PENDING' }
+      }),
+    ]);
 
-    await prisma.tutorRequest.update({
-      where: { id: requestId },
-      data: { status: 'PAYMENT_PENDING' }
-    });
-
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/student');
     return { success: true };
   } catch (err) {
@@ -197,13 +209,23 @@ export async function completeTutorRequest(requestId: string) {
     return { error: 'Not authorized.' };
   }
 
+  const studentId = (session.user as any).id;
+
   try {
+    // Verify the request belongs to this student
+    const request = await prisma.tutorRequest.findFirst({
+      where: { id: requestId, studentId },
+      select: { id: true, status: true }
+    });
+
+    if (!request) return { error: 'Request not found.' };
+    if (request.status !== 'ACCEPTED') return { error: 'Only active sessions can be marked as completed.' };
+
     await prisma.tutorRequest.update({
       where: { id: requestId },
       data: { status: 'COMPLETED' }
     });
 
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/student');
     return { success: true };
   } catch (err) {
@@ -222,14 +244,15 @@ export async function submitRefundRequest(formData: FormData) {
   const requestId = formData.get('requestId') as string;
   const details = formData.get('details') as string;
 
-  if (!requestId || !details) {
+  if (!requestId || !details?.trim()) {
     return { error: 'Details/Reason is required.' };
   }
 
   try {
     // Check if there is already a refund request
     const existing = await prisma.refundRequest.findFirst({
-      where: { requestId }
+      where: { requestId },
+      select: { id: true }
     });
 
     if (existing) {
@@ -240,12 +263,11 @@ export async function submitRefundRequest(formData: FormData) {
       data: {
         requestId,
         studentId,
-        details,
+        details: details.trim(),
         status: 'PENDING'
       }
     });
 
-    const { revalidatePath } = await import('next/cache');
     revalidatePath('/student');
     return { success: true };
   } catch (err) {

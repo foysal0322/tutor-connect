@@ -23,12 +23,22 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing credentials");
         }
 
+        // Only fetch required fields — never load the full user row
         const user = await prisma.user.findFirst({
           where: {
             OR: [
               { email: credentials.identifier },
               { nsuId: credentials.identifier }
             ]
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            nsuId: true,
+            role: true,
+            password: true,
+            isBlocked: true,
           }
         });
 
@@ -58,7 +68,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: user.role as 'STUDENT' | 'TUTOR' | 'ADMIN',
           nsuId: user.nsuId,
         };
       }
@@ -89,23 +99,23 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false
+        secure: process.env.NODE_ENV === 'production'
       }
     },
     callbackUrl: {
       name: `next-auth.callback-url.tutor-connect`,
       options: {
         path: '/',
-        secure: false
+        secure: process.env.NODE_ENV === 'production'
       }
     },
     csrfToken: {
       name: `next-auth.csrf-token.tutor-connect`,
       options: {
         path: '/',
-        secure: false
+        secure: process.env.NODE_ENV === 'production'
       }
     }
   },
-  secret: process.env.NEXTAUTH_SECRET || "nsu-tutor-secret-key-12345",
+  secret: process.env.NEXTAUTH_SECRET,
 };

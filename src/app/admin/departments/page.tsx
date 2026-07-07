@@ -1,10 +1,9 @@
 import { prisma } from '@/lib/prisma';
+import { getDepartments } from '@/lib/cache';
 import DepartmentManager from './DepartmentManager';
 
 export default async function AdminDepartmentsPage() {
-  const departments = await prisma.department.findMany({
-    orderBy: { name: 'asc' }
-  });
+  const departments = await getDepartments();
 
   return (
     <div className="animate-fade-in">
