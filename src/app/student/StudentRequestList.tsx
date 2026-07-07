@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { submitPayment, completeTutorRequest, submitRefundRequest, cancelTutorRequest } from './actions';
+import { useToast } from '@/components/ToastProvider';
 import styles from '../dashboard.module.css';
 
 interface RequestListProps {
@@ -12,6 +13,8 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
   const [requests, setRequests] = useState(initialRequests);
   const [activePaymentId, setActivePaymentId] = useState<string | null>(null);
   const [activeRefundId, setActiveRefundId] = useState<string | null>(null);
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
+  const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
   
   // Payment Form States
   const [mfsType, setMfsType] = useState<'BKASH' | 'NAGAD' | 'ROCKET'>('BKASH');
@@ -21,31 +24,26 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
   
   // Refund Form State
   const [refundDetails, setRefundDetails] = useState('');
-  
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+
   const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   const handleCancel = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this request?')) return;
-    setError(null);
-    setSuccess(null);
+    setConfirmCancelId(null);
     const res = await cancelTutorRequest(id);
     if (res?.error) {
-      setError(res.error);
+      toast.error(res.error);
     } else {
-      setSuccess('Request cancelled successfully.');
+      toast.success('Request cancelled successfully.');
       setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'CANCELLED' } : r));
     }
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent, requestId: string) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     
     if (!accountNumber || !amount || !transactionId) {
-      setError('Please fill in all payment fields.');
+      toast.error('Please fill in all payment fields.');
       return;
     }
 
@@ -59,9 +57,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
     startTransition(async () => {
       const res = await submitPayment(formData);
       if (res?.error) {
-        setError(res.error);
+        toast.error(res.error);
       } else {
-        setSuccess('Payment details submitted successfully! Verification pending.');
+        toast.success('Payment details submitted! Verification pending.');
         setRequests(prev => prev.map(r => {
           if (r.id === requestId) {
             return {
@@ -73,7 +71,6 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
           return r;
         }));
         setActivePaymentId(null);
-        // Reset states
         setAccountNumber('');
         setAmount('');
         setTransactionId('');
@@ -82,26 +79,21 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
   };
 
   const handleComplete = async (requestId: string) => {
-    if (!confirm('Mark this tuition session as completed?')) return;
-    setError(null);
-    setSuccess(null);
-
+    setConfirmCompleteId(null);
     const res = await completeTutorRequest(requestId);
     if (res?.error) {
-      setError(res.error);
+      toast.error(res.error);
     } else {
-      setSuccess('Session marked as completed.');
+      toast.success('Session marked as completed.');
       setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'COMPLETED' } : r));
     }
   };
 
   const handleRefundSubmit = async (e: React.FormEvent, requestId: string) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     if (!refundDetails.trim()) {
-      setError('Please describe your reason for requesting a refund.');
+      toast.error('Please describe your reason for requesting a refund.');
       return;
     }
 
@@ -112,9 +104,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
     startTransition(async () => {
       const res = await submitRefundRequest(formData);
       if (res?.error) {
-        setError(res.error);
+        toast.error(res.error);
       } else {
-        setSuccess('Refund request submitted successfully for admin review.');
+        toast.success('Refund request submitted for admin review.');
         setRequests(prev => prev.map(r => {
           if (r.id === requestId) {
             return {
@@ -158,20 +150,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {error && (
-        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', border: '1px solid #fca5a5' }}>
-          {error}
-        </div>
-      )}
-      {success && (
-        <div style={{ background: '#d1fae5', color: '#065f46', padding: '1rem', borderRadius: '8px', border: '1px solid #6ee7b7' }}>
-          {success}
-        </div>
-      )}
-
       {requests.length === 0 ? (
         <div className={styles.card} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-          <p style={{ color: 'var(--text-muted)' }}>You haven't requested any tutors yet.</p>
+          <p style={{ color: 'var(--text-muted)' }}>You haven&apos;t requested any tutors yet.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100%, 1fr))', gap: '1.5rem' }}>
@@ -255,14 +236,35 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
                 {/* Footer Actions */}
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 'auto' }}>
-                  {req.status === 'PENDING' && (
+                  {req.status === 'PENDING' && confirmCancelId !== req.id && (
                     <button
-                      onClick={() => handleCancel(req.id)}
+                      onClick={() => setConfirmCancelId(req.id)}
                       className="btn"
                       style={{ background: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px' }}
                     >
                       Cancel Request
                     </button>
+                  )}
+
+                  {/* Inline cancel confirmation — no browser confirm() */}
+                  {confirmCancelId === req.id && (
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#fef2f2', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                      <span style={{ fontSize: '0.9rem', color: '#991b1b' }}>Cancel this request?</span>
+                      <button
+                        onClick={() => handleCancel(req.id)}
+                        className="btn"
+                        style={{ background: '#ef4444', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                      >
+                        Yes, Cancel
+                      </button>
+                      <button
+                        onClick={() => setConfirmCancelId(null)}
+                        className="btn"
+                        style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                      >
+                        Keep
+                      </button>
+                    </div>
                   )}
 
                   {req.status === 'MATCHED' && activePaymentId !== req.id && (
@@ -280,13 +282,33 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
                   {req.status === 'ACCEPTED' && !isRefunded && (
                     <>
-                      <button
-                        onClick={() => handleComplete(req.id)}
-                        className="btn"
-                        style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
-                      >
-                        Mark Session Completed
-                      </button>
+                      {confirmCompleteId !== req.id ? (
+                        <button
+                          onClick={() => setConfirmCompleteId(req.id)}
+                          className="btn"
+                          style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
+                        >
+                          Mark Session Completed
+                        </button>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f0fdf4', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                          <span style={{ fontSize: '0.9rem', color: '#166534' }}>Mark as completed?</span>
+                          <button
+                            onClick={() => handleComplete(req.id)}
+                            className="btn"
+                            style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                          >
+                            Yes, Completed
+                          </button>
+                          <button
+                            onClick={() => setConfirmCompleteId(null)}
+                            className="btn"
+                            style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                          >
+                            Not Yet
+                          </button>
+                        </div>
+                      )}
                       
                       {(!req.refundRequests || req.refundRequests.length === 0) && activeRefundId !== req.id && (
                         <button
@@ -379,8 +401,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>MFS Account Number</label>
+                        <label htmlFor={`account-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>MFS Account Number</label>
                         <input
+                          id={`account-${req.id}`}
                           type="text"
                           required
                           placeholder="e.g. 017XXXXXXXX"
@@ -390,8 +413,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Amount (BDT)</label>
+                        <label htmlFor={`amount-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Amount (BDT)</label>
                         <input
+                          id={`amount-${req.id}`}
                           type="number"
                           required
                           readOnly
@@ -400,8 +424,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Transaction ID</label>
+                        <label htmlFor={`txn-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Transaction ID</label>
                         <input
+                          id={`txn-${req.id}`}
                           type="text"
                           required
                           placeholder="e.g. TRX847927"
@@ -427,7 +452,7 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                         className="btn-primary"
                         style={{ padding: '0.5rem 1.25rem' }}
                       >
-                        {isPending ? 'Submitting...' : 'Submit Payment'}
+                        {isPending ? '⏳ Submitting...' : 'Submit Payment'}
                       </button>
                     </div>
                   </form>
@@ -442,7 +467,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                     </p>
 
                     <div>
+                      <label htmlFor={`refund-${req.id}`} className="sr-only">Refund reason</label>
                       <textarea
+                        id={`refund-${req.id}`}
                         required
                         rows={3}
                         placeholder="Reason for refund request..."
@@ -467,7 +494,7 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                         className="btn"
                         style={{ background: '#f59e0b', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px' }}
                       >
-                        {isPending ? 'Submitting...' : 'Submit Refund'}
+                        {isPending ? '⏳ Submitting...' : 'Submit Refund'}
                       </button>
                     </div>
                   </form>

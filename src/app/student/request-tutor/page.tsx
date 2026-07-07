@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getCourses } from '@/lib/cache';
 import RequestTutorForm from './RequestTutorForm';
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
@@ -18,10 +19,7 @@ export default async function RequestTutorPage({ searchParams }: { searchParams:
     redirect(`/auth/student-signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
-  const courses = await prisma.course.findMany({
-    orderBy: { name: 'asc' },
-    include: { department: true }
-  });
+  const courses = await getCourses();
 
   let selectedTutor = null;
   if (tutorId) {

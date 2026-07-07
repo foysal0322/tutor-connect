@@ -1,11 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import styles from '../../dashboard.module.css';
 
+// Cache dashboard stats for 5 minutes
+export const revalidate = 300;
+
 export default async function AdminDashboard() {
-  const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } });
-  const totalTutors = await prisma.user.count({ where: { role: 'TUTOR' } });
-  const totalRequests = await prisma.tutorRequest.count();
-  const pendingRequests = await prisma.tutorRequest.count({ where: { status: 'PENDING' } });
+  // Run all count queries in parallel
+  const [totalStudents, totalTutors, totalRequests, pendingRequests] = await Promise.all([
+    prisma.user.count({ where: { role: 'STUDENT' } }),
+    prisma.user.count({ where: { role: 'TUTOR' } }),
+    prisma.tutorRequest.count(),
+    prisma.tutorRequest.count({ where: { status: 'PENDING' } }),
+  ]);
   
   const stats = [
     { label: 'Total Students', value: totalStudents },

@@ -4,11 +4,24 @@ import Link from 'next/link';
 import DeleteUserButton from './DeleteUserButton';
 
 export default async function AdminUsersPage() {
+  // Select only columns rendered in the table — never fetch password hashes
   const users = await prisma.user.findMany({
     where: {
       role: { in: ['STUDENT', 'TUTOR'] }
     },
-    include: { department: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      nsuId: true,
+      role: true,
+      contact: true,
+      isBlocked: true,
+      createdAt: true,
+      department: {
+        select: { name: true }
+      }
+    },
     orderBy: { createdAt: 'desc' }
   });
 

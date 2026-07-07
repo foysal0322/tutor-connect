@@ -25,6 +25,9 @@ model Course {
   department Department?      @relation(fields: [departmentId], references: [id])
   expertises TutorExpertise[]
   requests   TutorRequest[]
+
+  @@index([departmentId])
+  @@index([name])
 }
 
 model User {
@@ -51,6 +54,11 @@ model User {
   refundRequests        RefundRequest[]
   passwordResetRequests PasswordResetRequest[]
   withdrawalRequests    WithdrawalRequest[]
+
+  @@index([role])
+  @@index([departmentId])
+  @@index([createdAt])
+  @@index([isBlocked])
 }
 
 model TutorExpertise {
@@ -67,6 +75,11 @@ model TutorExpertise {
 
   tutor  User   @relation(fields: [tutorId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
+
+  @@index([tutorId])
+  @@index([courseId])
+  @@index([isActive])
+  @@index([createdAt])
 }
 
 model TutorRequest {
@@ -87,6 +100,13 @@ model TutorRequest {
 
   payment        Payment?
   refundRequests RefundRequest[]
+
+  @@index([studentId])
+  @@index([assignedTutorId])
+  @@index([courseId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([studentId, status])
 }
 
 model ConsultancyRequest {
@@ -98,6 +118,10 @@ model ConsultancyRequest {
   createdAt DateTime @default(now())
 
   student User @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model RefundRequest {
@@ -110,6 +134,10 @@ model RefundRequest {
 
   request TutorRequest @relation(fields: [requestId], references: [id])
   student User         @relation(fields: [studentId], references: [id])
+
+  @@index([requestId])
+  @@index([studentId])
+  @@index([status])
 }
 
 model SupportTicket {
@@ -121,6 +149,9 @@ model SupportTicket {
   message   String
   status    String   @default("PENDING") // PENDING, RESOLVED
   createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model PasswordResetRequest {
@@ -130,6 +161,9 @@ model PasswordResetRequest {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }
 
 model Payment {
@@ -157,6 +191,10 @@ model WithdrawalRequest {
   createdAt     DateTime @default(now())
 
   tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model PaymentInfo {
@@ -166,4 +204,6 @@ model PaymentInfo {
   sender   String
   trxId    String   @unique
   time     DateTime @default(now())
+
+  @@index([time])
 }
