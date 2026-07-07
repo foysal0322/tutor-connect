@@ -253,7 +253,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           <button type="submit" className={`btn-primary ${authStyles.submitBtn}`} disabled={loading} style={{ flex: 1 }}>
             {loading ? 'Saving...' : (initialData ? 'Save Changes' : 'Add Expertise')}
           </button>
-          {initialData && onCancel && (
+          {onCancel && (
             <button type="button" onClick={onCancel} className="btn-secondary" disabled={loading} style={{ flex: 1, padding: '0.75rem' }}>
               Cancel
             </button>
