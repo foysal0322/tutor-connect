@@ -9,6 +9,19 @@ export default function NavbarClient({ session }: { session: any }) {
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
+  const handleSupportClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setIsMobileMenuOpen(false);
+    
+    // If we are already on the homepage, we can scroll manually
+    if (window.location.pathname === '/') {
+      e.preventDefault();
+      const supportSection = document.getElementById('support');
+      if (supportSection) {
+        supportSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <nav className={styles.navbar}>
       <div className={`container ${styles.navContainer}`}>
@@ -19,7 +32,7 @@ export default function NavbarClient({ session }: { session: any }) {
         <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
           <Link href="/" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link href="/tutorial" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
-          <Link href="/#support" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Support</Link>
+          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick}>Support</Link>
           <Link href="/refund-policy" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Refund Policy</Link>
           <Link href="/consultancy" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Get Free Consultancy</Link>
         

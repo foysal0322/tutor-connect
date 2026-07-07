@@ -98,7 +98,11 @@ export default function ProfileForm({
         {(user.role === 'TUTOR' || (isAdmin && user.role === 'TUTOR')) && (
           <div>
             <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>CGPA</label>
-            <input name="cgpa" type="number" step="0.01" min="0" max="4.0" defaultValue={user.cgpa || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
+            <input name="cgpa" type="number" step="0.01" min="0" max="4.0" defaultValue={user.cgpa || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', marginBottom: '0.5rem' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              <input type="checkbox" name="hideCgpa" defaultChecked={user.hideCgpa} />
+              Hide my CGPA from students
+            </label>
           </div>
         )}
 

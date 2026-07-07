@@ -16,6 +16,10 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
   const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
   
+  // Rating/Review State
+  const [completeRating, setCompleteRating] = useState(0);
+  const [completeReview, setCompleteReview] = useState('');
+  
   // Payment Form States
   const [mfsType, setMfsType] = useState<'BKASH' | 'NAGAD' | 'ROCKET'>('BKASH');
   const [accountNumber, setAccountNumber] = useState('');
@@ -78,9 +82,9 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
     });
   };
 
-  const handleComplete = async (requestId: string) => {
+  const handleComplete = async (requestId: string, rating: number, review: string) => {
     setConfirmCompleteId(null);
-    const res = await completeTutorRequest(requestId);
+    const res = await completeTutorRequest(requestId, rating || null, review || null);
     if (res?.error) {
       toast.error(res.error);
     } else {
@@ -284,29 +288,53 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                     <>
                       {confirmCompleteId !== req.id ? (
                         <button
-                          onClick={() => setConfirmCompleteId(req.id)}
+                          onClick={() => { setConfirmCompleteId(req.id); setCompleteRating(0); setCompleteReview(''); }}
                           className="btn"
                           style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
                         >
                           Mark Session Completed
                         </button>
                       ) : (
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f0fdf4', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                          <span style={{ fontSize: '0.9rem', color: '#166534' }}>Mark as completed?</span>
-                          <button
-                            onClick={() => handleComplete(req.id)}
-                            className="btn"
-                            style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                          >
-                            Yes, Completed
-                          </button>
-                          <button
-                            onClick={() => setConfirmCompleteId(null)}
-                            className="btn"
-                            style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
-                          >
-                            Not Yet
-                          </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: '#f0fdf4', padding: '1rem', borderRadius: '8px', border: '1px solid #bbf7d0', flex: '1 1 100%' }}>
+                          <span style={{ fontSize: '1rem', color: '#166534', fontWeight: 600 }}>Rate your session (Optional)</span>
+                          
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                              <button 
+                                key={star} 
+                                type="button"
+                                onClick={() => setCompleteRating(star)} 
+                                style={{ background: 'none', border: 'none', fontSize: '1.75rem', cursor: 'pointer', color: star <= completeRating ? '#fbbf24' : '#cbd5e1', padding: 0 }}
+                              >
+                                ★
+                              </button>
+                            ))}
+                          </div>
+                          
+                          <textarea 
+                            placeholder="Write a review (optional)..." 
+                            value={completeReview}
+                            onChange={(e) => setCompleteReview(e.target.value)}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #bbf7d0', resize: 'vertical', fontFamily: 'inherit' }}
+                            rows={2}
+                          />
+
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <button
+                              onClick={() => handleComplete(req.id, completeRating, completeReview)}
+                              className="btn"
+                              style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600 }}
+                            >
+                              Submit & Complete
+                            </button>
+                            <button
+                              onClick={() => setConfirmCompleteId(null)}
+                              className="btn"
+                              style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.9rem' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       )}
                       
