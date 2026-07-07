@@ -172,6 +172,21 @@ export default function FindTutorClient({
           </div>
         )}
       </div>
+
+      {/* Fallback Section */}
+      <div className={styles.fallbackSection}>
+        <h2 className={styles.fallbackTitle}>Couldn&apos;t find the right tutor?</h2>
+        <p className={styles.fallbackText}>
+          Post a custom tutor request and we will notify tutors who meet your criteria.
+        </p>
+        <Link 
+          href="/student/request-tutor" 
+          className="btn-primary" 
+          style={{ display: 'inline-block', fontSize: '1.1rem', padding: '0.75rem 2rem' }}
+        >
+          Request a Specific Tutor
+        </Link>
+      </div>
     </div>
   );
 }

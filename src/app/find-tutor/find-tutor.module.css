@@ -194,3 +194,25 @@
     font-size: 2rem;
   }
 }
+
+.fallbackSection {
+  margin-top: 3rem;
+  padding: 2.5rem 1.5rem;
+  background: var(--primary-light);
+  border-radius: var(--radius);
+  text-align: center;
+  border: 1px dashed var(--primary);
+}
+
+.fallbackTitle {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.fallbackText {
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+}
