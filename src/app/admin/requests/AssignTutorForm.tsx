@@ -10,8 +10,12 @@ export default function AssignTutorForm({ requestId, courseId, tutors }: { reque
   const eligibleTutors = tutors.filter(t => t.expertises.some((e: any) => e.courseId === courseId));
 
   async function handleSubmit(formData: FormData) {
+    const rId = formData.get('requestId') as string;
+    const tId = formData.get('tutorId') as string;
+    if (!rId || !tId) return;
+
     setLoading(true);
-    await assignTutorToRequest(formData);
+    await assignTutorToRequest(rId, tId);
     setLoading(false);
   }
 
