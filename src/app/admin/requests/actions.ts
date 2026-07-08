@@ -6,14 +6,11 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from '@/lib/notification';
 
-export async function assignTutorToRequest(formData: FormData) {
+export async function assignTutorToRequest(requestId: string, tutorId: string) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'ADMIN') {
     throw new Error('Not authorized');
   }
-
-  const requestId = formData.get('requestId') as string;
-  const tutorId = formData.get('tutorId') as string;
 
   const request = await prisma.tutorRequest.findUnique({
     where: { id: requestId },
