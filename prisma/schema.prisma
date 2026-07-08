@@ -93,6 +93,7 @@ model TutorRequest {
   topic           String
   facultyName     String?
   preferredMode   String // Online, On Campus
+  preferredDateTime String?
   budget          Float
   status          String   @default("PENDING") // PENDING, MATCHED, ACCEPTED, PAYMENT_PENDING, COMPLETED, CANCELLED
   assignedTutorId String?

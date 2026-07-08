@@ -21,6 +21,7 @@ export default async function TutorDashboard() {
       id: true,
       topic: true,
       preferredMode: true,
+      preferredDateTime: true,
       budget: true,
       status: true,
       createdAt: true,
@@ -48,6 +49,7 @@ export default async function TutorDashboard() {
                 <th>Course</th>
                 <th>Topic</th>
                 <th>Mode</th>
+                <th>Time</th>
                 <th>Budget</th>
                 <th>Status</th>
               </tr>
@@ -59,6 +61,7 @@ export default async function TutorDashboard() {
                   <td>{req.course.name}</td>
                   <td>{req.topic}</td>
                   <td>{req.preferredMode}</td>
+                  <td>{req.preferredDateTime ? new Date(req.preferredDateTime).toLocaleString() : 'N/A'}</td>
                   <td>{req.budget} BDT</td>
                   <td>
                     <span style={{ 

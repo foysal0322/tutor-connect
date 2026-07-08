@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from '@/lib/notification';
 
 export async function assignTutorToRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -14,13 +15,43 @@ export async function assignTutorToRequest(formData: FormData) {
   const requestId = formData.get('requestId') as string;
   const tutorId = formData.get('tutorId') as string;
 
+  const request = await prisma.tutorRequest.findUnique({
+    where: { id: requestId },
+    select: { courseId: true, studentId: true, topic: true }
+  });
+
+  let newBudget = undefined;
+  if (request) {
+    const expertise = await prisma.tutorExpertise.findFirst({
+      where: { tutorId, courseId: request.courseId }
+    });
+    if (expertise) {
+      newBudget = expertise.sessionFee;
+    }
+  }
+
   await prisma.tutorRequest.update({
     where: { id: requestId },
     data: {
       assignedTutorId: tutorId,
-      status: 'MATCHED'
+      status: 'MATCHED',
+      ...(newBudget !== undefined && { budget: newBudget })
     }
   });
+
+  if (request && newBudget !== undefined) {
+    // Send push notification to student
+    try {
+      await createNotification(
+        request.studentId,
+        "Tutor Assigned!",
+        `A tutor has been assigned for your request (${request.topic}). The final fee is ${newBudget} BDT.`,
+        `/student`
+      );
+    } catch (err) {
+      console.error("Failed to notify student:", err);
+    }
+  }
 
   revalidatePath('/admin/requests');
 }

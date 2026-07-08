@@ -16,6 +16,7 @@ export async function submitTutorRequest(formData: FormData) {
   const topic = formData.get('topic') as string;
   const facultyName = formData.get('facultyName') as string;
   const preferredMode = formData.get('preferredMode') as string;
+  const preferredDateTime = formData.get('preferredDateTime') as string;
   const budget = parseFloat(formData.get('budget') as string);
   const tutorId = formData.get('tutorId') as string || null;
   const status = tutorId ? 'MATCHED' : 'PENDING';
@@ -41,6 +42,7 @@ export async function submitTutorRequest(formData: FormData) {
       topic: topic.trim(),
       facultyName: facultyName?.trim(),
       preferredMode,
+      preferredDateTime: preferredDateTime?.trim() || null,
       budget,
       assignedTutorId: tutorId,
       status
@@ -65,6 +67,7 @@ export async function submitTutorRequest(formData: FormData) {
             { name: 'Course', value: course.name, inline: true },
             { name: 'Topic', value: topic || 'General Help', inline: true },
             { name: 'Mode', value: preferredMode, inline: true },
+            { name: 'Schedule', value: preferredDateTime || 'Not specified', inline: true },
             { name: 'Budget', value: `${budget} BDT`, inline: true }
           ],
           timestamp: new Date().toISOString()

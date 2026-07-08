@@ -250,7 +250,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
 
         <div className={authStyles.formGroup}>
           <label className={authStyles.label}>Session Fee (BDT)</label>
-          <input name="sessionFee" type="number" defaultValue={initialData?.sessionFee} required min="0" className={authStyles.input} placeholder="e.g. 500" />
+          <input name="sessionFee" type="number" defaultValue={initialData?.sessionFee} required min="100" step="any" className={authStyles.input} placeholder="e.g. 500.50" />
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>

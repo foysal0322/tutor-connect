@@ -24,6 +24,10 @@ export async function addTutorExpertise(formData: FormData) {
     return { error: 'All fields are required.' };
   }
 
+  if (sessionFee < 100) {
+    return { error: 'Minimum session fee is 100 BDT.' };
+  }
+
   // Prevent duplicate expertise for the same course
   const existing = await prisma.tutorExpertise.findFirst({
     where: { tutorId, courseId },
@@ -64,6 +68,10 @@ export async function updateTutorExpertise(formData: FormData) {
   const availability = formData.get('availability') as string;
   const sessionFee = parseFloat(formData.get('sessionFee') as string);
   const hideGrade = formData.get('hideGrade') === 'true';
+
+  if (isNaN(sessionFee) || sessionFee < 100) {
+    return { error: 'Minimum session fee is 100 BDT.' };
+  }
 
   try {
     const existing = await prisma.tutorExpertise.findFirst({

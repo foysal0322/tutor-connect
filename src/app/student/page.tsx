@@ -22,6 +22,7 @@ export default async function StudentDashboard() {
       topic: true,
       facultyName: true,
       preferredMode: true,
+      preferredDateTime: true,
       budget: true,
       status: true,
       courseId: true,
