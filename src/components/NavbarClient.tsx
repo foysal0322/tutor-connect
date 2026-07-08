@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import NotificationBell from './NotificationBell';
 import styles from './Navbar.module.css';
 
 export default function NavbarClient({ session }: { session: any }) {
@@ -43,7 +44,10 @@ export default function NavbarClient({ session }: { session: any }) {
                 <Link href="/auth/tutor-signin" className="btn-primary" onClick={() => setIsMobileMenuOpen(false)}>Tutor Sign In</Link>
               </>
             ) : (
-              <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+                <NotificationBell />
+                <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+              </div>
             )}
           </div>
         </div>
@@ -55,7 +59,10 @@ export default function NavbarClient({ session }: { session: any }) {
               <Link href="/auth/tutor-signin" className="btn-primary">Tutor Sign In</Link>
             </>
           ) : (
-            <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary">Dashboard</Link>
+            <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+              <NotificationBell />
+              <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary">Dashboard</Link>
+            </div>
           )}
         </div>
 
