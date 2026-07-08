@@ -21,7 +21,7 @@ export default function AssignTutorForm({ requestId, courseId, tutors }: { reque
       <select name="tutorId" required style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
         <option value="">Select Tutor</option>
         {eligibleTutors.map(t => (
-          <option key={t.id} value={t.id}>{t.name} (Fee: {t.expertises.find((e: any) => e.courseId === courseId)?.sessionFee})</option>
+          <option key={t.id} value={t.id}>{t.name} (Fee: {t.expertises.find((e: any) => e.courseId === courseId)?.sessionFee} BDT)</option>
         ))}
       </select>
       <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }} disabled={loading}>

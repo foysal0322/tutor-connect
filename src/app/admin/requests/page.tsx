@@ -53,7 +53,7 @@ export default async function AdminRequestsPage() {
         email: true,
         expertises: {
           where: { isActive: true },
-          select: { courseId: true }
+          select: { courseId: true, sessionFee: true }
         }
       }
     }),
