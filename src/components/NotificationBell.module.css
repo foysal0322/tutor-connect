@@ -51,6 +51,7 @@
   flex-direction: column;
   z-index: 50;
   overflow: hidden;
+  color: var(--text-main, #111827);
 }
 
 /* Dark mode support if applicable */
