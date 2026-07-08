@@ -190,6 +190,10 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                     <td>
                       <strong>{req.course.name}</strong><br/>
                       <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Topic: {req.topic}</span><br/>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Mode: {req.preferredMode}</span><br/>
+                      {req.preferredDateTime && (
+                        <><span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Time: {new Date(req.preferredDateTime).toLocaleString()}</span><br/></>
+                      )}
                       <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Budget: {req.budget} BDT</span>
                     </td>
                     <td>

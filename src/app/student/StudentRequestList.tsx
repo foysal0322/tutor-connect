@@ -198,11 +198,17 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                     <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Faculty</span>
                     <strong>{req.facultyName || 'Any'}</strong>
                   </div>
-                  <div>
+                  <div style={{ flex: '1 1 120px' }}>
                     <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mode</span>
                     <strong>{req.preferredMode}</strong>
                   </div>
-                  <div>
+                  {req.preferredDateTime && (
+                    <div style={{ flex: '1 1 150px' }}>
+                      <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Preferred Time</span>
+                      <strong>{new Date(req.preferredDateTime).toLocaleString()}</strong>
+                    </div>
+                  )}
+                  <div style={{ flex: '1 1 120px' }}>
                     <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Budget</span>
                     <strong>{req.budget} BDT</strong>
                   </div>

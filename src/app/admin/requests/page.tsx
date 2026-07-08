@@ -8,7 +8,9 @@ export default async function AdminRequestsPage() {
       select: {
         id: true,
         topic: true,
+        facultyName: true,
         preferredMode: true,
+        preferredDateTime: true,
         budget: true,
         status: true,
         courseId: true,

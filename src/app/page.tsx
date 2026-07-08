@@ -15,6 +15,7 @@ export default async function Home() {
         id: true,
         topic: true,
         preferredMode: true,
+        preferredDateTime: true,
         budget: true,
         createdAt: true,
         course: {
@@ -96,6 +97,9 @@ export default async function Home() {
                   <p><strong>Topic:</strong> {req.topic}</p>
                   <p><strong>Dept:</strong> {req.course.department?.name || 'N/A'}</p>
                   <p><strong>Mode:</strong> {req.preferredMode}</p>
+                  {req.preferredDateTime && (
+                    <p><strong>Time:</strong> {new Date(req.preferredDateTime).toLocaleString()}</p>
+                  )}
                   <p style={{ marginTop: '1rem', fontSize: '0.85rem' }}>
                     Requested: {new Date(req.createdAt).toLocaleDateString()}
                   </p>

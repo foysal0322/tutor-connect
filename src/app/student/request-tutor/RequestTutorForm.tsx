@@ -110,10 +110,18 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
           </select>
         </div>
 
+        <div className={authStyles.formGroup}>
+          <label className={authStyles.label}>Preferred Date & Time (Optional)</label>
+          <input name="preferredDateTime" type="datetime-local" className={authStyles.input} />
+        </div>
+
         {!selectedTutor && (
           <div className={authStyles.formGroup}>
             <label className={authStyles.label}>Approximate Budget (BDT)</label>
-            <input name="budget" type="number" required min="0" step="50" className={authStyles.input} placeholder="e.g. 500" />
+            <input name="budget" type="number" required min="0" step="any" className={authStyles.input} placeholder="e.g. 500.50" />
+            <span style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem', display: 'block' }}>
+              Note: If an admin assigns a tutor whose session fee differs from your budget, the final amount payable will be the assigned tutor's fee. You will be notified when a tutor is assigned.
+            </span>
           </div>
         )}
 
