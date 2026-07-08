@@ -1,11 +1,19 @@
 import webpush from 'web-push';
 import { prisma } from './prisma';
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:support@campusbridge.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as string,
-  process.env.VAPID_PRIVATE_KEY as string
-);
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:support@campusbridge.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+  } catch (error) {
+    console.error("Failed to set VAPID details:", error);
+  }
+} else {
+  console.warn("VAPID keys are missing. Web push notifications will be disabled.");
+}
 
 export async function createNotification(
   userId: string,
