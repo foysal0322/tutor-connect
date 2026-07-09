@@ -206,10 +206,7 @@ model WithdrawalRequest {
 
 model PaymentInfo {
   id       String   @id @default(cuid())
-  provider String
-  amount   Float
-  sender   String
-  trxId    String   @unique
+  data     String   @default("")
   time     DateTime @default(now())
 
   @@index([time])
