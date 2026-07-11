@@ -12,11 +12,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'NSU Tutor Connect',
+  title: 'nsuOne',
   description: 'Find private tutors for specific courses and topics at North South University.',
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
   openGraph: {
-    title: 'NSU Tutor Connect',
+    title: 'nsuOne',
     description: 'Find private tutors for specific courses and topics at North South University.',
     type: 'website',
   },

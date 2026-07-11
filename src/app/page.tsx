@@ -60,10 +60,10 @@ export default async function Home() {
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Ace Your Courses with <span>NSU Tutor Connect</span>
+            Ace Your Courses with <span>nsuOne</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            Find the perfect private tutor for your specific NSU courses, or share your knowledge and earn as a tutor.
+            Evrything an NSUer needs.
           </p>
           <div className={styles.heroButtons}>
             <Link href="/find-tutor" className="btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}>
