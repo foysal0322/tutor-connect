@@ -27,7 +27,7 @@ export default function NavbarClient({ session }: { session: any }) {
     <nav className={styles.navbar}>
       <div className={`container ${styles.navContainer}`}>
         <Link href="/" className={styles.logo} onClick={() => setIsMobileMenuOpen(false)}>
-          <span className={styles.logoHighlight}>NSU</span> Tutor Connect
+          <span className={styles.logoHighlight}>nsu</span>One
         </Link>
         
         <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>

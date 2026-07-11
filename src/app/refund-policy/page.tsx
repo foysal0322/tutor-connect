@@ -5,7 +5,7 @@ export default function RefundPolicyPage() {
       
       <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
         <p style={{ marginBottom: '1rem' }}>
-          At NSU Tutor Connect, we strive to provide the best tutoring experience. However, we understand that issues may arise.
+          At nsuOne, we strive to provide the best tutoring experience. However, we understand that issues may arise.
         </p>
 
         <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Eligibility for Refund</h3>
