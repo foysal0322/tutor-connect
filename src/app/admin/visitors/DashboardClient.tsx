@@ -49,21 +49,26 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
     setIsRefreshing(false);
   };
 
-  // 1. Parse all raw logs
+  // 1. Parse all raw logs and ignore admin paths
   const parsedLogs = useMemo<ParsedVisitorLog[]>(() => {
-    return logs.map(log => {
-      const parser = new UAParser(log.userAgent || '');
-      const device = parser.getDevice();
-      const deviceType = device.type || (parser.getOS().name === 'iOS' || parser.getOS().name === 'Android' ? 'mobile' : 'desktop');
-      
-      return {
-        ...log,
-        browser: parser.getBrowser().name || 'Unknown',
-        os: parser.getOS().name || 'Unknown',
-        device: deviceType === 'mobile' ? 'Mobile' : deviceType === 'tablet' ? 'Tablet' : 'Desktop',
-        timestamp: new Date(log.createdAt).getTime()
-      };
-    });
+    return logs
+      .filter(log => {
+        const path = log.path || '';
+        return !path.startsWith('/admin') && !path.startsWith('/api/admin');
+      })
+      .map(log => {
+        const parser = new UAParser(log.userAgent || '');
+        const device = parser.getDevice();
+        const deviceType = device.type || (parser.getOS().name === 'iOS' || parser.getOS().name === 'Android' ? 'mobile' : 'desktop');
+        
+        return {
+          ...log,
+          browser: parser.getBrowser().name || 'Unknown',
+          os: parser.getOS().name || 'Unknown',
+          device: deviceType === 'mobile' ? 'Mobile' : deviceType === 'tablet' ? 'Tablet' : 'Desktop',
+          timestamp: new Date(log.createdAt).getTime()
+        };
+      });
   }, [logs]);
 
   // 2. Filter by Date Range and Search
