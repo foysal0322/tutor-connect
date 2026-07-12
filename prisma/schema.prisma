@@ -234,3 +234,13 @@ model PushSubscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model VisitorLog {
+  id        String   @id @default(cuid())
+  ip        String?
+  userAgent String?
+  path      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
