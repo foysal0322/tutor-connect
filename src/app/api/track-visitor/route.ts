@@ -5,6 +5,11 @@ export async function POST(req: Request) {
   try {
     const { path } = await req.json();
     
+    // Ignore admin routes
+    if (path && (path.startsWith('/admin') || path.startsWith('/api/admin'))) {
+      return NextResponse.json({ success: true, ignored: true });
+    }
+
     // Get IP and User-Agent from headers
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'Unknown IP';
     const userAgent = req.headers.get('user-agent') || 'Unknown Agent';
