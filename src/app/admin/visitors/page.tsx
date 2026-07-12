@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import styles from '../../dashboard.module.css';
 import VisitorLogsClient from './VisitorLogsClient';
+import { Users, UserPlus, Activity } from 'lucide-react';
 
 export const metadata = {
   title: 'Visitor Logs | Admin | nsuOne',
@@ -47,23 +48,41 @@ export default async function VisitorLogsPage({
   const uniqueVisitors = new Set(logs.map(log => log.ip)).size;
 
   return (
-    <div className={styles.dashboardContainer}>
-      <header className={styles.header}>
+    <div className={styles.dashboardContainer} style={{ padding: '1rem', background: 'var(--bg-color)' }}>
+      <header style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '12px', color: 'var(--primary)' }}>
+          <Activity size={28} />
+        </div>
         <div>
-          <h2>Visitor Logs</h2>
-          <p>View and filter website visitor traffic</p>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>Visitor Logs</h2>
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem' }}>Monitor and analyze website traffic and visitor activity</p>
         </div>
       </header>
 
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <h3>Total Visits</h3>
-          <p className={styles.statNumber}>{totalVisits}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        
+        {/* Total Visits Card */}
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '50%', color: 'var(--primary)' }}>
+            <Users size={24} />
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Visits</h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>{totalVisits}</p>
+          </div>
         </div>
-        <div className={styles.statCard}>
-          <h3>Unique Visitors</h3>
-          <p className={styles.statNumber}>{uniqueVisitors}</p>
+
+        {/* Unique Visitors Card */}
+        <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '50%', color: '#10b981' }}>
+            <UserPlus size={24} />
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unique Visitors</h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>{uniqueVisitors}</p>
+          </div>
         </div>
+
       </div>
 
       <VisitorLogsClient
