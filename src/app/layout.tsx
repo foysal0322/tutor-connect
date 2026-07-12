@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import NextTopLoader from 'nextjs-toploader';
 import { ToastProvider } from '@/components/ToastProvider';
+import VisitorTracker from '@/components/VisitorTracker';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <ToastProvider>
+          <VisitorTracker />
           <NextTopLoader color="var(--primary)" showSpinner={false} />
           <Navbar />
           <main>

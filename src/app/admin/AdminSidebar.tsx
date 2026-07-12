@@ -157,6 +157,9 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
         <Link href="/admin/expertises" className={styles.navLink} style={{ display: 'flex', alignItems: 'center' }}>
           Offered Courses {getBadge('expertises')}
         </Link>
+        <Link href="/admin/visitors" className={styles.navLink} style={{ display: 'flex', alignItems: 'center' }}>
+          Visitor Logs
+        </Link>
 
         <Link href="/api/auth/signout" className={styles.navLink} style={{ marginTop: 'auto', color: 'var(--error)' }}>
           Sign Out
