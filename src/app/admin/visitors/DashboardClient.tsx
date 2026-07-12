@@ -141,27 +141,36 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
 
   // 4. Compute Chart Data
   const chartData = useMemo(() => {
-    // Trend Data (Group by Day)
-    const trendMap: Record<string, number> = {};
+    // Trend Data (Group by Day using Sets for unique IPs)
+    const trendMap: Record<string, Set<string>> = {};
     filteredLogs.forEach(log => {
       const day = format(log.createdAt, 'MMM dd');
-      trendMap[day] = (trendMap[day] || 0) + 1;
+      if (!trendMap[day]) trendMap[day] = new Set();
+      if (log.ip) trendMap[day].add(log.ip);
     });
-    const trend = Object.keys(trendMap).map(key => ({ date: key, visitors: trendMap[key] })).reverse(); // Assuming logs are descending, wait, we should sort by date.
+    const trend = Object.keys(trendMap).map(key => ({ date: key, visitors: trendMap[key].size }));
     trend.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Device Data
+    // Device/OS/Browser Data (Count once per unique IP in the selected period)
     const deviceMap: Record<string, number> = {};
     const browserMap: Record<string, number> = {};
     const osMap: Record<string, number> = {};
     const pageMap: Record<string, number> = {};
 
+    const uniqueIpsInPeriod = new Set<string>();
+
     filteredLogs.forEach(log => {
-      deviceMap[log.device] = (deviceMap[log.device] || 0) + 1;
-      browserMap[log.browser] = (browserMap[log.browser] || 0) + 1;
-      osMap[log.os] = (osMap[log.os] || 0) + 1;
+      // Top pages counts every page view
       const path = log.path || '/';
       pageMap[path] = (pageMap[path] || 0) + 1;
+
+      // Devices, OS, Browser count unique visitors only
+      if (log.ip && !uniqueIpsInPeriod.has(log.ip)) {
+        uniqueIpsInPeriod.add(log.ip);
+        deviceMap[log.device] = (deviceMap[log.device] || 0) + 1;
+        browserMap[log.browser] = (browserMap[log.browser] || 0) + 1;
+        osMap[log.os] = (osMap[log.os] || 0) + 1;
+      }
     });
 
     const formatPie = (map: Record<string, number>) => Object.keys(map).map(k => ({ name: k, value: map[k] })).sort((a, b) => b.value - a.value);
