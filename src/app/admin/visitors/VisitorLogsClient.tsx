@@ -142,7 +142,7 @@ export default function VisitorLogsClient({ initialStartDate, initialEndDate, lo
                       </div>
                     </td>
                     <td style={{ padding: '1rem 1.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-color)', padding: '0.25rem 0.75rem', borderRadius: '12px', display: 'inline-flex' }}>
+                      <div style={{ alignItems: 'center', gap: '0.5rem', background: 'var(--bg-color)', padding: '0.25rem 0.75rem', borderRadius: '12px', display: 'inline-flex' }}>
                         <MapPin size={14} color="var(--primary)" />
                         <span style={{ fontFamily: 'monospace' }}>{log.ip || 'Unknown'}</span>
                       </div>
