@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { notifyWithdrawRequest } from '@/lib/discord';
 
 export async function submitWithdrawalRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -72,6 +73,17 @@ export async function submitWithdrawalRequest(formData: FormData) {
         status: 'PENDING'
       }
     });
+
+    try {
+      const tutorName = session.user?.name || 'A tutor';
+      await notifyWithdrawRequest({
+        tutorName,
+        amount,
+        method: mfsType
+      });
+    } catch (err) {
+      console.error('Failed to send discord withdraw notification', err);
+    }
 
     revalidatePath('/tutor/earnings');
     return { success: true };

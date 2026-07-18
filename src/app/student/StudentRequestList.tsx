@@ -45,9 +45,13 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
   const handlePaymentSubmit = async (e: React.FormEvent, requestId: string) => {
     e.preventDefault();
+    if (!mfsType || !accountNumber || !amount || !transactionId) {
+      toast.error('Please fill in all payment details.');
+      return;
+    }
     
-    if (!accountNumber || !amount || !transactionId) {
-      toast.error('Please fill in all payment fields.');
+    if (accountNumber.length !== 11) {
+      toast.error('MFS Account Number must be exactly 11 digits.');
       return;
     }
 
@@ -383,9 +387,26 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                       </p>
                     </div>
 
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
-                      Choose your preferred mobile financial service and enter the details.
-                    </p>
+                    <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '1.25rem', borderRadius: '8px' }}>
+                      <p style={{ fontSize: '1.05rem', color: '#9a3412', margin: 0, fontWeight: 600 }}>
+                        Step 1: Send Money to <span 
+                          onClick={() => {
+                            navigator.clipboard.writeText('01785872142');
+                            toast.success('Number copied to clipboard!');
+                          }}
+                          title="Click to copy"
+                          style={{ backgroundColor: '#ffedd5', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '1.2rem', fontWeight: 800, color: '#ea580c', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', margin: '0 0.25rem', border: '1px solid #fdba74', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fed7aa'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffedd5'}
+                        >
+                          01785872142
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </span> (bKash, Nagad, or Rocket)
+                      </p>
+                      <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: '0.5rem 0 0 0' }}>
+                        Step 2: Choose your service below and submit the transaction details.
+                      </p>
+                    </div>
 
                     {/* MFS Providers */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
@@ -442,7 +463,8 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                           required
                           placeholder="e.g. 017XXXXXXXX"
                           value={accountNumber}
-                          onChange={(e) => setAccountNumber(e.target.value)}
+                          maxLength={11}
+                          onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                           style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
                         />
                       </div>

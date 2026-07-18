@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { notifyNewCourseRequest, notifyPaymentSubmission, notifyRefundRequest } from '@/lib/discord';
 
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -56,28 +57,12 @@ export async function submitTutorRequest(formData: FormData) {
       select: { name: true }
     });
     if (course) {
-      const webhookUrl = 'REDACTED_WEBHOOK_URL';
       const studentName = session.user?.name || 'A student';
-      const message = {
-        embeds: [{
-          title: '📚 New Tutor Request Submitted!',
-          color: 5814783,
-          fields: [
-            { name: 'Student', value: studentName, inline: true },
-            { name: 'Course', value: course.name, inline: true },
-            { name: 'Topic', value: topic || 'General Help', inline: true },
-            { name: 'Mode', value: preferredMode, inline: true },
-            { name: 'Schedule', value: preferredDateTime || 'Not specified', inline: true },
-            { name: 'Budget', value: `${budget} BDT`, inline: true }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
-
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message)
+      await notifyNewCourseRequest({
+        courseName: course.name,
+        studentName,
+        topic: topic || 'General Help',
+        budget: budget,
       });
     }
   } catch (err) {
@@ -198,6 +183,19 @@ export async function submitPayment(formData: FormData) {
       }),
     ]);
 
+    // Send discord notification
+    try {
+      const studentName = session.user?.name || 'A student';
+      await notifyPaymentSubmission({
+        amount: amount,
+        method: mfsType,
+        transactionId: sanitizedTransactionId,
+        studentName,
+      });
+    } catch (err) {
+      console.error('Failed to send payment discord notification', err);
+    }
+
     revalidatePath('/student');
     return { success: true };
   } catch (err) {
@@ -278,6 +276,17 @@ export async function submitRefundRequest(formData: FormData) {
         status: 'PENDING'
       }
     });
+
+    // Send discord notification
+    try {
+      const studentName = session.user?.name || 'A student';
+      await notifyRefundRequest({
+        studentName,
+        reason: details.trim(),
+      });
+    } catch (err) {
+      console.error('Failed to send refund discord notification', err);
+    }
 
     revalidatePath('/student');
     return { success: true };
