@@ -27,6 +27,16 @@ export default function ConsultancyPage() {
       }
     });
 
+    try {
+      const { notifyConsultancyRequest } = await import('@/lib/discord');
+      await notifyConsultancyRequest({
+        studentName: student.name,
+        topic,
+      });
+    } catch (err) {
+      console.error('Failed to send consultancy discord notification', err);
+    }
+
     redirect('/consultancy?success=true');
   }
 

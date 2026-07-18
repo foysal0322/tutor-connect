@@ -34,22 +34,21 @@ export default function EarningsClient({
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const val = parseFloat(amount);
-    if (isNaN(val) || val <= 0) {
-      setError('Please enter a valid positive amount.');
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      setError('Please enter a valid amount.');
+      return;
+    }
+    if (parseFloat(amount) < 100) {
+      setError('Minimum withdrawal amount is 100 BDT.');
+      return;
+    }
+    if (!accountNumber || accountNumber.length !== 11) {
+      setError('MFS Account Number must be exactly 11 digits.');
       return;
     }
 
-    if (val > balance) {
+    if (parseFloat(amount) > balance) {
       setError('Requested amount exceeds available balance.');
-      return;
-    }
-
-    if (!accountNumber) {
-      setError('Please provide an MFS account number.');
       return;
     }
 
@@ -197,7 +196,8 @@ export default function EarningsClient({
               label="MFS Account Number"
               placeholder="e.g. 017XXXXXXXX"
               value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
+              maxLength={11}
+              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
             />
 
             <div className="form-group mb-0">

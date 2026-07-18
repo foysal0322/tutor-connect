@@ -53,7 +53,7 @@ export function usePushNotifications() {
 
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
-          console.error("VAPID public key not found");
+          console.warn("VAPID public key not found in environment variables. Push notifications are disabled.");
           return;
       }
 

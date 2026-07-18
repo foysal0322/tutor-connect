@@ -22,26 +22,12 @@ export async function submitSupportTicket(formData: FormData) {
     
     // Optional: send Discord notification for the support ticket
     try {
-      const webhookUrl = 'https://discord.com/api/webhooks/1351086319815888916/GkSxw4XAuJDCeshqZ95GBLYiwwgk7VCv3LFL7qDsPBIqXebwBshikJd8HcJm-9OT0H6B';
-      const embed = {
-        embeds: [{
-          title: `📬 New ${type} Submitted!`,
-          color: type === 'REFUND' ? 15158332 : (type === 'COMPLAINT' ? 15548997 : 5763719),
-          fields: [
-            { name: 'Name', value: name, inline: true },
-            { name: 'Email', value: email, inline: true },
-            { name: 'Contact', value: contact, inline: true },
-            { name: 'Type', value: type, inline: true },
-            { name: 'Message', value: message }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
-
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(embed)
+      const { notifySupportRequest } = await import('@/lib/discord');
+      await notifySupportRequest({
+        name,
+        email,
+        subject: type,
+        message,
       });
     } catch (e) {
       console.error('Failed to send discord webhook for support ticket');

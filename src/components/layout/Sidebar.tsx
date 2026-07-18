@@ -81,13 +81,29 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
 
   const getBadge = (key: string) => {
     if (!isMounted || role !== 'ADMIN' || !currentCounts) return null;
-    const diff = (currentCounts[key] || 0) - (seenCounts[key] || 0);
-    if (diff > 0) {
-      return (
-        <span className="ml-auto bg-danger text-white text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full">
-          {diff}
-        </span>
-      );
+    
+    const actionableKeys = ['requests', 'withdrawals', 'support', 'passwordResets', 'refunds', 'consultancy'];
+    
+    if (actionableKeys.includes(key)) {
+      // For actionable items, show absolute pending count
+      const count = currentCounts[key] || 0;
+      if (count > 0) {
+        return (
+          <span className="ml-auto bg-danger text-white text-[0.7rem] font-bold h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full">
+            {count}
+          </span>
+        );
+      }
+    } else {
+      // For non-actionable items, show difference (new items since last visit)
+      const diff = (currentCounts[key] || 0) - (seenCounts[key] || 0);
+      if (diff > 0) {
+        return (
+          <span className="ml-auto bg-primary text-white text-[0.7rem] font-bold h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full">
+            {diff}
+          </span>
+        );
+      }
     }
     return null;
   };
