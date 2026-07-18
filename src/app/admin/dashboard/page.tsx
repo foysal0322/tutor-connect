@@ -1,11 +1,10 @@
 import { prisma } from '@/lib/prisma';
-import styles from '../../dashboard.module.css';
+import StatCard from '@/components/ui/StatCard';
+import { Users, GraduationCap, BookOpen, Clock } from 'lucide-react';
 
-// Cache dashboard stats for 5 minutes
 export const revalidate = 300;
 
 export default async function AdminDashboard() {
-  // Run all count queries in parallel
   const [totalStudents, totalTutors, totalRequests, pendingRequests] = await Promise.all([
     prisma.user.count({ where: { role: 'STUDENT' } }),
     prisma.user.count({ where: { role: 'TUTOR' } }),
@@ -13,24 +12,18 @@ export default async function AdminDashboard() {
     prisma.tutorRequest.count({ where: { status: 'PENDING' } }),
   ]);
   
-  const stats = [
-    { label: 'Total Students', value: totalStudents },
-    { label: 'Total Tutors', value: totalTutors },
-    { label: 'Total Requests', value: totalRequests },
-    { label: 'Pending Requests', value: pendingRequests },
-  ];
-
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>Dashboard Overview</h1>
+    <div className="flex flex-col gap-6">
+      <div className="card max-w-3xl mb-6">
+        <h2 className="text-xl mb-2">Dashboard Overview</h2>
+        <p className="text-muted">Welcome to the nsuOne admin portal.</p>
+      </div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        {stats.map((s, i) => (
-          <div key={i} className={styles.card} style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>{s.value}</div>
-            <div style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{s.label}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Students" value={totalStudents} icon={<GraduationCap size={20} />} />
+        <StatCard title="Total Tutors" value={totalTutors} icon={<Users size={20} />} />
+        <StatCard title="Total Requests" value={totalRequests} icon={<BookOpen size={20} />} />
+        <StatCard title="Pending Requests" value={pendingRequests} icon={<Clock size={20} />} />
       </div>
     </div>
   );

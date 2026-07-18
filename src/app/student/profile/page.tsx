@@ -8,20 +8,31 @@ import { redirect } from 'next/navigation';
 
 export default async function StudentProfilePage() {
   const session = await getServerSession(authOptions);
+  console.log('StudentProfilePage - Session:', JSON.stringify(session, null, 2));
 
   if (!session || (session.user as any).role !== 'STUDENT') {
     redirect('/auth/student-signin?callbackUrl=/student/profile');
   }
 
+  const userId = (session.user as any).id;
+  console.log('StudentProfilePage - Looking up user with ID:', userId);
+
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id }
+    where: { id: userId }
   });
+
+  console.log('StudentProfilePage - User found:', user ? user.email : 'null');
+
+  if (!user) {
+    console.log('StudentProfilePage - User is null, redirecting to force-signout');
+    redirect('/auth/force-signout');
+  }
   
   const departments = await getDepartments();
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>My Profile</h1>
+    <div className="max-w-2xl">
+      <h1 className="mb-6">My Profile</h1>
       <ProfileForm user={user} departments={departments} />
     </div>
   );

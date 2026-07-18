@@ -1,0 +1,177 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  User, 
+  BookOpen, 
+  GraduationCap, 
+  Calendar, 
+  MessageSquare, 
+  Bell, 
+  Settings, 
+  LogOut,
+  CreditCard,
+  Briefcase,
+  DollarSign,
+  Users,
+  Eye,
+  LifeBuoy,
+  ShieldAlert,
+  Key
+} from 'lucide-react';
+import styles from './layout.module.css';
+
+type SidebarProps = {
+  role: 'ADMIN' | 'STUDENT' | 'TUTOR';
+  isOpen: boolean;
+  onClose: () => void;
+  currentCounts?: any;
+};
+
+export default function Sidebar({ role, isOpen, onClose, currentCounts }: SidebarProps) {
+  const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+  const [seenCounts, setSeenCounts] = useState<any>({});
+
+  // Badge Logic for Admin
+  useEffect(() => {
+    if (role !== 'ADMIN' || !currentCounts) return;
+    
+    const saved = localStorage.getItem('adminSeenCounts');
+    if (saved) {
+      try {
+        setSeenCounts(JSON.parse(saved));
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      setSeenCounts(currentCounts);
+      localStorage.setItem('adminSeenCounts', JSON.stringify(currentCounts));
+    }
+    setIsMounted(true);
+  }, [currentCounts, role]);
+
+  useEffect(() => {
+    if (role !== 'ADMIN' || !currentCounts) return;
+
+    let keyToUpdate: string | null = null;
+    if (pathname === '/admin/requests') keyToUpdate = 'requests';
+    if (pathname === '/admin/withdrawals') keyToUpdate = 'withdrawals';
+    if (pathname === '/admin/users') keyToUpdate = 'users';
+    if (pathname === '/admin/support') keyToUpdate = 'support';
+    if (pathname === '/admin/departments') keyToUpdate = 'departments';
+    if (pathname === '/admin/courses') keyToUpdate = 'courses';
+    if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
+    if (pathname === '/admin/password-resets') keyToUpdate = 'passwordResets';
+
+    if (keyToUpdate) {
+      setSeenCounts((prev: any) => {
+        if (prev[keyToUpdate as string] !== currentCounts[keyToUpdate as string]) {
+          const updated = { ...prev, [keyToUpdate as string]: currentCounts[keyToUpdate as string] };
+          localStorage.setItem('adminSeenCounts', JSON.stringify(updated));
+          return updated;
+        }
+        return prev;
+      });
+    }
+  }, [pathname, currentCounts, role]);
+
+  const getBadge = (key: string) => {
+    if (!isMounted || role !== 'ADMIN' || !currentCounts) return null;
+    const diff = (currentCounts[key] || 0) - (seenCounts[key] || 0);
+    if (diff > 0) {
+      return (
+        <span className="ml-auto bg-danger text-white text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full">
+          {diff}
+        </span>
+      );
+    }
+    return null;
+  };
+
+  const getLinks = () => {
+    switch (role) {
+      case 'STUDENT':
+        return [
+          { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
+          { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
+          { name: 'My Requests', href: '/student/request-tutor', icon: Calendar },
+          { name: 'Payments', href: '/student/payments', icon: CreditCard },
+          { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
+          { name: 'Profile', href: '/student/profile', icon: User },
+        ];
+      case 'TUTOR':
+        return [
+          { name: 'Dashboard', href: '/tutor', icon: LayoutDashboard },
+          { name: 'My Expertise', href: '/tutor/expertise', icon: Briefcase },
+          { name: 'Earnings', href: '/tutor/earnings', icon: DollarSign },
+          { name: 'Profile', href: '/tutor/profile', icon: User },
+        ];
+      case 'ADMIN':
+        return [
+          { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+          { name: 'Tutor Requests', href: '/admin/requests', icon: BookOpen, badgeKey: 'requests' },
+          { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
+          { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
+          { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
+          { name: 'Password Resets', href: '/admin/password-resets', icon: Key, badgeKey: 'passwordResets' },
+          { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
+          { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },
+          { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },
+          { name: 'Visitors', href: '/admin/visitors', icon: Eye },
+          { name: 'Profile', href: '/admin/profile', icon: User },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const links = getLinks();
+
+  return (
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      <div className={styles.sidebarHeader}>
+        <div className="flex items-center gap-2">
+          <GraduationCap className="text-primary" size={28} />
+          <span>nsuOne</span>
+        </div>
+      </div>
+      
+      <nav className={styles.sidebarNav}>
+        {links.map((link) => {
+          const Icon = link.icon;
+          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+          const isExactActive = pathname === link.href;
+          
+          const isCurrent = link.href.split('/').length > 2 ? isActive : isExactActive;
+
+          return (
+            <Link 
+              key={link.name} 
+              href={link.href}
+              onClick={() => {
+                if (window.innerWidth <= 1024) onClose();
+              }}
+              className={`${styles.navItem} ${isCurrent ? styles.active : ''}`}
+              suppressHydrationWarning
+            >
+              <Icon size={20} className={styles.navItemIcon} />
+              {link.name}
+              {(link as any).badgeKey && getBadge((link as any).badgeKey)}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className={styles.sidebarFooter}>
+        <Link href="/auth/force-signout" className={styles.navItem}>
+          <LogOut size={20} className={styles.navItemIcon} />
+          Logout
+        </Link>
+      </div>
+    </aside>
+  );
+}

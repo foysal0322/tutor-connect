@@ -5,7 +5,8 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
-import styles from '../auth.module.css';
+import FloatingInput from '@/components/ui/FloatingInput';
+import { LogIn } from 'lucide-react';
 
 export default function TutorSignInForm() {
   const router = useRouter();
@@ -41,32 +42,33 @@ export default function TutorSignInForm() {
   }
 
   return (
-    <div className={`animate-fade-in ${styles.authContainer}`}>
-      <div className={styles.authCard}>
-        <h2 className={styles.authTitle}>Tutor Sign In</h2>
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-gray-50/50">
+      <div className="card w-full max-w-md p-8 sm:p-10 shadow-lg border-t-4 border-t-primary">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
+            <LogIn size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-main">Tutor Sign In</h2>
+          <p className="text-muted text-sm mt-2">Welcome back! Please enter your details.</p>
+        </div>
         
-        {registered && <div style={{ background: '#d1fae5', color: '#047857', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>Registration successful! Please sign in.</div>}
-        {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{error}</div>}
+        {registered && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">Registration successful! Please sign in.</div>}
+        {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Email or NSU ID</label>
-            <input name="identifier" type="text" required className={styles.input} />
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <FloatingInput name="identifier" type="text" label="Email or NSU ID" required />
+          <FloatingInput name="password" type="password" label="Password" required />
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
-            <input name="password" type="password" required className={styles.input} />
-          </div>
-
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-2" disabled={loading}>
             {loading ? <><Spinner size={18} /> Signing in...</> : 'Sign In'}
           </button>
         </form>
 
-        <div className={styles.authLinks}>
-          <Link href="/auth/forgot-password" style={{ display: 'block', marginBottom: '1rem' }}>Forgot Password?</Link>
-          Don't have an account? <Link href="/auth/tutor-register">Register Here</Link>
+        <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">
+          <Link href="/auth/forgot-password" className="text-primary hover:text-primary-hover font-semibold transition-colors">Forgot Password?</Link>
+          <div className="text-muted">
+            Don't have an account? <Link href="/auth/tutor-register" className="text-primary hover:text-primary-hover font-semibold transition-colors ml-1">Register Here</Link>
+          </div>
         </div>
       </div>
     </div>

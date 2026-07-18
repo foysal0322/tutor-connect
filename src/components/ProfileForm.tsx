@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { updateUserProfile } from '@/app/actions/user';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 export default function ProfileForm({ 
   user, 
@@ -38,16 +39,16 @@ export default function ProfileForm({
   }
 
   return (
-    <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', maxWidth: '600px' }}>
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{error}</div>}
-      {success && <div style={{ background: '#d1fae5', color: '#047857', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>Profile updated successfully!</div>}
+    <div className="card max-w-2xl w-full">
+      {error && <div className="mb-6 p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover">{error}</div>}
+      {success && <div className="mb-6 p-4 bg-success-light text-success-hover rounded-md font-medium border border-success-hover">Profile updated successfully!</div>}
 
-      <form action={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form action={handleSubmit} className="flex flex-col gap-4">
         
         {isAdmin && (
-          <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Role</label>
-            <select name="role" defaultValue={user.role} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}>
+          <div className="form-group mb-0">
+            <label className="form-label">Role</label>
+            <select name="role" defaultValue={user.role} className="form-select">
               <option value="STUDENT">Student</option>
               <option value="TUTOR">Tutor</option>
               <option value="ADMIN">Admin</option>
@@ -55,72 +56,74 @@ export default function ProfileForm({
           </div>
         )}
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Name</label>
-          <input name="name" type="text" defaultValue={user.name} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FloatingInput name="name" label="Full Name" defaultValue={user.name} required />
+          <FloatingInput name="nsuId" label="NSU ID" defaultValue={user.nsuId} required />
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>NSU ID</label>
-          <input name="nsuId" type="text" defaultValue={user.nsuId} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FloatingInput name="email" type="email" label="Email Address" defaultValue={user.email} required />
+          <FloatingInput name="contact" label="Contact Number" defaultValue={user.contact} required />
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Email</label>
-          <input name="email" type="email" defaultValue={user.email} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group mb-0">
+            <label className="form-label text-muted">Gender</label>
+            <select name="gender" defaultValue={user.gender || ''} className="form-select">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Contact Number</label>
-          <input name="contact" type="text" defaultValue={user.contact} required style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Gender</label>
-          <select name="gender" defaultValue={user.gender || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}>
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Department</label>
-          <select name="departmentId" defaultValue={user.departmentId || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}>
-            <option value="">Select Department</option>
-            {departments.map(dept => (
-              <option key={dept.id} value={dept.id}>{dept.name}</option>
-            ))}
-          </select>
+          <div className="form-group mb-0">
+            <label className="form-label text-muted">Department</label>
+            <select name="departmentId" defaultValue={user.departmentId || ''} className="form-select">
+              <option value="">Select Department</option>
+              {departments.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {(user.role === 'TUTOR' || (isAdmin && user.role === 'TUTOR')) && (
-          <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>CGPA</label>
-            <input name="cgpa" type="number" step="0.01" min="0" max="4.0" defaultValue={user.cgpa || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', marginBottom: '0.5rem' }} />
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              <input type="checkbox" name="hideCgpa" defaultChecked={user.hideCgpa} />
+          <div className="form-group mb-0">
+            <FloatingInput 
+              name="cgpa" 
+              type="number" 
+              step="0.01" 
+              min="0" 
+              max="4.0" 
+              label="CGPA" 
+              defaultValue={user.cgpa || ''} 
+            />
+            <label className="flex items-center gap-2 mt-2 cursor-pointer text-sm text-muted hover:text-main transition-colors">
+              <input type="checkbox" name="hideCgpa" defaultChecked={user.hideCgpa} className="w-4 h-4 rounded border-color text-primary focus:ring-primary" />
               Hide my CGPA from students
             </label>
           </div>
         )}
 
-        <hr style={{ margin: '1rem 0', borderColor: 'var(--border-color)' }} />
-        <h4 style={{ marginBottom: '0.5rem' }}>Change Password (Optional)</h4>
+        <div className="my-2 border-t border-color"></div>
+        <h4 className="text-lg mb-2">Change Password <span className="text-muted text-sm font-normal">(Optional)</span></h4>
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>New Password</label>
-          <input name="password" type="password" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FloatingInput name="password" type="password" label="New Password" />
+          <FloatingInput name="confirmPassword" type="password" label="Confirm New Password" />
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Confirm New Password</label>
-          <input name="confirmPassword" type="password" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-        </div>
-
-        <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
-          {loading ? 'Updating...' : 'Update Profile'}
+        <button type="submit" className="btn-primary mt-4 w-full md:w-auto self-start" disabled={loading}>
+          {loading ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Updating...
+            </>
+          ) : 'Update Profile'}
         </button>
       </form>
     </div>

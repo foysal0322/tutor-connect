@@ -12,6 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.5rem; /* Add gap so logo and navLinks never touch */
 }
 
 .logo {
@@ -27,15 +28,16 @@
 
 .navLinks {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem; /* Reduced from 1.5rem to fit more links */
   align-items: center;
 }
 
 .navLink {
   font-weight: 500;
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem; /* Reduced slightly */
   position: relative;
+  white-space: nowrap; /* Prevent awkward wrapping */
 }
 
 .navLink:hover {
@@ -57,10 +59,61 @@
   width: 100%;
 }
 
+.disabledLink {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.disabledLink:hover {
+  color: var(--text-muted);
+}
+.disabledLink:hover::after {
+  width: 0;
+}
+
+.badgeComingSoon {
+  font-size: 0.6rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  padding: 0.15rem 0.3rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  margin-left: 0.2rem;
+}
+
+.navLinkHot {
+  font-weight: 700;
+  color: #D97706; /* Amber-600 */
+  background-color: #FEF3C7; /* Amber-100 */
+  padding: 0.4rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #F59E0B; /* Amber-500 */
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.navLinkHot:hover {
+  background-color: #FDE68A; /* Amber-200 */
+  transform: translateY(-1px);
+}
+
 .authButtonsDesktop {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem; /* Reduced from 1rem to fit on smaller screens */
   align-items: center;
+  white-space: nowrap;
+}
+
+.authButtonsDesktop a {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
 }
 
 .authButtonsMobile {

@@ -23,8 +23,8 @@ export default async function AdminExpertisesPage() {
   });
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>Offered Courses</h1>
+    <div className="max-w-full">
+      <h1 className="mb-6">Offered Courses</h1>
       <ExpertiseManager expertises={expertises} />
     </div>
   );

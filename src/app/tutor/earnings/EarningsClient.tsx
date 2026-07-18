@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { submitWithdrawalRequest } from './actions';
-import styles from '../../dashboard.module.css';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 interface EarningsClientProps {
   completedRequests: any[];
@@ -23,7 +23,6 @@ export default function EarningsClient({
   const [withdrawn, setWithdrawn] = useState(totalWithdrawn);
   const [payouts, setPayouts] = useState(withdrawalRequests);
   
-  // Withdrawal Form States
   const [mfsType, setMfsType] = useState<'BKASH' | 'NAGAD' | 'ROCKET'>('BKASH');
   const [transferType, setTransferType] = useState<'SEND_MONEY' | 'PAYMENT'>('SEND_MONEY');
   const [amount, setAmount] = useState('');
@@ -69,7 +68,6 @@ export default function EarningsClient({
         const fee = val * 0.05;
         const net = val * 0.95;
         
-        // Add to local state list
         const newRequest = {
           id: `temp-${Date.now()}`,
           amount: val,
@@ -86,95 +84,81 @@ export default function EarningsClient({
         setBalance(prev => prev - val);
         setWithdrawn(prev => prev + val);
         
-        // Reset form
         setAmount('');
         setAccountNumber('');
       }
     });
   };
 
-  const getMfsColor = (type: string) => {
-    if (type === 'BKASH') return '#d1417a';
-    if (type === 'NAGAD') return '#f67221';
-    return '#8c2a8c';
-  };
-
   const calculatedFee = amount ? parseFloat(amount) * 0.05 : 0;
   const calculatedNet = amount ? parseFloat(amount) * 0.95 : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="flex flex-col gap-6">
       
       {/* Dynamic Widgets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-        <div className={styles.card} style={{ borderTop: '5px solid var(--primary)' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Completed Earnings</span>
-          <h2 style={{ fontSize: '2rem', margin: '0.25rem 0 0 0', color: 'var(--text-main)' }}>{totalEarned.toFixed(2)} BDT</h2>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Accumulated from completed sessions</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card border-t-4 border-primary">
+          <span className="text-sm text-muted font-semibold">Total Completed Earnings</span>
+          <h2 className="text-3xl mt-1 text-primary">{totalEarned.toFixed(2)} BDT</h2>
+          <p className="mt-2 text-xs text-muted">Accumulated from completed sessions</p>
         </div>
-        <div className={styles.card} style={{ borderTop: '5px solid #a855f7' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Withdrawn / Pending</span>
-          <h2 style={{ fontSize: '2rem', margin: '0.25rem 0 0 0', color: 'var(--text-main)' }}>{withdrawn.toFixed(2)} BDT</h2>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Includes pending request amounts</p>
+        <div className="card border-t-4 border-accent">
+          <span className="text-sm text-muted font-semibold">Total Withdrawn / Pending</span>
+          <h2 className="text-3xl mt-1 text-accent">{withdrawn.toFixed(2)} BDT</h2>
+          <p className="mt-2 text-xs text-muted">Includes pending request amounts</p>
         </div>
-        <div className={styles.card} style={{ borderTop: '5px solid var(--success)', background: '#f0fdf4' }}>
-          <span style={{ fontSize: '0.85rem', color: '#15803d', fontWeight: 600 }}>Available Balance</span>
-          <h2 style={{ fontSize: '2rem', margin: '0.25rem 0 0 0', color: '#166534' }}>{balance.toFixed(2)} BDT</h2>
-          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: '#166534' }}>Amount eligible for instant withdrawal</p>
+        <div className="card border-t-4 border-success bg-success-light">
+          <span className="text-sm text-success-hover font-semibold">Available Balance</span>
+          <h2 className="text-3xl mt-1 text-success-hover">{balance.toFixed(2)} BDT</h2>
+          <p className="mt-2 text-xs text-success-hover">Amount eligible for instant withdrawal</p>
         </div>
       </div>
 
       {error && (
-        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', border: '1px solid #fca5a5' }}>
+        <div className="p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover">
           {error}
         </div>
       )}
       {success && (
-        <div style={{ background: '#d1fae5', color: '#065f46', padding: '1rem', borderRadius: '8px', border: '1px solid #6ee7b7' }}>
+        <div className="p-4 bg-success-light text-success-hover rounded-md font-medium border border-success-hover">
           {success}
         </div>
       )}
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Withdrawal Request Form Card */}
-        <div className={styles.card} style={{ height: 'fit-content' }}>
-          <h3 style={{ marginTop: 0, fontSize: '1.25rem' }}>Request Withdrawal</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+        <div className="card h-fit lg:col-span-1">
+          <h3 className="text-xl mb-2">Request Withdrawal</h3>
+          <p className="text-sm text-muted mb-6">
             Submit a withdrawal request to transfer available earnings to your MFS account.
           </p>
 
-          <form onSubmit={handleWithdrawSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Amount */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>Withdrawal Amount (BDT)</label>
-              <input
-                type="number"
-                required
-                min="100"
-                step="50"
-                placeholder="Minimum 100 BDT"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}
-              />
-            </div>
+          <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
+            <FloatingInput
+              name="amount"
+              type="number"
+              min="100"
+              step="50"
+              required
+              label="Withdrawal Amount (Min 100 BDT)"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
 
-            {/* MFS Providers */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>MFS Provider</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+            <div className="form-group mb-0">
+              <label className="form-label">MFS Provider</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
                 <button
                   type="button"
                   onClick={() => setMfsType('BKASH')}
+                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'BKASH' ? 'shadow-md text-white' : 'bg-white'}`}
                   style={{
-                    padding: '0.6rem',
-                    borderRadius: '8px',
-                    border: mfsType === 'BKASH' ? '2px solid #d1417a' : '1px solid var(--border-color)',
-                    background: mfsType === 'BKASH' ? '#fdf2f7' : 'white',
-                    color: mfsType === 'BKASH' ? '#d1417a' : 'var(--text-main)',
-                    fontWeight: 600
+                    backgroundColor: mfsType === 'BKASH' ? '#E2136E' : 'white',
+                    borderColor: mfsType === 'BKASH' ? '#E2136E' : 'var(--border-color)',
+                    color: mfsType === 'BKASH' ? 'white' : '#E2136E'
                   }}
                 >
                   bKash
@@ -182,13 +166,11 @@ export default function EarningsClient({
                 <button
                   type="button"
                   onClick={() => setMfsType('NAGAD')}
+                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'NAGAD' ? 'shadow-md text-white' : 'bg-white'}`}
                   style={{
-                    padding: '0.6rem',
-                    borderRadius: '8px',
-                    border: mfsType === 'NAGAD' ? '2px solid #f67221' : '1px solid var(--border-color)',
-                    background: mfsType === 'NAGAD' ? '#fff7ed' : 'white',
-                    color: mfsType === 'NAGAD' ? '#f67221' : 'var(--text-main)',
-                    fontWeight: 600
+                    backgroundColor: mfsType === 'NAGAD' ? '#F58220' : 'white',
+                    borderColor: mfsType === 'NAGAD' ? '#F58220' : 'var(--border-color)',
+                    color: mfsType === 'NAGAD' ? 'white' : '#F58220'
                   }}
                 >
                   Nagad
@@ -196,13 +178,11 @@ export default function EarningsClient({
                 <button
                   type="button"
                   onClick={() => setMfsType('ROCKET')}
+                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'ROCKET' ? 'shadow-md text-white' : 'bg-white'}`}
                   style={{
-                    padding: '0.6rem',
-                    borderRadius: '8px',
-                    border: mfsType === 'ROCKET' ? '2px solid #8c2a8c' : '1px solid var(--border-color)',
-                    background: mfsType === 'ROCKET' ? '#faf5ff' : 'white',
-                    color: mfsType === 'ROCKET' ? '#8c2a8c' : 'var(--text-main)',
-                    fontWeight: 600
+                    backgroundColor: mfsType === 'ROCKET' ? '#89288f' : 'white',
+                    borderColor: mfsType === 'ROCKET' ? '#89288f' : 'var(--border-color)',
+                    color: mfsType === 'ROCKET' ? 'white' : '#89288f'
                   }}
                 >
                   Rocket
@@ -210,26 +190,22 @@ export default function EarningsClient({
               </div>
             </div>
 
-            {/* Account Number */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>MFS Account Number</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. 017XXXXXXXX"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}
-              />
-            </div>
+            <FloatingInput
+              name="accountNumber"
+              type="text"
+              required
+              label="MFS Account Number"
+              placeholder="e.g. 017XXXXXXXX"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+            />
 
-            {/* Transfer Type */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem', fontWeight: 600 }}>Transfer Type</label>
+            <div className="form-group mb-0">
+              <label className="form-label">Transfer Type</label>
               <select
                 value={transferType}
                 onChange={(e) => setTransferType(e.target.value as any)}
-                style={{ width: '100%', padding: '0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'white' }}
+                className="form-select"
               >
                 <option value="SEND_MONEY">Send Money</option>
                 <option value="PAYMENT">Payment</option>
@@ -238,50 +214,49 @@ export default function EarningsClient({
 
             {/* Breakdown section */}
             {amount && (
-              <div style={{ background: '#f8fafc', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-                <p style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 0.4rem 0' }}>
+              <div className="bg-primary-light p-4 rounded-md border border-primary text-sm text-primary">
+                <div className="flex justify-between mb-1">
                   <span>Withdrawal Amount:</span>
                   <span>{parseFloat(amount).toFixed(2)} BDT</span>
-                </p>
-                <p style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 0.4rem 0', color: 'var(--text-muted)' }}>
+                </div>
+                <div className="flex justify-between mb-1 text-primary">
                   <span>Platform Fee (10%):</span>
                   <span>-{(parseFloat(amount) * 0.1).toFixed(2)} BDT</span>
-                </p>
-                <p style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 0.4rem 0', color: 'var(--success)' }}>
+                </div>
+                <div className="flex justify-between mb-2 text-success-hover font-medium">
                   <span>Promo Discount (50% Off):</span>
                   <span>+{(parseFloat(amount) * 0.05).toFixed(2)} BDT</span>
-                </p>
-                <hr style={{ border: '0', borderTop: '1px solid var(--border-color)', margin: '0.5rem 0' }} />
-                <p style={{ display: 'flex', justifyContent: 'space-between', margin: 0, fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>
-                  <span>Net Payout (deducting 5% fee):</span>
+                </div>
+                <div className="border-t border-primary/30 my-2"></div>
+                <div className="flex justify-between font-bold text-base">
+                  <span>Net Payout:</span>
                   <span>{calculatedNet.toFixed(2)} BDT</span>
-                </p>
+                </div>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isPending || balance <= 0}
-              className="btn-primary"
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', display: 'flex', justifyContent: 'center' }}
+              className="btn-primary w-full justify-center mt-2"
             >
               {isPending ? 'Submitting...' : (balance <= 0 ? 'No balance available' : 'Request Withdrawal')}
             </button>
           </form>
         </div>
 
-        {/* Withdrawal Payout History Table */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Tables Column */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
           
-          <div className={styles.card}>
-            <h3 style={{ marginTop: 0, fontSize: '1.25rem', marginBottom: '1rem' }}>Withdrawal Payout History</h3>
+          <div className="card">
+            <h3 className="text-xl mb-4">Withdrawal Payout History</h3>
             
             {payouts.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No withdrawal requests found.</p>
+              <p className="text-muted text-sm text-center py-4">No withdrawal requests found.</p>
             ) : (
-              <div className={styles.tableResponsive} style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                <table className={styles.table}>
-                  <thead>
+              <div className="data-grid-container max-h-[350px] overflow-y-auto">
+                <table className="data-grid hidden.md:table">
+                  <thead className="sticky top-0 bg-white">
                     <tr>
                       <th>Amount</th>
                       <th>Method</th>
@@ -295,21 +270,24 @@ export default function EarningsClient({
                       <tr key={w.id}>
                         <td>{w.amount} BDT</td>
                         <td>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: getMfsColor(w.mfsType) }}>
+                          <span 
+                            style={{ 
+                              color: w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f',
+                              backgroundColor: w.mfsType === 'BKASH' ? '#fdf2f7' : w.mfsType === 'NAGAD' ? '#fff7ed' : '#f9f5fa',
+                              border: `1px solid ${w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f'}` 
+                            }} 
+                            className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
+                          >
                             {w.mfsType}
                           </span>
                         </td>
-                        <td>{w.accountNumber}<br/><span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{w.transferType}</span></td>
+                        <td>
+                          {w.accountNumber}<br/>
+                          <span className="text-xs text-muted">{w.transferType}</span>
+                        </td>
                         <td><strong>{w.netAmount.toFixed(2)} BDT</strong></td>
                         <td>
-                          <span style={{
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            backgroundColor: w.status === 'PENDING' ? '#e0e7ff' : (w.status === 'APPROVED' ? '#d1fae5' : '#fee2e2'),
-                            color: w.status === 'PENDING' ? '#4f46e5' : (w.status === 'APPROVED' ? '#047857' : '#ef4444')
-                          }}>
+                          <span className={`badge ${w.status === 'PENDING' ? 'badge-info' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
                             {w.status}
                           </span>
                         </td>
@@ -317,20 +295,55 @@ export default function EarningsClient({
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile View */}
+                <div className="md:hidden flex flex-col gap-4 p-4">
+                  {payouts.map(w => (
+                    <div key={w.id} className="card p-3 flex flex-col gap-2">
+                      <div className="flex justify-between items-center border-b border-color pb-2">
+                        <span className="font-semibold">{w.amount} BDT</span>
+                        <span className={`badge ${w.status === 'PENDING' ? 'badge-info' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
+                          {w.status}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted">Net Payout</span>
+                        <strong>{w.netAmount.toFixed(2)} BDT</strong>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted">Provider</span>
+                        <span 
+                          style={{ 
+                            color: w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f',
+                            backgroundColor: w.mfsType === 'BKASH' ? '#fdf2f7' : w.mfsType === 'NAGAD' ? '#fff7ed' : '#f9f5fa',
+                            border: `1px solid ${w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f'}` 
+                          }} 
+                          className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
+                        >
+                          {w.mfsType}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted">Account</span>
+                        <span>{w.accountNumber}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {/* Earnings / Completed Tuition Sessions */}
-          <div className={styles.card}>
-            <h3 style={{ marginTop: 0, fontSize: '1.25rem', marginBottom: '1rem' }}>Tuition Earnings Log</h3>
+          <div className="card">
+            <h3 className="text-xl mb-4">Tuition Earnings Log</h3>
             
             {completedRequests.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No completed sessions found.</p>
+              <p className="text-muted text-sm text-center py-4">No completed sessions found.</p>
             ) : (
-              <div className={styles.tableResponsive} style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                <table className={styles.table}>
-                  <thead>
+              <div className="data-grid-container max-h-[350px] overflow-y-auto">
+                <table className="data-grid hidden.md:table">
+                  <thead className="sticky top-0 bg-white">
                     <tr>
                       <th>Student</th>
                       <th>Course</th>
@@ -344,19 +357,37 @@ export default function EarningsClient({
                         <td><strong>{r.student.name}</strong></td>
                         <td>{r.course.name}</td>
                         <td>{r.topic}</td>
-                        <td><strong style={{ color: 'var(--success)' }}>+{r.budget} BDT</strong></td>
+                        <td><strong className="text-success-hover">+{r.budget} BDT</strong></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                
+                {/* Mobile View */}
+                <div className="md:hidden flex flex-col gap-4 p-4">
+                  {completedRequests.map(r => (
+                    <div key={r.id} className="card p-3 flex flex-col gap-2">
+                      <div className="flex justify-between items-center border-b border-color pb-2">
+                        <span className="font-semibold">{r.course.name}</span>
+                        <strong className="text-success-hover">+{r.budget} BDT</strong>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted">Student</span>
+                        <span>{r.student.name}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted">Topic</span>
+                        <span>{r.topic}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
         </div>
-
       </div>
-      
     </div>
   );
 }

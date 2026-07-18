@@ -2,8 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import styles from '../dashboard.module.css';
-import AdminSidebar from './AdminSidebar';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -27,11 +26,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const currentCounts = { requests, withdrawals, users, support, departments, courses, expertises, passwordResets };
 
   return (
-    <div className={styles.dashboardContainer}>
-      <AdminSidebar currentCounts={currentCounts} userName={session.user?.name} />
-      <main className={styles.mainContent}>
-        {children}
-      </main>
-    </div>
+    <DashboardLayout 
+      role="ADMIN" 
+      userName={session.user?.name}
+      userEmail={session.user?.email}
+      currentCounts={currentCounts}
+    >
+      {children}
+    </DashboardLayout>
   );
 }

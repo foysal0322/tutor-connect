@@ -72,3 +72,93 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+/* Split Screen Layout for Registration */
+.splitContainer {
+  display: flex;
+  min-height: calc(100vh - 80px);
+}
+
+.formPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--bg-color);
+}
+
+.formContent {
+  width: 100%;
+  max-width: 32rem; /* max-w-lg */
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border-top: 4px solid var(--primary);
+}
+
+.graphicPanel {
+  display: none;
+  flex: 1;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .graphicPanel {
+    display: flex;
+  }
+}
+
+.graphicContent {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: white;
+  max-width: 28rem;
+}
+
+.graphicTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.graphicText {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+/* Decorative Blobs */
+.blobTop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30rem;
+  height: 30rem;
+  background-color: white;
+  opacity: 0.1;
+  border-radius: 9999px;
+  filter: blur(60px);
+  transform: translate(50%, -50%);
+}
+
+.blobBottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 30rem;
+  height: 30rem;
+  background-color: var(--accent);
+  opacity: 0.2;
+  border-radius: 9999px;
+  filter: blur(60px);
+  transform: translate(-50%, 50%);
+}

@@ -4,7 +4,7 @@ import { prisma } from './prisma';
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   try {
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || 'mailto:support@campusbridge.com',
+      process.env.VAPID_SUBJECT || 'mailto:support@nsuone.com',
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY
     );

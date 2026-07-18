@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import styles from '../../dashboard.module.css';
 import AssignTutorForm from './AssignTutorForm';
 import { verifyPaymentAction, verifyRefundAction } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import { useDebounce } from '@/hooks/useDebounce';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 export default function RequestManager({ initialRequests, tutors }: { initialRequests: any[], tutors: any[] }) {
   const [requests, setRequests] = useState(initialRequests);
@@ -114,57 +114,80 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
     const hasApprovedRefund = req.refundRequests && req.refundRequests.some((r: any) => r.status === 'APPROVED');
     const hasRejectedRefund = req.refundRequests && req.refundRequests.some((r: any) => r.status === 'REJECTED');
 
-    if (hasPendingRefund) return { label: 'Refund Requested', bg: '#fee2e2', color: '#ef4444' };
-    if (hasApprovedRefund) return { label: 'Refunded (Cancelled)', bg: '#f1f5f9', color: '#475569' };
-    if (hasRejectedRefund) return { label: 'Active (Refund Rejected)', bg: '#ffedd5', color: '#ea580c' };
+    if (hasPendingRefund) return 'badge-danger';
+    if (hasApprovedRefund) return 'badge-secondary';
+    if (hasRejectedRefund) return 'badge-warning';
 
     switch (req.status) {
       case 'PENDING':
-        return { label: 'Pending', bg: '#fef3c7', color: '#d97706' };
+        return 'badge-warning';
       case 'MATCHED':
-        return { label: 'Matched (Unpaid)', bg: '#dbeafe', color: '#1d4ed8' };
+        return 'badge-info';
       case 'PAYMENT_PENDING':
-        return { label: 'Payment Verifying', bg: '#e0e7ff', color: '#4f46e5' };
+        return 'badge-primary';
       case 'ACCEPTED':
-        return { label: 'Active Session', bg: '#d1fae5', color: '#059669' };
+        return 'badge-success';
       case 'COMPLETED':
-        return { label: 'Completed', bg: '#f1f5f9', color: '#64748b' };
       case 'CANCELLED':
-        return { label: 'Cancelled', bg: '#f1f5f9', color: '#64748b' };
+        return 'badge-secondary';
       default:
-        return { label: req.status, bg: '#e2e8f0', color: '#475569' };
+        return 'badge-secondary';
+    }
+  };
+
+  const getStatusLabel = (req: any) => {
+    const hasPendingRefund = req.refundRequests && req.refundRequests.some((r: any) => r.status === 'PENDING');
+    const hasApprovedRefund = req.refundRequests && req.refundRequests.some((r: any) => r.status === 'APPROVED');
+    const hasRejectedRefund = req.refundRequests && req.refundRequests.some((r: any) => r.status === 'REJECTED');
+
+    if (hasPendingRefund) return 'Refund Requested';
+    if (hasApprovedRefund) return 'Refunded (Cancelled)';
+    if (hasRejectedRefund) return 'Active (Refund Rejected)';
+
+    switch (req.status) {
+      case 'PENDING': return 'Pending';
+      case 'MATCHED': return 'Matched (Unpaid)';
+      case 'PAYMENT_PENDING': return 'Payment Verifying';
+      case 'ACCEPTED': return 'Active Session';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return req.status;
     }
   };
 
   return (
-    <div className={styles.card}>
+    <div className="card p-0 overflow-hidden">
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: '1rem', padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-        <input 
-          type="text" 
-          placeholder="Search by course, student, or topic..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', flex: 1 }}
-        />
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
-        >
-          <option value="">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="MATCHED">Matched</option>
-          <option value="PAYMENT_PENDING">Payment Verifying</option>
-          <option value="ACCEPTED">Active Session</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="REFUND_REQUESTED">Refund Requested</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
+      <div className="flex flex-col sm:flex-row gap-4 p-4 border-b border-color bg-gray-50/50">
+        <div className="flex-1">
+          <FloatingInput
+            name="search"
+            type="text"
+            label="Search by course, student, or topic..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="w-full sm:w-64">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="form-select h-[50px]"
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="MATCHED">Matched</option>
+            <option value="PAYMENT_PENDING">Payment Verifying</option>
+            <option value="ACCEPTED">Active Session</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="REFUND_REQUESTED">Refund Requested</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table className={styles.table}>
+      <div className="data-grid-container">
+        <table className="data-grid hidden.md:table">
           <thead>
             <tr>
               <th>Student</th>
@@ -177,45 +200,39 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
           <tbody>
             {filteredRequests.length > 0 ? (
               filteredRequests.map(req => {
-                const badge = getStatusBadgeColors(req);
+                const badgeClass = getStatusBadgeColors(req);
+                const badgeLabel = getStatusLabel(req);
                 const pendingRefund = req.refundRequests && req.refundRequests.find((r: any) => r.status === 'PENDING');
                 
                 return (
                   <tr key={req.id}>
                     <td>
-                      <strong>{req.student.name}</strong><br/>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID: {req.student.nsuId}</span><br/>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Email: {req.student.email}</span>
+                      <div className="font-semibold text-main">{req.student.name}</div>
+                      <div className="text-xs text-muted mt-1">ID: {req.student.nsuId}</div>
+                      <div className="text-xs text-muted">Email: {req.student.email}</div>
                     </td>
                     <td>
-                      <strong>{req.course.name}</strong><br/>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Topic: {req.topic}</span><br/>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Mode: {req.preferredMode}</span><br/>
+                      <div className="font-semibold text-main">{req.course.name}</div>
+                      <div className="text-sm text-muted mt-1">Topic: {req.topic}</div>
+                      <div className="text-sm text-muted">Mode: {req.preferredMode}</div>
                       {req.preferredDateTime && (
-                        <><span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Time: {new Date(req.preferredDateTime).toLocaleString()}</span><br/></>
+                        <div className="text-sm text-muted">Time: {new Date(req.preferredDateTime).toLocaleString()}</div>
                       )}
-                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Budget: {req.budget} BDT</span>
+                      <div className="text-sm font-semibold text-primary mt-1">{req.budget} BDT</div>
                     </td>
                     <td>
-                      <span style={{ 
-                        padding: '0.25rem 0.6rem', 
-                        borderRadius: '4px', 
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        backgroundColor: badge.bg,
-                        color: badge.color
-                      }}>
-                        {badge.label}
+                      <span className={`badge ${badgeClass}`}>
+                        {badgeLabel}
                       </span>
                     </td>
                     <td>
                       {req.assignedTutor ? (
                         <div>
-                          <strong>{req.assignedTutor.name}</strong><br/>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Email: {req.assignedTutor.email}</span>
+                          <div className="font-semibold text-main">{req.assignedTutor.name}</div>
+                          <div className="text-xs text-muted mt-1">Email: {req.assignedTutor.email}</div>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>
+                        <span className="text-sm text-muted italic">Unassigned</span>
                       )}
                     </td>
                     <td>
@@ -228,28 +245,33 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
 
                       {/* Case 2: Payment is pending verification */}
                       {req.status === 'PAYMENT_PENDING' && req.payment && (
-                        <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                          <p style={{ margin: '0 0 0.5rem 0' }}><strong>MFS Info:</strong> {req.payment.mfsType}</p>
-                          <p style={{ margin: '0 0 0.5rem 0' }}><strong>Account:</strong> {req.payment.accountNumber}</p>
-                          <p style={{ margin: '0 0 0.5rem 0' }}><strong>Amount:</strong> {req.payment.amount} BDT</p>
-                          <p style={{ margin: '0 0 0.75rem 0' }}><strong>Txn ID:</strong> <code style={{ background: '#e2e8f0', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>{req.payment.transactionId}</code></p>
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div className="bg-primary-light p-3 rounded-md border border-primary text-sm">
+                          <div className="mb-1"><strong className="text-primary">MFS Info:</strong> {req.payment.mfsType}</div>
+                          <div className="mb-1"><strong className="text-primary">Account:</strong> {req.payment.accountNumber}</div>
+                          <div className="mb-1"><strong className="text-primary">Amount:</strong> {req.payment.amount} BDT</div>
+                          <div className="mb-3"><strong className="text-primary">Txn ID:</strong> <code className="bg-white px-1.5 py-0.5 rounded shadow-sm text-main">{req.payment.transactionId}</code></div>
+                          
+                          <div className="flex gap-2 flex-wrap">
                             {confirmAction?.type === `pay-approve-${req.id}` ? (
                               <>
-                                <span style={{ fontSize: '0.85rem', color: '#166534', alignSelf: 'center' }}>Approve this payment?</span>
-                                <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === req.id ? '⏳' : 'Yes, Approve'}</button>
-                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                                <span className="text-success-hover font-semibold self-center mr-2">Approve?</span>
+                                <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs">
+                                  {loadingId === req.id ? '...' : 'Yes, Approve'}
+                                </button>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
                               </>
                             ) : confirmAction?.type === `pay-reject-${req.id}` ? (
                               <>
-                                <span style={{ fontSize: '0.85rem', color: '#991b1b', alignSelf: 'center' }}>Reject this payment?</span>
-                                <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === req.id ? '⏳' : 'Yes, Reject'}</button>
-                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                                <span className="text-danger-hover font-semibold self-center mr-2">Reject?</span>
+                                <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs">
+                                  {loadingId === req.id ? '...' : 'Yes, Reject'}
+                                </button>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Approve</button>
-                                <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Reject</button>
+                                <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs">Approve</button>
+                                <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs">Reject</button>
                               </>
                             )}
                           </div>
@@ -258,26 +280,31 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
 
                       {/* Case 3: Refund request is pending approval */}
                       {pendingRefund && (
-                        <div style={{ background: '#fffbeb', padding: '0.75rem', borderRadius: '8px', border: '1px solid #fde68a', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                          <p style={{ margin: '0 0 0.5rem 0', color: '#b45309' }}><strong>Refund Reason:</strong></p>
-                          <p style={{ margin: '0 0 0.75rem 0', fontStyle: 'italic', background: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fef3c7' }}>"{pendingRefund.details}"</p>
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div className="bg-warning-light p-3 rounded-md border border-warning text-sm mt-2">
+                          <div className="font-semibold text-warning-hover mb-1">Refund Reason:</div>
+                          <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">"{pendingRefund.details}"</div>
+                          
+                          <div className="flex gap-2 flex-wrap">
                             {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
                               <>
-                                <span style={{ fontSize: '0.85rem', color: '#166534', alignSelf: 'center' }}>Approve refund?</span>
-                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === pendingRefund.id ? '⏳' : 'Yes, Approve'}</button>
-                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                                <span className="text-success-hover font-semibold self-center mr-2">Approve?</span>
+                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs">
+                                  {loadingId === pendingRefund.id ? '...' : 'Yes, Approve'}
+                                </button>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
                               </>
                             ) : confirmAction?.type === `ref-reject-${pendingRefund.id}` ? (
                               <>
-                                <span style={{ fontSize: '0.85rem', color: '#991b1b', alignSelf: 'center' }}>Reject refund?</span>
-                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>{loadingId === pendingRefund.id ? '⏳' : 'Yes, Reject'}</button>
-                                <button onClick={() => setConfirmAction(null)} className="btn" style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Cancel</button>
+                                <span className="text-danger-hover font-semibold self-center mr-2">Reject?</span>
+                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs">
+                                  {loadingId === pendingRefund.id ? '...' : 'Yes, Reject'}
+                                </button>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Approve Refund</button>
-                                <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn" style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>Reject Refund</button>
+                                <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs">Approve</button>
+                                <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs">Reject</button>
                               </>
                             )}
                           </div>
@@ -286,7 +313,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
 
                       {/* Fallback label when no actions are available */}
                       {req.status !== 'PENDING' && req.status !== 'PAYMENT_PENDING' && !pendingRefund && (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        <span className="text-sm text-muted">
                           No pending actions
                         </span>
                       )}
@@ -296,13 +323,142 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
               })
             ) : (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                <td colSpan={5} className="text-center py-8 text-muted">
                   No requests found matching your filters.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+          {filteredRequests.length > 0 ? (
+            filteredRequests.map(req => {
+              const badgeClass = getStatusBadgeColors(req);
+              const badgeLabel = getStatusLabel(req);
+              const pendingRefund = req.refundRequests && req.refundRequests.find((r: any) => r.status === 'PENDING');
+              
+              return (
+                <div key={req.id} className="card p-4 flex flex-col gap-3">
+                  <div className="flex justify-between items-start border-b border-color pb-3">
+                    <div>
+                      <div className="font-semibold text-main text-lg">{req.course.name}</div>
+                      <div className="text-sm text-muted">{req.topic}</div>
+                    </div>
+                    <span className={`badge ${badgeClass}`}>
+                      {badgeLabel}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Student</div>
+                      <div className="font-medium text-main">{req.student.name}</div>
+                      <div className="text-xs text-muted">{req.student.nsuId}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Tutor</div>
+                      {req.assignedTutor ? (
+                        <div className="font-medium text-main">{req.assignedTutor.name}</div>
+                      ) : (
+                        <div className="text-muted italic">Unassigned</div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-2 rounded">
+                    <div>
+                      <div className="text-muted text-xs">Mode</div>
+                      <div className="font-medium">{req.preferredMode}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted text-xs">Budget</div>
+                      <div className="font-medium text-primary">{req.budget} BDT</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 pt-3 border-t border-color">
+                    {/* Action & Info handling (same logic as desktop) */}
+                    {req.status === 'PENDING' && (
+                      <AssignTutorForm requestId={req.id} courseId={req.courseId} tutors={tutors} />
+                    )}
+
+                    {req.status === 'PAYMENT_PENDING' && req.payment && (
+                      <div className="bg-primary-light p-3 rounded-md border border-primary text-sm">
+                        <div className="mb-1"><strong className="text-primary">MFS Info:</strong> {req.payment.mfsType} ({req.payment.accountNumber})</div>
+                        <div className="mb-3"><strong className="text-primary">Amount:</strong> {req.payment.amount} BDT | <strong>Txn:</strong> {req.payment.transactionId}</div>
+                        
+                        <div className="flex gap-2">
+                          {confirmAction?.type === `pay-approve-${req.id}` ? (
+                            <>
+                              <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">
+                                {loadingId === req.id ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                            </>
+                          ) : confirmAction?.type === `pay-reject-${req.id}` ? (
+                            <>
+                              <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">
+                                {loadingId === req.id ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">Approve</button>
+                              <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">Reject</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {pendingRefund && (
+                      <div className="bg-warning-light p-3 rounded-md border border-warning text-sm">
+                        <div className="font-semibold text-warning-hover mb-1">Refund Reason:</div>
+                        <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">"{pendingRefund.details}"</div>
+                        
+                        <div className="flex gap-2">
+                          {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
+                            <>
+                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">
+                                {loadingId === pendingRefund.id ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                            </>
+                          ) : confirmAction?.type === `ref-reject-${pendingRefund.id}` ? (
+                            <>
+                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">
+                                {loadingId === pendingRefund.id ? '...' : 'Confirm'}
+                              </button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">Approve Refund</button>
+                              <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">Reject Refund</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {req.status !== 'PENDING' && req.status !== 'PAYMENT_PENDING' && !pendingRefund && (
+                      <span className="text-sm text-muted">
+                        No pending actions
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8 text-muted">
+              No requests found matching your filters.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

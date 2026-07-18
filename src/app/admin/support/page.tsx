@@ -7,9 +7,9 @@ export default async function AdminSupportPage() {
   });
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>Support & Feedback</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+    <div className="max-w-full">
+      <h1 className="mb-2">Support & Feedback</h1>
+      <p className="text-muted mb-6">
         Manage refunds, complaints, and suggestions submitted from the home page.
       </p>
       <SupportManager initialTickets={tickets} />

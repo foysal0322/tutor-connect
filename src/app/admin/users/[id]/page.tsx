@@ -4,6 +4,7 @@ import ProfileForm from '@/components/ProfileForm';
 import { adminUpdateUser } from '@/app/actions/admin';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default async function AdminUserEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,11 +26,14 @@ export default async function AdminUserEditPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="animate-fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem', gap: '1rem' }}>
-        <Link href="/admin/users" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>&larr; Back to Users</Link>
-        <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', margin: 0 }}>Edit User: {user.name}</h1>
+    <div className="max-w-2xl">
+      <div className="flex items-center gap-4 mb-6">
+        <Link href="/admin/users" className="text-primary hover:text-primary-hover flex items-center gap-1 font-semibold transition-colors">
+          <ArrowLeft size={18} />
+          Back to Users
+        </Link>
       </div>
+      <h1 className="mb-6">Edit User: {user.name}</h1>
       <ProfileForm user={user} departments={departments} isAdmin={true} customAction={handleAdminUpdate} />
     </div>
   );

@@ -167,7 +167,7 @@ export default function FindTutorClient({
                   </li>
                   <li>
                     <span>Session Fee:</span>
-                    <strong>{exp.sessionFee} BDT / Month</strong>
+                    <strong>{exp.sessionFee} BDT / Session</strong>
                   </li>
                 </ul>
               </div>

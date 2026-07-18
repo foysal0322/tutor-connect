@@ -2,6 +2,8 @@
 
 import { useState, useRef, useMemo } from 'react';
 import { addCourse, updateCourse, deleteCourse, importCourses, deleteBulkCourses } from '@/app/actions/admin';
+import FloatingInput from '@/components/ui/FloatingInput';
+import { Upload, Trash2, Search, CheckSquare } from 'lucide-react';
 
 export default function CourseManager({ courses }: { courses: any[] }) {
   const [loading, setLoading] = useState(false);
@@ -147,134 +149,200 @@ export default function CourseManager({ courses }: { courses: any[] }) {
   const isAllCurrentSelected = currentCourses.length > 0 && currentCourses.every(c => selectedIds.has(c.id));
 
   return (
-    <div>
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{error}</div>}
-      {success && <div style={{ background: '#d1fae5', color: '#047857', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{success}</div>}
+    <div className="flex flex-col gap-6">
+      {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium">{error}</div>}
+      {success && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium">{success}</div>}
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-        <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Manually Add Course</h2>
-          <form id="add-course-form" action={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <input name="name" type="text" placeholder="Course Name (e.g. ACT201: Intro...)" required style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-            <button type="submit" className="btn-primary" disabled={loading}>Add Course</button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card">
+          <h2 className="text-lg font-bold text-main mb-4">Manually Add Course</h2>
+          <form id="add-course-form" action={handleAdd} className="flex flex-col gap-4">
+            <FloatingInput name="name" type="text" label="Course Name (e.g. ACT201: Intro...)" required />
+            <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 font-semibold rounded-lg transition-colors w-full" disabled={loading}>
+              Add Course
+            </button>
           </form>
         </div>
 
-        <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Import Courses via JSON</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <input type="file" accept=".json" ref={fileInputRef} style={{ padding: '0.5rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
-            <button type="button" onClick={handleImport} className="btn-secondary" disabled={loading}>Import Courses</button>
+        <div className="card">
+          <h2 className="text-lg font-bold text-main mb-4">Import Courses via JSON</h2>
+          <div className="flex flex-col gap-4">
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={fileInputRef} 
+              className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-light file:text-primary hover:file:bg-indigo-100 cursor-pointer" 
+            />
+            <button type="button" onClick={handleImport} className="btn bg-gray-100 text-main hover:bg-gray-200 px-4 py-2 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2" disabled={loading}>
+              <Upload size={18} />
+              Import Courses
+            </button>
           </div>
         </div>
       </div>
 
-      <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-        
+      <div className="card p-0 overflow-hidden">
         {/* Toolbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <input 
-              type="text" 
-              placeholder="Search courses..." 
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
-              }}
-              style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', width: '250px' }}
-            />
+        <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-b border-color bg-gray-50/50 gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search courses..." 
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
+                className="form-input pl-10 h-[42px] w-full"
+              />
+            </div>
             {selectedIds.size > 0 && (
               <button 
                 onClick={handleBulkDelete} 
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-4 py-2 text-sm font-semibold rounded-md transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
                 disabled={loading}
               >
+                <Trash2 size={16} />
                 Delete Selected ({selectedIds.size})
               </button>
             )}
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <div className="text-muted text-sm font-medium w-full sm:w-auto text-center sm:text-right">
             Total: {filteredCourses.length} courses
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
-            <tr>
-              <th style={{ padding: '1rem', width: '50px', textAlign: 'center' }}>
-                <input 
-                  type="checkbox" 
-                  checked={isAllCurrentSelected}
-                  onChange={handleSelectAll}
-                  disabled={currentCourses.length === 0}
-                  style={{ cursor: 'pointer' }}
-                />
-              </th>
-              <th style={{ padding: '1rem' }}>Course Name</th>
-              <th style={{ padding: '1rem', width: '200px' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentCourses.map(course => (
-              <tr key={course.id} style={{ borderBottom: '1px solid var(--border-color)', background: selectedIds.has(course.id) ? 'rgba(79, 70, 229, 0.05)' : 'transparent' }}>
-                <td style={{ padding: '1rem', textAlign: 'center' }}>
+        <div className="data-grid-container">
+          <table className="data-grid hidden.md:table">
+            <thead>
+              <tr>
+                <th className="w-[50px] text-center">
                   <input 
                     type="checkbox" 
-                    checked={selectedIds.has(course.id)}
-                    onChange={(e) => handleSelectOne(course.id, e.target.checked)}
-                    style={{ cursor: 'pointer' }}
+                    checked={isAllCurrentSelected}
+                    onChange={handleSelectAll}
+                    disabled={currentCourses.length === 0}
+                    className="cursor-pointer w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
                   />
-                </td>
-                <td style={{ padding: '1rem' }} colSpan={editingId === course.id ? 2 : 1}>
-                  {editingId === course.id ? (
-                    <form action={handleEdit} style={{ display: 'flex', gap: '1rem', width: '100%' }}>
-                      <input type="hidden" name="id" value={course.id} />
-                      <input name="name" type="text" defaultValue={course.name} required style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button type="submit" className="btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }} disabled={loading}>Save</button>
-                        <button type="button" onClick={() => setEditingId(null)} className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }} disabled={loading}>Cancel</button>
-                      </div>
-                    </form>
-                  ) : (
-                    course.name
-                  )}
-                </td>
-                {editingId !== course.id && (
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => setEditingId(course.id)} className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}>Edit</button>
-                      <button onClick={() => handleDelete(course.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
-                    </div>
-                  </td>
-                )}
+                </th>
+                <th>Course Name</th>
+                <th className="w-48">Actions</th>
               </tr>
-            ))}
-          </tbody>
+            </thead>
+            <tbody>
+              {currentCourses.map(course => (
+                <tr key={course.id} className={selectedIds.has(course.id) ? 'bg-primary-light/30' : ''}>
+                  <td className="text-center">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.has(course.id)}
+                      onChange={(e) => handleSelectOne(course.id, e.target.checked)}
+                      className="cursor-pointer w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                    />
+                  </td>
+                  <td colSpan={editingId === course.id ? 2 : 1}>
+                    {editingId === course.id ? (
+                      <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
+                        <input type="hidden" name="id" value={course.id} />
+                        <div className="flex-1">
+                          <FloatingInput name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                        </div>
+                        <div className="flex gap-2 items-center mt-1">
+                          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
+                          <button type="button" onClick={() => setEditingId(null)} className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="font-semibold text-main">{course.name}</div>
+                    )}
+                  </td>
+                  {editingId !== course.id && (
+                    <td>
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditingId(course.id)} className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Edit</button>
+                        <button onClick={() => handleDelete(course.id)} className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Delete</button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
           </table>
+          
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col p-2 bg-gray-50/50 gap-2">
+             {/* Select all mobile */}
+             {currentCourses.length > 0 && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-color shadow-sm mb-2">
+                  <input 
+                    type="checkbox" 
+                    id="select-all-mobile"
+                    checked={isAllCurrentSelected}
+                    onChange={handleSelectAll}
+                    disabled={currentCourses.length === 0}
+                    className="cursor-pointer w-5 h-5 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                  />
+                  <label htmlFor="select-all-mobile" className="font-medium text-sm text-main cursor-pointer flex-1">
+                    Select All on Page
+                  </label>
+                </div>
+              )}
+            {currentCourses.map(course => (
+              <div key={course.id} className={`card p-4 flex flex-col gap-3 ${selectedIds.has(course.id) ? 'ring-2 ring-primary border-primary bg-primary-light/10' : ''}`}>
+                <div className="flex items-start gap-3">
+                  <div className="pt-1">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.has(course.id)}
+                      onChange={(e) => handleSelectOne(course.id, e.target.checked)}
+                      className="cursor-pointer w-5 h-5 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                    />
+                  </div>
+                  {editingId === course.id ? (
+                      <form action={handleEdit} className="flex flex-col gap-3 w-full">
+                        <input type="hidden" name="id" value={course.id} />
+                        <FloatingInput name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                        <div className="flex gap-2">
+                          <button type="submit" className="btn flex-1 bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
+                          <button type="button" onClick={() => setEditingId(null)} className="btn flex-1 bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex-1">
+                        <div className="font-semibold text-main text-lg mb-3">{course.name}</div>
+                        <div className="flex gap-2">
+                          <button onClick={() => setEditingId(course.id)} className="btn flex-1 bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors">Edit</button>
+                          <button onClick={() => handleDelete(course.id)} className="btn flex-1 bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-3 py-1.5 text-sm font-semibold rounded-md transition-colors">Delete</button>
+                        </div>
+                      </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {currentCourses.length === 0 && <div className="p-8 text-center text-muted">No courses found.</div>}
         </div>
-        {currentCourses.length === 0 && <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No courses found.</p>}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
+          <div className="flex justify-center items-center gap-4 p-4 border-t border-color bg-gray-50/50">
             <button 
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
               disabled={currentPage === 1}
-              className="btn-secondary"
-              style={{ padding: '0.5rem 1rem' }}
+              className="btn bg-gray-100 text-main hover:bg-gray-200 px-4 py-2 text-sm font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>
+            <span className="text-sm font-medium text-main">
               Page {currentPage} of {totalPages}
             </span>
             <button 
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
               disabled={currentPage === totalPages}
-              className="btn-secondary"
-              style={{ padding: '0.5rem 1rem' }}
+              className="btn bg-gray-100 text-main hover:bg-gray-200 px-4 py-2 text-sm font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

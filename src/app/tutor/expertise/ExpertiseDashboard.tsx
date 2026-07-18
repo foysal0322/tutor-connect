@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '../../dashboard.module.css';
 import AddExpertiseForm from './AddExpertiseForm';
 import { deleteTutorExpertise, toggleTutorExpertise } from '../actions';
+import { CheckCircle2, CircleDashed } from 'lucide-react';
 
 export default function ExpertiseDashboard({ expertises, allCourses }: { expertises: any[], allCourses: any[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,9 +36,9 @@ export default function ExpertiseDashboard({ expertises, allCourses }: { experti
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.25rem' }}>My Offered Courses</h2>
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl">My Offered Courses</h2>
         <button 
           onClick={() => setIsAdding(true)} 
           className="btn-primary"
@@ -47,59 +47,72 @@ export default function ExpertiseDashboard({ expertises, allCourses }: { experti
         </button>
       </div>
       
-      <div className={styles.card}>
+      <div>
         {expertises.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>You haven't added any course expertise yet.</p>
+          <div className="card text-center p-8 text-muted max-w-4xl">You haven't added any course expertise yet.</div>
         ) : (
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <ul className="flex flex-col gap-4 max-w-4xl list-none">
             {expertises.map(exp => (
-              <li key={exp.id} style={{ 
-                padding: '1.5rem', 
-                border: '1px solid var(--border-color)', 
-                borderRadius: '8px',
-                background: exp.isActive ? 'transparent' : '#f9fafb',
-                opacity: exp.isActive ? 1 : 0.6,
-                transition: 'all 0.2s'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem' }}>
-                      {exp.course.name}
-                      {!exp.isActive && <span style={{ fontSize: '0.7rem', background: 'var(--text-muted)', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>DISABLED</span>}
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', fontSize: '0.95rem', color: 'var(--text-muted)', marginTop: '1rem' }}>
-                      <p><strong>Grade:</strong> {exp.courseGrade}</p>
-                      <p><strong>Faculty:</strong> {exp.facultyName}</p>
-                      <p><strong>Availability:</strong> {exp.availability}</p>
-                      <p><strong>Fee:</strong> {exp.sessionFee} BDT</p>
+              <li key={exp.id} className={`card p-4 transition-all duration-300 border-2 relative ${exp.isActive ? 'border-primary/20 hover:border-primary/40 shadow-sm hover:shadow-md' : 'border-color opacity-70 bg-gray-50/50 hover:opacity-100'}`}>
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center justify-between mb-3">
+                       <h3 className="text-lg font-bold text-main flex items-center gap-2">
+                         {exp.course.name}
+                         {!exp.isActive && <span className="text-[0.6rem] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full font-bold tracking-wider">INACTIVE</span>}
+                       </h3>
+                       
+                       {/* Upper Right Toggle Switch */}
+                       <button
+                         type="button"
+                         role="switch"
+                         aria-checked={exp.isActive}
+                         onClick={() => handleToggle(exp.id, exp.isActive)}
+                         disabled={togglingId === exp.id}
+                         className={`relative inline-flex h-6 w-12 flex-shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${exp.isActive ? 'bg-primary' : 'bg-gray-400 hover:bg-gray-500'}`}
+                         aria-label="Toggle expertise"
+                       >
+                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-300 ease-in-out shadow-sm ${exp.isActive ? 'translate-x-7' : 'translate-x-1'}`} />
+                       </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50/80 p-3 rounded-md border border-color/50">
+                      <div>
+                        <span className="block text-[0.65rem] uppercase tracking-wider mb-0.5 text-muted">Grade</span>
+                        <span className="text-sm font-medium text-main">{exp.courseGrade}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[0.65rem] uppercase tracking-wider mb-0.5 text-muted">Faculty</span>
+                        <span className="text-sm font-medium text-main">{exp.facultyName}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[0.65rem] uppercase tracking-wider mb-0.5 text-muted">Availability</span>
+                        <span className="text-sm font-medium text-main">{exp.availability}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[0.65rem] uppercase tracking-wider mb-0.5 text-muted">Fee / Session</span>
+                        <span className="text-sm font-semibold text-primary">{exp.sessionFee} BDT</span>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '0.25rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginRight: '1rem' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={exp.isActive}
-                        onChange={() => handleToggle(exp.id, exp.isActive)}
-                        disabled={togglingId === exp.id}
-                        style={{ cursor: 'pointer', width: '1rem', height: '1rem' }}
-                      />
-                      Active
-                    </label>
-                    <button 
-                      onClick={() => setEditingId(exp.id)} 
-                      className="btn-outline"
-                      style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(exp.id)}
-                      disabled={deletingId === exp.id}
-                      className="btn-outline"
-                      style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', borderColor: '#f87171', color: '#dc2626' }}
-                    >
-                      {deletingId === exp.id ? '...' : 'Delete'}
-                    </button>
+
+                  <div className="flex flex-row md:flex-col gap-3 items-center md:items-end w-full md:w-auto justify-between md:justify-center border-t md:border-t-0 pt-3 md:pt-0 border-color/50">
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setEditingId(exp.id)} 
+                        className="btn-outline px-3 py-1 text-xs bg-white"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(exp.id)}
+                        disabled={deletingId === exp.id}
+                        className="btn-outline px-3 py-1 text-xs border-danger-hover text-danger-hover hover:bg-danger-hover hover:text-white bg-white"
+                      >
+                        {deletingId === exp.id ? '...' : 'Delete'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -110,46 +123,20 @@ export default function ExpertiseDashboard({ expertises, allCourses }: { experti
 
       {/* Modal Overlay */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '1rem',
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{
-            background: 'var(--bg-main)',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '100%',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            position: 'relative',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <button 
-              onClick={() => { setIsAdding(false); setEditingId(null); }}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                color: 'var(--text-muted)'
-              }}
-            >
-              &times;
-            </button>
-            <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', color: 'var(--text-main)' }}>
-              {editingId ? 'Edit Expertise' : 'Add New Expertise'}
-            </h2>
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[110] p-4 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl text-main">
+                {editingId ? 'Edit Expertise' : 'Add New Expertise'}
+              </h2>
+              <button 
+                onClick={() => { setIsAdding(false); setEditingId(null); }}
+                className="text-muted hover:text-danger-hover transition-colors text-3xl leading-none"
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
             {editingId && editingExpertise ? (
               <AddExpertiseForm 
                 courses={allCourses} 

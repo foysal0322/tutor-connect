@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { addDepartment, updateDepartment, deleteDepartment } from '@/app/actions/admin';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 export default function DepartmentManager({ departments }: { departments: any[] }) {
   const [loading, setLoading] = useState(false);
@@ -36,55 +37,63 @@ export default function DepartmentManager({ departments }: { departments: any[] 
   }
 
   return (
-    <div>
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{error}</div>}
+    <div className="flex flex-col gap-6">
+      {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium">{error}</div>}
       
-      <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Add New Department</h2>
-        <form id="add-dept-form" action={handleAdd} style={{ display: 'flex', gap: '1rem' }}>
-          <input name="name" type="text" placeholder="Department Name" required style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-          <button type="submit" className="btn-primary" disabled={loading}>Add</button>
+      <div className="card">
+        <h2 className="text-lg font-bold text-main mb-4">Add New Department</h2>
+        <form id="add-dept-form" action={handleAdd} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex-1 w-full">
+            <FloatingInput name="name" type="text" label="Department Name" required />
+          </div>
+          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-6 py-3 font-semibold rounded-lg transition-colors w-full sm:w-auto mt-1" disabled={loading}>
+            Add Department
+          </button>
         </form>
       </div>
 
-      <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
-            <tr>
-              <th style={{ padding: '1rem' }}>Department Name</th>
-              <th style={{ padding: '1rem', width: '200px' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {departments.map(dept => (
-              <tr key={dept.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1rem' }} colSpan={editingId === dept.id ? 2 : 1}>
-                  {editingId === dept.id ? (
-                    <form action={handleEdit} style={{ display: 'flex', gap: '1rem', width: '100%' }}>
-                      <input type="hidden" name="id" value={dept.id} />
-                      <input name="name" type="text" defaultValue={dept.name} required style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} />
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button type="submit" className="btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }} disabled={loading}>Save</button>
-                        <button type="button" onClick={() => setEditingId(null)} className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }} disabled={loading}>Cancel</button>
-                      </div>
-                    </form>
-                  ) : (
-                    dept.name
-                  )}
-                </td>
-                {editingId !== dept.id && (
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => setEditingId(dept.id)} className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}>Edit</button>
-                      <button onClick={() => handleDelete(dept.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
-                    </div>
-                  </td>
-                )}
+      <div className="card p-0 overflow-hidden">
+        <div className="data-grid-container">
+          <table className="data-grid">
+            <thead>
+              <tr>
+                <th>Department Name</th>
+                <th className="w-48">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {departments.length === 0 && <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No departments found.</p>}
+            </thead>
+            <tbody>
+              {departments.map(dept => (
+                <tr key={dept.id}>
+                  <td colSpan={editingId === dept.id ? 2 : 1}>
+                    {editingId === dept.id ? (
+                      <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
+                        <input type="hidden" name="id" value={dept.id} />
+                        <div className="flex-1">
+                          <FloatingInput name="name" type="text" defaultValue={dept.name} label="Department Name" required />
+                        </div>
+                        <div className="flex gap-2 items-center mt-1">
+                          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
+                          <button type="button" onClick={() => setEditingId(null)} className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="font-semibold text-main">{dept.name}</div>
+                    )}
+                  </td>
+                  {editingId !== dept.id && (
+                    <td>
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditingId(dept.id)} className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Edit</button>
+                        <button onClick={() => handleDelete(dept.id)} className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Delete</button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {departments.length === 0 && <div className="p-8 text-center text-muted">No departments found.</div>}
+        </div>
       </div>
     </div>
   );
