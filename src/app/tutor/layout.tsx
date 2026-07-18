@@ -1,9 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import styles from '../dashboard.module.css';
-import TutorSidebar from './TutorSidebar';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default async function TutorLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -13,11 +11,12 @@ export default async function TutorLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className={styles.dashboardContainer}>
-      <TutorSidebar userName={session.user?.name} />
-      <main className={styles.mainContent}>
-        {children}
-      </main>
-    </div>
+    <DashboardLayout 
+      role="TUTOR" 
+      userName={session.user?.name}
+      userEmail={session.user?.email}
+    >
+      {children}
+    </DashboardLayout>
   );
 }

@@ -161,7 +161,7 @@ export default function AdminSidebar({ currentCounts, userName }: { currentCount
           Visitor Logs
         </Link>
 
-        <Link href="/api/auth/signout" className={styles.navLink} style={{ marginTop: 'auto', color: 'var(--error)' }}>
+        <Link href="/auth/force-signout" className={styles.navLink} style={{ marginTop: 'auto', color: 'var(--error)' }}>
           Sign Out
         </Link>
       </aside>

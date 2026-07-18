@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { verifyWithdrawalRequest } from './actions';
-import styles from '../../dashboard.module.css';
 
 interface WithdrawalManagerProps {
   initialRequests: any[];
@@ -48,22 +47,24 @@ export default function WithdrawalManager({ initialRequests }: WithdrawalManager
   };
 
   return (
-    <div className={styles.card}>
-      <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
-        >
-          <option value="">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
+    <div className="card p-0 overflow-hidden">
+      <div className="flex flex-col sm:flex-row gap-4 p-4 border-b border-color bg-gray-50/50">
+        <div className="w-full sm:w-64 ml-auto">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="form-select h-[42px]"
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table className={styles.table}>
+      <div className="data-grid-container">
+        <table className="data-grid hidden.md:table">
           <thead>
             <tr>
               <th>Tutor</th>
@@ -81,67 +82,126 @@ export default function WithdrawalManager({ initialRequests }: WithdrawalManager
               filteredRequests.map(w => (
                 <tr key={w.id}>
                   <td>
-                    <strong>{w.tutor.name}</strong><br/>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Email: {w.tutor.email}</span>
+                    <div className="font-semibold text-main">{w.tutor.name}</div>
+                    <div className="text-xs text-muted mt-1">Email: {w.tutor.email}</div>
                   </td>
                   <td>{w.amount.toFixed(2)} BDT</td>
                   <td>{w.platformFee.toFixed(2)} BDT</td>
-                  <td><strong>{w.netAmount.toFixed(2)} BDT</strong></td>
+                  <td className="font-semibold text-primary">{w.netAmount.toFixed(2)} BDT</td>
                   <td>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: getMfsColor(w.mfsType) }}>
+                    <div className="text-sm font-bold" style={{ color: getMfsColor(w.mfsType) }}>
                       {w.mfsType}
-                    </span><br/>
-                    <strong>{w.accountNumber}</strong><br/>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Type: {w.transferType}</span>
+                    </div>
+                    <div className="font-medium text-main">{w.accountNumber}</div>
+                    <div className="text-xs text-muted mt-1">Type: {w.transferType}</div>
                   </td>
                   <td>{new Date(w.createdAt).toLocaleDateString()}</td>
                   <td>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      backgroundColor: w.status === 'PENDING' ? '#e0e7ff' : (w.status === 'APPROVED' ? '#d1fae5' : '#fee2e2'),
-                      color: w.status === 'PENDING' ? '#4f46e5' : (w.status === 'APPROVED' ? '#047857' : '#ef4444')
-                    }}>
+                    <span className={`badge ${w.status === 'PENDING' ? 'badge-primary' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
                       {w.status}
                     </span>
                   </td>
                   <td>
                     {w.status === 'PENDING' ? (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleVerify(w.id, true)}
                           disabled={loadingId === w.id}
-                          className="btn"
-                          style={{ background: 'var(--success)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                          className="btn bg-success text-white hover:bg-success-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleVerify(w.id, false)}
                           disabled={loadingId === w.id}
-                          className="btn"
-                          style={{ background: 'var(--error)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                          className="btn bg-danger text-white hover:bg-danger-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
                         >
                           Reject
                         </button>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>Processed</span>
+                      <span className="text-muted text-sm italic">Processed</span>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                <td colSpan={8} className="text-center py-8 text-muted">
                   No withdrawal requests found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+          {filteredRequests.length > 0 ? (
+            filteredRequests.map(w => (
+              <div key={w.id} className="card p-4 flex flex-col gap-3">
+                <div className="flex justify-between items-start border-b border-color pb-3">
+                  <div>
+                    <div className="font-semibold text-main text-lg">{w.tutor.name}</div>
+                    <div className="text-sm text-muted">{w.tutor.email}</div>
+                  </div>
+                  <span className={`badge ${w.status === 'PENDING' ? 'badge-primary' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
+                    {w.status}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-2 rounded">
+                  <div>
+                    <div className="text-muted text-xs">MFS Type</div>
+                    <div className="font-bold" style={{ color: getMfsColor(w.mfsType) }}>{w.mfsType}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted text-xs">Account</div>
+                    <div className="font-medium">{w.accountNumber} ({w.transferType})</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm mt-1">
+                  <div>
+                    <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Requested</div>
+                    <div className="font-medium text-main">{w.amount.toFixed(2)} BDT</div>
+                  </div>
+                  <div>
+                    <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Net Payout</div>
+                    <div className="font-bold text-primary">{w.netAmount.toFixed(2)} BDT</div>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-muted text-right mt-1">
+                  Requested on {new Date(w.createdAt).toLocaleDateString()}
+                </div>
+                
+                {w.status === 'PENDING' && (
+                  <div className="mt-2 pt-3 border-t border-color flex gap-2">
+                    <button
+                      onClick={() => handleVerify(w.id, true)}
+                      disabled={loadingId === w.id}
+                      className="btn bg-success text-white hover:bg-success-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex-1"
+                    >
+                      {loadingId === w.id ? '...' : 'Approve'}
+                    </button>
+                    <button
+                      onClick={() => handleVerify(w.id, false)}
+                      disabled={loadingId === w.id}
+                      className="btn bg-danger text-white hover:bg-danger-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex-1"
+                    >
+                      {loadingId === w.id ? '...' : 'Reject'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted">
+              No withdrawal requests found.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

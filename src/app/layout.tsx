@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import NextTopLoader from 'nextjs-toploader';
 import { ToastProvider } from '@/components/ToastProvider';
 import VisitorTracker from '@/components/VisitorTracker';
@@ -35,9 +36,10 @@ export default function RootLayout({
           <VisitorTracker />
           <NextTopLoader color="var(--primary)" showSpinner={false} />
           <Navbar />
-          <main>
+          <main style={{ minHeight: 'calc(100vh - 400px)' }}>
             {children}
           </main>
+          <Footer />
         </ToastProvider>
       </body>
     </html>

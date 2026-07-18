@@ -1,23 +1,22 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import styles from '../dashboard.module.css';
-import StudentSidebar from './StudentSidebar';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as any).role !== 'STUDENT') {
-    return <>{children}</>;
+    redirect('/api/auth/signin');
   }
 
   return (
-    <div className={styles.dashboardContainer}>
-      <StudentSidebar userName={session.user?.name} />
-      <main className={styles.mainContent}>
-        {children}
-      </main>
-    </div>
+    <DashboardLayout 
+      role="STUDENT" 
+      userName={session.user?.name}
+      userEmail={session.user?.email}
+    >
+      {children}
+    </DashboardLayout>
   );
 }

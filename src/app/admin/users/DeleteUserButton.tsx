@@ -23,16 +23,8 @@ export default function DeleteUserButton({ userId }: { userId: string }) {
     <button 
       onClick={handleDelete}
       disabled={loading}
-      style={{ 
-        padding: '0.25rem 0.75rem', 
-        fontSize: '0.85rem',
-        background: '#fee2e2',
-        color: '#b91c1c',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontWeight: 600
-      }}>
+      className="btn bg-danger-light text-danger-hover border border-danger-hover/30 hover:bg-danger hover:text-white px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
+    >
       {loading ? '...' : 'Delete'}
     </button>
   );

@@ -32,10 +32,12 @@ export default function NavbarClient({ session }: { session: any }) {
         
         <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
           <Link href="/" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+          <Link href="/find-tutor" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
+          <Link href="/auth/tutor-register" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Become a Tutor</Link>
+          <Link href="/consultancy" className={styles.navLinkHot} onClick={() => setIsMobileMenuOpen(false)}>Get Consultancy</Link>
+          <span className={`${styles.navLink} ${styles.disabledLink}`}>One Shop <sup className={styles.badgeComingSoon}>Coming Soon</sup></span>
           <Link href="/tutorial" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
-          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick}>Support</Link>
-          <Link href="/refund-policy" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Refund Policy</Link>
-          <Link href="/consultancy" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Get Free Consultancy</Link>
+          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick}>Contact</Link>
         
           <div className={`${styles.authButtonsMobile}`}>
             {!session ? (

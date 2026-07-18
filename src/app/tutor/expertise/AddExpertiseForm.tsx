@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { addTutorExpertise, updateTutorExpertise } from '../actions';
-import authStyles from '../../auth/auth.module.css';
-
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter } from 'next/navigation';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 export default function AddExpertiseForm({ courses, initialData, onSuccess, onCancel }: { courses: any[], initialData?: any, onSuccess?: () => void, onCancel?: () => void }) {
   const [error, setError] = useState('');
@@ -15,6 +14,10 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
   const [isGradeOpen, setIsGradeOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(initialData?.courseGrade || '');
   const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F', 'I', 'W'];
+
+  const [semesterCompleted, setSemesterCompleted] = useState(initialData?.semesterCompleted || '');
+  const [facultyName, setFacultyName] = useState(initialData?.facultyName || '');
+  const [sessionFee, setSessionFee] = useState(initialData?.sessionFee?.toString() || '');
 
   function parseDays(str: string) {
     if (!str) return [];
@@ -94,9 +97,17 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
       setError('Please specify a time range.');
       return;
     }
+    if (!selectedGrade) {
+      setError('Please select a course grade.');
+      return;
+    }
 
     const availabilityString = isAllDay ? 'Everyday' : `${selectedDays.join(', ')} (${startTime}-${endTime})`;
     formData.set('availability', availabilityString);
+    formData.set('semesterCompleted', semesterCompleted);
+    formData.set('facultyName', facultyName);
+    formData.set('sessionFee', sessionFee);
+    formData.set('courseGrade', selectedGrade);
 
     if (initialData) {
       formData.set('id', initialData.id);
@@ -122,105 +133,94 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
   }
 
   return (
-    <div className={authStyles.authCard} style={{ maxWidth: '100%' }}>
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>{error}</div>}
+    <div className="w-full">
+      {error && <div className="p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover mb-6">{error}</div>}
 
-      <form action={handleSubmit}>
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Course</label>
+      <form action={handleSubmit} className="flex flex-col gap-5">
+        <div className="form-group mb-0">
+          <label className="form-label text-sm font-semibold mb-1">Course</label>
           <SearchableCourseSelect courses={courses} defaultValue={initialData?.courseId} />
         </div>
 
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Semester Completed</label>
-          <input name="semesterCompleted" type="text" defaultValue={initialData?.semesterCompleted} required className={authStyles.input} placeholder="e.g. Spring 2023" />
-        </div>
+        <FloatingInput
+          name="semesterCompleted"
+          type="text"
+          required
+          label="Semester Completed"
+          placeholder="e.g. Spring 2023"
+          value={semesterCompleted}
+          onChange={(e) => setSemesterCompleted(e.target.value)}
+        />
 
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Faculty Name</label>
-          <input name="facultyName" type="text" defaultValue={initialData?.facultyName} required className={authStyles.input} placeholder="Who taught you?" />
-        </div>
+        <FloatingInput
+          name="facultyName"
+          type="text"
+          required
+          label="Faculty Name"
+          placeholder="Who taught you?"
+          value={facultyName}
+          onChange={(e) => setFacultyName(e.target.value)}
+        />
 
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Course Grade</label>
-          <input type="hidden" name="courseGrade" value={selectedGrade} required />
-          <div style={{ position: 'relative' }}>
-            <div
-              className={authStyles.input}
-              onClick={() => setIsGradeOpen(!isGradeOpen)}
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <span style={{ color: selectedGrade ? 'inherit' : 'var(--text-muted)' }}>{selectedGrade || 'Select Grade'}</span>
-              <span style={{ transform: isGradeOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', fontSize: '0.8rem' }}>▼</span>
-            </div>
-            {isGradeOpen && (
-              <ul style={{
-                position: 'absolute', top: '100%', left: 0, right: 0,
-                background: 'var(--card-bg)', border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)', zIndex: 50,
-                maxHeight: '180px', overflowY: 'auto',
-                listStyle: 'none', padding: 0, margin: '4px 0 0 0',
-                boxShadow: 'var(--shadow-md)'
-              }}>
-                {grades.map(g => (
-                  <li
-                    key={g}
-                    onClick={() => { setSelectedGrade(g); setIsGradeOpen(false); }}
-                    style={{
-                      padding: '0.75rem 1rem',
-                      cursor: 'pointer',
-                      borderBottom: '1px solid var(--border-color)',
-                      background: selectedGrade === g ? 'var(--primary-light)' : 'transparent',
-                      color: selectedGrade === g ? 'var(--primary)' : 'var(--text-main)',
-                      fontWeight: selectedGrade === g ? 600 : 400
-                    }}
-                  >
-                    {g}
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div className="form-group mb-0 relative">
+          <label className="form-label text-sm font-semibold mb-1">Course Grade</label>
+          <div
+            className="form-select flex justify-between items-center cursor-pointer"
+            onClick={() => setIsGradeOpen(!isGradeOpen)}
+          >
+            <span className={selectedGrade ? 'text-main' : 'text-muted'}>{selectedGrade || 'Select Grade'}</span>
+            <span className={`text-xs transition-transform ${isGradeOpen ? 'rotate-180' : ''}`}>▼</span>
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            <input type="checkbox" name="hideGrade" defaultChecked={initialData?.hideGrade} value="true" />
+          {isGradeOpen && (
+            <ul className="absolute top-full left-0 right-0 bg-white border border-color rounded-md z-50 max-h-[180px] overflow-y-auto mt-1 shadow-lg">
+              {grades.map(g => (
+                <li
+                  key={g}
+                  onClick={() => { setSelectedGrade(g); setIsGradeOpen(false); }}
+                  className={`p-3 cursor-pointer border-b border-color last:border-b-0 hover:bg-gray-50 transition-colors ${selectedGrade === g ? 'bg-primary-light text-primary font-semibold' : 'text-main'}`}
+                >
+                  {g}
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-muted mt-2 hover:text-main transition-colors w-fit">
+            <input 
+              type="checkbox" 
+              name="hideGrade" 
+              defaultChecked={initialData?.hideGrade} 
+              value="true" 
+              className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+            />
             Hide my acquired grade for this course from students
           </label>
         </div>
 
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Availability</label>
+        <div className="form-group mb-0">
+          <label className="form-label text-sm font-semibold mb-2">Availability</label>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-              <input
-                type="checkbox"
-                checked={isAllDay}
-                onChange={(e) => handleAllDayChange(e.target.checked)}
-                style={{ width: '16px', height: '16px' }}
-              />
-              Everyday
-            </label>
-          </div>
+          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-main mb-3 w-fit hover:text-primary transition-colors">
+            <input
+              type="checkbox"
+              checked={isAllDay}
+              onChange={(e) => handleAllDayChange(e.target.checked)}
+              className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+            />
+            Everyday
+          </label>
 
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <div className="flex gap-2 flex-wrap mb-4">
             {daysOfWeek.map(day => (
               <button
                 key={day}
                 type="button"
                 onClick={() => toggleDay(day)}
                 disabled={isAllDay}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '20px',
-                  border: `1px solid ${selectedDays.includes(day) ? 'var(--primary)' : 'var(--border-color)'}`,
-                  background: selectedDays.includes(day) ? 'var(--primary)' : 'transparent',
-                  color: selectedDays.includes(day) ? '#fff' : 'var(--text-main)',
-                  cursor: isAllDay ? 'not-allowed' : 'pointer',
-                  opacity: isAllDay ? 0.5 : 1,
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  transition: 'all 0.2s'
-                }}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                  selectedDays.includes(day) 
+                    ? 'bg-primary border-primary text-white shadow-md' 
+                    : 'border-color text-main hover:border-primary/50'
+                } ${isAllDay ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {day}
               </button>
@@ -228,37 +228,42 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           </div>
 
           {!isAllDay && (
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="flex gap-4 items-center bg-gray-50 p-4 rounded-md border border-color">
               <input
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className={authStyles.input}
-                style={{ width: 'auto' }}
+                className="form-input"
               />
-              <span style={{ color: 'var(--text-muted)' }}>to</span>
+              <span className="text-muted font-medium">to</span>
               <input
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className={authStyles.input}
-                style={{ width: 'auto' }}
+                className="form-input"
               />
             </div>
           )}
         </div>
 
-        <div className={authStyles.formGroup}>
-          <label className={authStyles.label}>Session Fee (BDT)</label>
-          <input name="sessionFee" type="number" defaultValue={initialData?.sessionFee} required min="100" step="any" className={authStyles.input} placeholder="e.g. 500.50" />
-        </div>
+        <FloatingInput
+          name="sessionFee"
+          type="number"
+          min="100"
+          step="any"
+          required
+          label="Session Fee (BDT)"
+          placeholder="e.g. 500.50"
+          value={sessionFee}
+          onChange={(e) => setSessionFee(e.target.value)}
+        />
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button type="submit" className={`btn-primary ${authStyles.submitBtn}`} disabled={loading} style={{ flex: 1 }}>
+        <div className="flex gap-4 mt-2">
+          <button type="submit" className="btn-primary flex-1 justify-center" disabled={loading}>
             {loading ? 'Saving...' : (initialData ? 'Save Changes' : 'Add Expertise')}
           </button>
           {onCancel && (
-            <button type="button" onClick={onCancel} className="btn-secondary" disabled={loading} style={{ flex: 1, padding: '0.75rem' }}>
+            <button type="button" onClick={onCancel} className="btn-outline flex-1 justify-center" disabled={loading}>
               Cancel
             </button>
           )}

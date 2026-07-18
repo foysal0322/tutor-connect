@@ -17,8 +17,8 @@ export default async function ExpertisePage() {
   const allCourses = await getCourses();
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>Course Expertise</h1>
+    <div className="max-w-full">
+      <h1 className="mb-6">Course Expertise</h1>
       <ExpertiseDashboard expertises={expertises} allCourses={allCourses} />
     </div>
   );

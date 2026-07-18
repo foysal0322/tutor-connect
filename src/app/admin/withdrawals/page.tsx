@@ -23,9 +23,9 @@ export default async function AdminWithdrawalsPage() {
   });
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '0.25rem' }}>Withdrawal Payouts Management</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+    <div className="max-w-full">
+      <h1 className="mb-2">Withdrawal Payouts Management</h1>
+      <p className="text-muted mb-6">
         Review and process mobile financial service (MFS) payout requests submitted by tutors.
       </p>
 

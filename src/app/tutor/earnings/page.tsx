@@ -50,9 +50,9 @@ export default async function TutorEarningsPage() {
   const availableBalance = totalEarned - totalWithdrawn;
 
   return (
-    <div className="animate-fade-in">
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '0.25rem' }}>Earnings & Withdrawals</h1>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+    <div className="max-w-full">
+      <h1 className="mb-2">Earnings & Withdrawals</h1>
+      <p className="text-muted mb-6">
         View completed tuition revenues, track balance eligibility, and request withdrawals.
       </p>
 

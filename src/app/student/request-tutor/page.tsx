@@ -30,9 +30,9 @@ export default async function RequestTutorPage({ searchParams }: { searchParams:
   }
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '600px' }}>
-      <h1 style={{ color: 'var(--text-main)', fontSize: '2rem', marginBottom: '2rem' }}>Request a Tutor</h1>
-      <Suspense fallback={<div>Loading form...</div>}>
+    <div className="max-w-2xl">
+      <h1 className="mb-6">Request a Tutor</h1>
+      <Suspense fallback={<div className="p-8 text-center"><div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-primary rounded-full" /></div>}>
         <RequestTutorForm courses={courses} selectedTutor={selectedTutor} />
       </Suspense>
     </div>

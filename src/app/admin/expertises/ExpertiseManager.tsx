@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import FloatingInput from '@/components/ui/FloatingInput';
 
 export default function ExpertiseManager({ expertises }: { expertises: any[] }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,69 +20,107 @@ export default function ExpertiseManager({ expertises }: { expertises: any[] }) 
   }, [expertises, searchQuery]);
 
   return (
-    <div>
-      <div style={{ background: 'var(--card-bg)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-        
-        {/* Toolbar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-          <input 
+    <div className="card p-0 overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-b border-color bg-gray-50/50 gap-4">
+        <div className="w-full sm:w-96">
+          <FloatingInput 
+            name="search"
             type="text" 
-            placeholder="Search by course, tutor, or faculty..." 
+            label="Search by course, tutor, or faculty..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', width: '350px' }}
           />
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Total: {filteredExpertises.length} entries
-          </div>
         </div>
+        <div className="text-muted text-sm font-medium">
+          Total: {filteredExpertises.length} entries
+        </div>
+      </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-            <thead style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
-              <tr>
-                <th style={{ padding: '1rem' }}>Tutor Name</th>
-                <th style={{ padding: '1rem' }}>Course</th>
-                <th style={{ padding: '1rem' }}>Semester</th>
-                <th style={{ padding: '1rem' }}>Faculty</th>
-                <th style={{ padding: '1rem' }}>Grade</th>
-                <th style={{ padding: '1rem' }}>Availability</th>
-                <th style={{ padding: '1rem' }}>Fee (BDT)</th>
-                <th style={{ padding: '1rem' }}>Added On</th>
+      <div className="data-grid-container">
+        <table className="data-grid hidden.md:table">
+          <thead>
+            <tr>
+              <th>Tutor Name</th>
+              <th>Course</th>
+              <th>Semester</th>
+              <th>Faculty</th>
+              <th>Grade</th>
+              <th>Availability</th>
+              <th>Fee (BDT)</th>
+              <th>Added On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredExpertises.map(exp => (
+              <tr key={exp.id}>
+                <td>
+                  <div className="font-semibold text-main">{exp.tutor.name}</div>
+                  <div className="text-xs text-muted">{exp.tutor.nsuId}</div>
+                </td>
+                <td className="font-medium text-main">{exp.course.name}</td>
+                <td>{exp.semesterCompleted}</td>
+                <td>{exp.facultyName}</td>
+                <td>
+                  <span className="badge badge-primary">
+                    {exp.courseGrade}
+                  </span>
+                </td>
+                <td>{exp.availability}</td>
+                <td className="font-semibold text-primary">{exp.sessionFee}</td>
+                <td>{new Date(exp.createdAt).toLocaleDateString()}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredExpertises.map(exp => (
-                <tr key={exp.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '1rem' }}>
-                    <strong>{exp.tutor.name}</strong><br/>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{exp.tutor.nsuId}</span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>{exp.course.name}</td>
-                  <td style={{ padding: '1rem' }}>{exp.semesterCompleted}</td>
-                  <td style={{ padding: '1rem' }}>{exp.facultyName}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ 
-                      padding: '0.2rem 0.5rem', 
-                      background: 'rgba(79, 70, 229, 0.1)', 
-                      color: 'var(--primary)', 
-                      borderRadius: '4px',
-                      fontWeight: 600
-                    }}>
-                      {exp.courseGrade}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>{exp.availability}</td>
-                  <td style={{ padding: '1rem' }}>{exp.sessionFee}</td>
-                  <td style={{ padding: '1rem' }}>{new Date(exp.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredExpertises.length === 0 && (
-            <p style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No expertises found.</p>
-          )}
+            ))}
+          </tbody>
+        </table>
+        
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+          {filteredExpertises.map(exp => (
+            <div key={exp.id} className="card p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-start border-b border-color pb-3">
+                <div>
+                  <div className="font-semibold text-main text-lg">{exp.course.name}</div>
+                  <div className="text-sm text-muted">{exp.tutor.name} ({exp.tutor.nsuId})</div>
+                </div>
+                <span className="badge badge-primary">
+                  {exp.courseGrade}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Semester</div>
+                  <div className="font-medium text-main">{exp.semesterCompleted}</div>
+                </div>
+                <div>
+                  <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Faculty</div>
+                  <div className="font-medium text-main">{exp.facultyName}</div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-2 rounded">
+                <div>
+                  <div className="text-muted text-xs">Fee</div>
+                  <div className="font-bold text-primary">{exp.sessionFee} BDT</div>
+                </div>
+                <div>
+                  <div className="text-muted text-xs">Added</div>
+                  <div className="font-medium">{new Date(exp.createdAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+              
+              <div className="text-sm">
+                <div className="text-muted text-xs uppercase font-bold tracking-wider mb-1">Availability</div>
+                <div className="font-medium text-main">{exp.availability}</div>
+              </div>
+            </div>
+          ))}
         </div>
+        
+        {filteredExpertises.length === 0 && (
+          <div className="p-8 text-center text-muted">No expertises found.</div>
+        )}
       </div>
     </div>
   );
