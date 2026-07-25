@@ -10,11 +10,16 @@ import { BookOpen, CheckCircle, MessageSquare, Search, PlusCircle, History, User
 export default async function StudentDashboard() {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     redirect('/auth/student-signin?callbackUrl=/student');
   }
 
   const studentId = (session.user as any).id;
+  const user = await prisma.user.findUnique({
+    where: { id: studentId },
+    select: { balance: true }
+  });
+  const userBalance = user?.balance || 0;
 
   const requests = await prisma.tutorRequest.findMany({
     where: { studentId },
@@ -95,7 +100,7 @@ export default async function StudentDashboard() {
           <h2>Recent Requests</h2>
           <Link href="/student/request-tutor" className="btn-primary">New Request</Link>
         </div>
-        <StudentRequestList initialRequests={requests.slice(0, 5) as any} />
+        <StudentRequestList initialRequests={requests.slice(0, 5) as any} userBalance={userBalance} />
       </div>
     </div>
   );

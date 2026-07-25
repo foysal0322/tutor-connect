@@ -8,7 +8,7 @@ export const revalidate = 60;
 export default async function FindTutorPage() {
   const [expertises, departments] = await Promise.all([
     prisma.tutorExpertise.findMany({
-      where: { isActive: true },
+      where: { isActive: true, tutor: { role: { not: 'ADMIN' } } },
       select: {
         id: true,
         tutorId: true,

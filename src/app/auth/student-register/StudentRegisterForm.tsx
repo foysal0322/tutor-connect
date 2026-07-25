@@ -41,8 +41,8 @@ export default function StudentRegisterForm({ departments }: { departments: any[
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
             <UserPlus size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-main">Student Registration</h2>
-          <p className="text-muted text-sm mt-2">Create an account to start finding tutors.</p>
+          <h2 className="text-2xl font-bold text-main">Campus Member Registration</h2>
+          <p className="text-muted text-sm mt-2">Create a dual-role campus account to start finding tutors and teaching courses.</p>
         </div>
         
         {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
@@ -83,7 +83,7 @@ export default function StudentRegisterForm({ departments }: { departments: any[
           </div>
 
           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-4" disabled={loading}>
-            {loading ? <><Spinner size={18} /> Registering...</> : 'Register as Student'}
+            {loading ? <><Spinner size={18} /> Registering...</> : 'Create Campus Account'}
           </button>
         </form>
 

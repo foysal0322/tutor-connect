@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'ADMIN') {
+  if (!session || (session.user as any)?.role !== 'ADMIN') {
     redirect('/auth/admin-signin');
   }
 

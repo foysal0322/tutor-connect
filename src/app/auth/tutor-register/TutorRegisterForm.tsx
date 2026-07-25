@@ -74,7 +74,7 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
                 ))}
               </select>
             </div>
-            <FloatingInput name="cgpa" type="number" label="CGPA (e.g. 3.50)" required />
+            <FloatingInput name="cgpa" type="number" step="any" min="0" max="4.0" label="CGPA (e.g. 3.50)" required />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

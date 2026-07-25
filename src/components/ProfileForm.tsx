@@ -88,12 +88,12 @@ export default function ProfileForm({
           </div>
         </div>
 
-        {(user.role === 'TUTOR' || (isAdmin && user.role === 'TUTOR')) && (
+        {(user.role !== 'ADMIN' || (isAdmin && user.role !== 'ADMIN')) && (
           <div className="form-group mb-0">
             <FloatingInput 
               name="cgpa" 
               type="number" 
-              step="0.01" 
+              step="any" 
               min="0" 
               max="4.0" 
               label="CGPA" 

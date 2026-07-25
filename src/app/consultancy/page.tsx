@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { sendSupportEmail } from '@/lib/mail';
 
 export default function ConsultancyPage() {
   async function submitConsultancy(formData: FormData) {
@@ -37,8 +38,29 @@ export default function ConsultancyPage() {
       console.error('Failed to send consultancy discord notification', err);
     }
 
+    try {
+      await sendSupportEmail({
+        to: student.email,
+        subject: `Consultancy Request Confirmed: ${topic} - NSUone`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #4f46e5;">We Received Your Consultancy Request!</h2>
+            <p>Hello ${student.name},</p>
+            <p>We have received your request for a free consultation session on <strong>${topic}</strong>.</p>
+            <p style="background: #f8fafc; padding: 12px; border-left: 4px solid #4f46e5; border-radius: 4px;"><em>"${details}"</em></p>
+            <p>One of our senior mentors will review your request and contact you shortly via email or phone. If you have any questions before the session, reply directly to this email!</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+            <p style="color: #64748b; font-size: 0.9em;">NSUone Mentorship & Consultancy Team</p>
+          </div>
+        `
+      });
+    } catch (mailErr) {
+      console.error('Failed to send consultancy confirmation email:', mailErr);
+    }
+
     redirect('/consultancy?success=true');
   }
+
 
   return (
     <div className="container animate-fade-in" style={{ padding: '4rem 1.5rem', maxWidth: '600px' }}>

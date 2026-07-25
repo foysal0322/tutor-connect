@@ -6,8 +6,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'STUDENT') {
-    redirect('/api/auth/signin');
+  if (!session || (session.user as any)?.role === 'ADMIN') {
+    redirect('/auth/student-signin');
   }
 
   return (

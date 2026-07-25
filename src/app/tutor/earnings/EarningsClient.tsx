@@ -64,6 +64,7 @@ export default function EarningsClient({
         setError(res.error);
       } else {
         setSuccess('Withdrawal request submitted successfully! Admin verification pending.');
+        const val = parseFloat(amount);
         const fee = val * 0.05;
         const net = val * 0.95;
         

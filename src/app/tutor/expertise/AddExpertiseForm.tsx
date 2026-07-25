@@ -142,6 +142,18 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           <SearchableCourseSelect courses={courses} defaultValue={initialData?.courseId} />
         </div>
 
+        {!initialData && (
+          <FloatingInput
+            name="cgpa"
+            type="number"
+            step="any"
+            min="0"
+            max="4.0"
+            label="Your Overall CGPA (Optional)"
+            placeholder="e.g. 3.75"
+          />
+        )}
+
         <FloatingInput
           name="semesterCompleted"
           type="text"
