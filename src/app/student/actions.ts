@@ -140,55 +140,93 @@ export async function cancelTutorRequest(id: string) {
 
 export async function submitPayment(formData: FormData) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     return { error: 'Not authorized.' };
   }
 
+  const studentId = (session.user as any).id;
   const requestId = formData.get('requestId') as string;
-  const mfsType = formData.get('mfsType') as string;
-  const accountNumber = formData.get('accountNumber') as string;
-  const amount = parseFloat(formData.get('amount') as string);
-  const transactionId = formData.get('transactionId') as string;
+  const mfsType = formData.get('mfsType') as string || 'CAMPUS_WALLET';
+  const accountNumber = formData.get('accountNumber') as string || 'WALLET';
+  const amount = parseFloat(formData.get('amount') as string || '0');
+  const transactionId = formData.get('transactionId') as string || `WLT-${Date.now()}`;
+  const walletAmountStr = formData.get('walletAmount') as string;
+  const walletAmount = walletAmountStr ? parseFloat(walletAmountStr) : 0;
 
-  if (!requestId || !mfsType || !accountNumber || isNaN(amount) || !transactionId) {
-    return { error: 'All fields are required.' };
+  if (!requestId) {
+    return { error: 'Request ID is required.' };
   }
 
-  // Sanitize inputs
-  const sanitizedAccountNumber = accountNumber.trim();
-  const sanitizedTransactionId = transactionId.trim();
-
   try {
-    // Use a transaction to update both records atomically
+    let totalPaid = amount;
+    let finalMfsType = mfsType;
+    let newStatus = 'PAYMENT_PENDING';
+
+    // Handle Wallet deduction if applied
+    if (walletAmount > 0) {
+      const student = await prisma.user.findUnique({
+        where: { id: studentId },
+        select: { balance: true }
+      });
+      if (!student || student.balance < walletAmount) {
+        return { error: `Insufficient wallet balance. You have ${student?.balance || 0} BDT available.` };
+      }
+
+      await prisma.user.update({
+        where: { id: studentId },
+        data: { balance: { decrement: walletAmount } }
+      });
+
+      await prisma.walletTransaction.create({
+        data: {
+          userId: studentId,
+          amount: -walletAmount,
+          type: 'TUITION_PAYMENT',
+          description: `Tuition fee payment for request #${requestId.slice(-6)}`,
+          referenceId: requestId
+        }
+      });
+
+      totalPaid = amount + walletAmount;
+      if (amount <= 0 || mfsType === 'CAMPUS_WALLET') {
+        finalMfsType = 'CAMPUS_WALLET';
+        newStatus = 'ACCEPTED'; // 100% wallet payment is instantly auto-verified
+      } else {
+        finalMfsType = `${mfsType} + WALLET`;
+      }
+    }
+
+    const sanitizedAccountNumber = accountNumber.trim();
+    const sanitizedTransactionId = transactionId.trim();
+
     await prisma.$transaction([
       prisma.payment.upsert({
         where: { requestId },
         update: {
-          mfsType,
+          mfsType: finalMfsType,
           accountNumber: sanitizedAccountNumber,
-          amount,
+          amount: totalPaid,
           transactionId: sanitizedTransactionId
         },
         create: {
           requestId,
-          mfsType,
+          mfsType: finalMfsType,
           accountNumber: sanitizedAccountNumber,
-          amount,
+          amount: totalPaid,
           transactionId: sanitizedTransactionId
         }
       }),
       prisma.tutorRequest.update({
         where: { id: requestId },
-        data: { status: 'PAYMENT_PENDING' }
+        data: { status: newStatus }
       }),
     ]);
 
-    // Send discord notification
     try {
       const studentName = session.user?.name || 'A student';
       await notifyPaymentSubmission({
-        amount: amount,
-        method: mfsType,
+        amount: totalPaid,
+        method: finalMfsType,
         transactionId: sanitizedTransactionId,
         studentName,
       });
@@ -197,6 +235,7 @@ export async function submitPayment(formData: FormData) {
     }
 
     revalidatePath('/student');
+    revalidatePath('/wallet');
     return { success: true };
   } catch (err) {
     console.error('Submit payment error:', err);

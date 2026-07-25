@@ -1,9 +1,7 @@
-import { prisma } from '@/lib/prisma';
-import { getDepartments } from '@/lib/cache';
-import TutorRegisterForm from './TutorRegisterForm';
+import { redirect } from 'next/navigation';
 
-export default async function TutorRegisterPage() {
-  const departments = await getDepartments();
-
-  return <TutorRegisterForm departments={departments} />;
+export default async function TutorRegisterPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
+  const resolvedParams = await searchParams;
+  const callbackUrl = resolvedParams?.callbackUrl || '';
+  redirect(`/auth/student-register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
 }

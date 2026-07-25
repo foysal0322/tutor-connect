@@ -12,7 +12,7 @@ export default async function RequestTutorPage({ searchParams }: { searchParams:
   const courseId = resolvedParams.courseId;
   const tutorId = resolvedParams.tutorId;
 
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     const callbackUrl = courseId
       ? `/student/request-tutor?courseId=${courseId}${tutorId ? `&tutorId=${tutorId}` : ''}`
       : '/student/request-tutor';
@@ -24,7 +24,7 @@ export default async function RequestTutorPage({ searchParams }: { searchParams:
   let selectedTutor = null;
   if (tutorId) {
     selectedTutor = await prisma.user.findFirst({
-      where: { id: tutorId, role: 'TUTOR' },
+      where: { id: tutorId, role: { not: 'ADMIN' } },
       include: { expertises: true }
     });
   }

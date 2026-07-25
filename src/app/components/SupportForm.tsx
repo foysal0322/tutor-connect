@@ -10,18 +10,19 @@ export default function SupportForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
     setError('');
     setSuccess(false);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const res = await submitSupportTicket(formData);
     
     if (res?.error) {
       setError(res.error);
     } else if (res?.success) {
       setSuccess(true);
-      (e.target as HTMLFormElement).reset();
+      form?.reset();
     }
     setLoading(false);
   }

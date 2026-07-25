@@ -48,8 +48,8 @@ export default function TutorSignInForm() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
             <LogIn size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-main">Tutor Sign In</h2>
-          <p className="text-muted text-sm mt-2">Welcome back! Please enter your details.</p>
+          <h2 className="text-2xl font-bold text-main">Campus Account Sign In</h2>
+          <p className="text-muted text-sm mt-2">Welcome back! Access your dual-role Teaching & Learning dashboard.</p>
         </div>
         
         {registered && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">Registration successful! Please sign in.</div>}

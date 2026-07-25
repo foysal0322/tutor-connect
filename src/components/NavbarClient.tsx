@@ -33,37 +33,34 @@ export default function NavbarClient({ session }: { session: any }) {
         <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
           <Link href="/" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link href="/find-tutor" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
-          <Link href="/auth/tutor-register" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Become a Tutor</Link>
-          <Link href="/consultancy" className={styles.navLinkHot} onClick={() => setIsMobileMenuOpen(false)}>Get Consultancy</Link>
-          <span className={`${styles.navLink} ${styles.disabledLink}`}>One Shop <sup className={styles.badgeComingSoon}>Coming Soon</sup></span>
+          <Link href={session ? "/tutor/expertise" : "/auth/student-register"} className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>
+            {session ? "Teach a Course" : "Register"}
+          </Link>
+          <Link href="/shop" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
           <Link href="/tutorial" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
           <Link href="/#support" className={styles.navLink} onClick={handleSupportClick}>Contact</Link>
         
           <div className={`${styles.authButtonsMobile}`}>
+            <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>
             {!session ? (
-              <>
-                <Link href="/auth/student-signin" className="btn-outline" onClick={() => setIsMobileMenuOpen(false)}>Student Sign In</Link>
-                <Link href="/auth/tutor-signin" className="btn-primary" onClick={() => setIsMobileMenuOpen(false)}>Tutor Sign In</Link>
-              </>
+              <Link href="/auth/student-signin" className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
             ) : (
               <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
                 <NotificationBell />
-                <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
               </div>
             )}
           </div>
         </div>
 
         <div className={styles.authButtonsDesktop}>
+          <Link href="/consultancy" className={styles.btnConsultancy}>Free Consultancy</Link>
           {!session ? (
-            <>
-              <Link href="/auth/student-signin" className="btn-outline">Student Sign In</Link>
-              <Link href="/auth/tutor-signin" className="btn-primary">Tutor Sign In</Link>
-            </>
+            <Link href="/auth/student-signin" className={styles.btnTutorSignIn}>Sign In</Link>
           ) : (
             <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
               <NotificationBell />
-              <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className="btn-primary">Dashboard</Link>
+              <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className={styles.btnTutorSignIn}>Dashboard</Link>
             </div>
           )}
         </div>

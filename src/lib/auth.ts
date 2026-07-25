@@ -46,12 +46,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("User not found");
         }
 
-        // Validate role if passed (to distinguish student/tutor/admin logins if needed)
-        if (credentials.role && user.role !== credentials.role) {
-           // Allow ADMIN to login anywhere, otherwise restrict
-           if (user.role !== 'ADMIN') {
-             throw new Error(`Access denied. You are registered as a ${user.role}.`);
-           }
+        // In a Unified Campus System, we allow any non-admin user (STUDENT or TUTOR) to sign in seamlessly
+        if (credentials.role === 'ADMIN' && user.role !== 'ADMIN') {
+          throw new Error("Access denied. Admin privileges required.");
         }
 
         if (user.isBlocked) {

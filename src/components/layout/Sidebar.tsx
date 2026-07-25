@@ -111,20 +111,18 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   const getLinks = () => {
     switch (role) {
       case 'STUDENT':
-        return [
-          { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
-          { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
-          { name: 'My Requests', href: '/student/request-tutor', icon: Calendar },
-          { name: 'Payments', href: '/student/payments', icon: CreditCard },
-          { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
-          { name: 'Profile', href: '/student/profile', icon: User },
-        ];
       case 'TUTOR':
         return [
-          { name: 'Dashboard', href: '/tutor', icon: LayoutDashboard },
-          { name: 'My Expertise', href: '/tutor/expertise', icon: Briefcase },
-          { name: 'Earnings', href: '/tutor/earnings', icon: DollarSign },
-          { name: 'Profile', href: '/tutor/profile', icon: User },
+          { name: '🎓 My Learning', href: '/student', icon: LayoutDashboard },
+          { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
+          { name: 'Tuition Requests', href: '/student/request-tutor', icon: Calendar },
+          { name: 'Payments', href: '/student/payments', icon: CreditCard },
+          { name: '👨‍🏫 My Teaching', href: '/tutor', icon: Briefcase },
+          { name: 'Offer Course', href: '/tutor/expertise', icon: GraduationCap },
+          { name: 'Earnings & Withdrawals', href: '/tutor/earnings', icon: DollarSign },
+          { name: '💰 My Wallet', href: '/wallet', icon: CreditCard },
+          { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
+          { name: '👤 My Profile', href: '/student/profile', icon: User },
         ];
       case 'ADMIN':
         return [

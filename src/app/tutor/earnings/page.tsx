@@ -9,7 +9,7 @@ export const revalidate = 0; // Dynamic on every request
 export default async function TutorEarningsPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'TUTOR') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     redirect('/auth/tutor-signin?callbackUrl=/tutor/earnings');
   }
 

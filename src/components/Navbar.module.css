@@ -33,15 +33,16 @@
 }
 
 .navLink {
-  font-weight: 500;
-  color: var(--text-muted);
-  font-size: 0.9rem; /* Reduced slightly */
+  font-weight: 600;
+  color: #334155; /* A deeper, richer slate color instead of muted gray */
+  font-size: 0.95rem; 
   position: relative;
-  white-space: nowrap; /* Prevent awkward wrapping */
+  white-space: nowrap; 
+  transition: color 0.3s ease;
 }
 
 .navLink:hover {
-  color: var(--primary);
+  color: #4f46e5 !important; /* Vibrant indigo on hover */
 }
 
 .navLink::after {
@@ -51,7 +52,7 @@
   height: 2px;
   bottom: -4px;
   left: 0;
-  background-color: var(--primary);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6); /* Nice gradient underline on hover */
   transition: width 0.3s ease;
 }
 
@@ -126,6 +127,137 @@
   display: none;
   background: transparent;
   color: var(--text-main);
+}
+
+.btnConsultancy {
+  background: linear-gradient(135deg, #ff6b6b, #ff4757);
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: pulseConsultancy 2s infinite;
+}
+
+.btnConsultancy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+  color: white !important;
+}
+
+@keyframes pulseConsultancy {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+  }
+}
+
+.btnStudentSignIn {
+  background: transparent !important;
+  color: #4f46e5 !important;
+  border: 2px solid #4f46e5 !important;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btnStudentSignIn:hover {
+  background: rgba(79, 70, 229, 0.1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.btnTutorSignIn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: white !important;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none !important;
+}
+
+.btnTutorSignIn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+  color: white !important;
+}
+
+.signInDropdownContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.signInDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  min-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  z-index: 100;
+}
+
+.signInDropdownContainer:hover .signInDropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.signInDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-main);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.signInDropdownItem:hover {
+  background: rgba(99, 102, 241, 0.05);
+  color: #4f46e5;
+}
+
+.signInDropdownItemIcon {
+  font-size: 1.25rem;
 }
 
 @media (max-width: 992px) {

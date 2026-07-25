@@ -43,6 +43,7 @@ model User {
   password     String
   isBlocked    Boolean  @default(false)
   hideCgpa     Boolean  @default(false)
+  balance      Float    @default(0)
   createdAt    DateTime @default(now())
 
   department Department? @relation(fields: [departmentId], references: [id])
@@ -55,6 +56,7 @@ model User {
   refundRequests        RefundRequest[]
   passwordResetRequests PasswordResetRequest[]
   withdrawalRequests    WithdrawalRequest[]
+  walletTransactions    WalletTransaction[]
   notifications         Notification[]
   pushSubscriptions     PushSubscription[]
 
@@ -164,6 +166,8 @@ model SupportTicket {
 model PasswordResetRequest {
   id        String   @id @default(cuid())
   userId    String
+  token     String?
+  expiresAt DateTime?
   status    String   @default("PENDING") // PENDING, RESOLVED
   createdAt DateTime @default(now())
 
@@ -244,3 +248,20 @@ model VisitorLog {
 
   @@index([createdAt])
 }
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float    // Positive for credit/recharge, negative for payment/withdrawal
+  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL
+  description String
+  referenceId String?  // MFS transaction ID or TutorRequest ID
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+

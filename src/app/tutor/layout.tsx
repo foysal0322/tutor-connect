@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 export default async function TutorLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'TUTOR') {
+  if (!session || (session.user as any)?.role === 'ADMIN') {
     redirect('/auth/tutor-signin');
   }
 

@@ -7,9 +7,10 @@ import styles from '../dashboard.module.css';
 
 interface RequestListProps {
   initialRequests: any[];
+  userBalance?: number;
 }
 
-export default function StudentRequestList({ initialRequests }: RequestListProps) {
+export default function StudentRequestList({ initialRequests, userBalance = 0 }: RequestListProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [activePaymentId, setActivePaymentId] = useState<string | null>(null);
   const [activeRefundId, setActiveRefundId] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
   const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionId, setTransactionId] = useState('');
+  const [useWallet, setUseWallet] = useState(false);
   
   // Refund Form State
   const [refundDetails, setRefundDetails] = useState('');
@@ -45,35 +47,51 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
 
   const handlePaymentSubmit = async (e: React.FormEvent, requestId: string) => {
     e.preventDefault();
-    if (!mfsType || !accountNumber || !amount || !transactionId) {
-      toast.error('Please fill in all payment details.');
-      return;
-    }
-    
-    if (accountNumber.length !== 11) {
-      toast.error('MFS Account Number must be exactly 11 digits.');
-      return;
-    }
+    const req = requests.find(r => r.id === requestId);
+    const totalPayable = req ? parseFloat((req.budget * 1.05).toFixed(2)) : parseFloat(amount || '0');
+    const walletCovered = useWallet ? Math.min(userBalance, totalPayable) : 0;
+    const remainingMfs = parseFloat(Math.max(0, totalPayable - walletCovered).toFixed(2));
 
     const formData = new FormData();
     formData.append('requestId', requestId);
-    formData.append('mfsType', mfsType);
-    formData.append('accountNumber', accountNumber);
-    formData.append('amount', amount);
-    formData.append('transactionId', transactionId);
+    if (walletCovered > 0) {
+      formData.append('walletAmount', walletCovered.toString());
+    }
+
+    if (remainingMfs === 0) {
+      // 100% Wallet payment
+      formData.append('mfsType', 'CAMPUS_WALLET');
+      formData.append('accountNumber', 'WALLET');
+      formData.append('amount', '0');
+      formData.append('transactionId', `WLT-${Date.now()}`);
+    } else {
+      if (!mfsType || !accountNumber || !transactionId) {
+        toast.error('Please fill in all MFS payment details for the remaining balance.');
+        return;
+      }
+      if (accountNumber.length !== 11) {
+        toast.error('MFS Account Number must be exactly 11 digits.');
+        return;
+      }
+      formData.append('mfsType', mfsType);
+      formData.append('accountNumber', accountNumber);
+      formData.append('amount', remainingMfs.toString());
+      formData.append('transactionId', transactionId);
+    }
 
     startTransition(async () => {
       const res = await submitPayment(formData);
       if (res?.error) {
         toast.error(res.error);
       } else {
-        toast.success('Payment details submitted! Verification pending.');
+        const newStatus = remainingMfs === 0 ? 'ACCEPTED' : 'PAYMENT_PENDING';
+        toast.success(remainingMfs === 0 ? '⚡ Paid 100% with Campus Wallet! Session is automatically verified & active.' : 'Payment details submitted! Verification pending.');
         setRequests(prev => prev.map(r => {
           if (r.id === requestId) {
             return {
               ...r,
-              status: 'PAYMENT_PENDING',
-              payment: { mfsType, accountNumber, amount: parseFloat(amount), transactionId }
+              status: newStatus,
+              payment: { mfsType: remainingMfs === 0 ? 'CAMPUS_WALLET' : (walletCovered > 0 ? `${mfsType} + WALLET` : mfsType), accountNumber: remainingMfs === 0 ? 'WALLET' : accountNumber, amount: totalPayable, transactionId: remainingMfs === 0 ? 'WALLET' : transactionId }
             };
           }
           return r;
@@ -82,6 +100,7 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
         setAccountNumber('');
         setAmount('');
         setTransactionId('');
+        setUseWallet(false);
       }
     });
   };
@@ -387,116 +406,152 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                       </p>
                     </div>
 
-                    <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '1.25rem', borderRadius: '8px' }}>
-                      <p style={{ fontSize: '1.05rem', color: '#9a3412', margin: 0, fontWeight: 600 }}>
-                        Step 1: Send Money to <span 
-                          onClick={() => {
-                            navigator.clipboard.writeText('01785872142');
-                            toast.success('Number copied to clipboard!');
-                          }}
-                          title="Click to copy"
-                          style={{ backgroundColor: '#ffedd5', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '1.2rem', fontWeight: 800, color: '#ea580c', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', margin: '0 0.25rem', border: '1px solid #fdba74', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fed7aa'}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffedd5'}
-                        >
-                          01785872142
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        </span> (bKash, Nagad, or Rocket)
-                      </p>
-                      <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: '0.5rem 0 0 0' }}>
-                        Step 2: Choose your service below and submit the transaction details.
-                      </p>
-                    </div>
+                    {userBalance > 0 && (
+                      <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac', padding: '1rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#166534', cursor: 'pointer', fontSize: '0.95rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={useWallet}
+                            onChange={(e) => setUseWallet(e.target.checked)}
+                            style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                          />
+                          Use Campus Wallet Balance ({userBalance.toFixed(2)} BDT available)
+                        </label>
+                        {useWallet && (
+                          <div style={{ fontSize: '0.85rem', color: '#15803d', paddingLeft: '1.7rem' }}>
+                            {userBalance >= (req.budget * 1.05) ? (
+                              <span>⚡ Your wallet covers 100% of this tuition! <strong>No MFS transfer needed.</strong></span>
+                            ) : (
+                              <span>💰 Wallet covers -{userBalance.toFixed(2)} BDT. You will pay the remaining <strong>{((req.budget * 1.05) - userBalance).toFixed(2)} BDT</strong> via MFS below.</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                    {/* MFS Providers */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => setMfsType('BKASH')}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: mfsType === 'BKASH' ? '2px solid #d1417a' : '1px solid var(--border-color)',
-                          background: mfsType === 'BKASH' ? '#fdf2f7' : 'white',
-                          color: mfsType === 'BKASH' ? '#d1417a' : 'var(--text-main)',
-                          fontWeight: 600
-                        }}
-                      >
-                        bKash
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMfsType('NAGAD')}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: mfsType === 'NAGAD' ? '2px solid #f67221' : '1px solid var(--border-color)',
-                          background: mfsType === 'NAGAD' ? '#fff7ed' : 'white',
-                          color: mfsType === 'NAGAD' ? '#f67221' : 'var(--text-main)',
-                          fontWeight: 600
-                        }}
-                      >
-                        Nagad
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMfsType('ROCKET')}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: mfsType === 'ROCKET' ? '2px solid #8c2a8c' : '1px solid var(--border-color)',
-                          background: mfsType === 'ROCKET' ? '#faf5ff' : 'white',
-                          color: mfsType === 'ROCKET' ? '#8c2a8c' : 'var(--text-main)',
-                          fontWeight: 600
-                        }}
-                      >
-                        Rocket
-                      </button>
-                    </div>
+                    {(!useWallet || userBalance < (req.budget * 1.05)) ? (
+                      <>
+                        <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '1.25rem', borderRadius: '8px' }}>
+                          <p style={{ fontSize: '1.05rem', color: '#9a3412', margin: 0, fontWeight: 600 }}>
+                            Step 1: Send Money to <span 
+                              onClick={() => {
+                                navigator.clipboard.writeText('01785872142');
+                                toast.success('Number copied to clipboard!');
+                              }}
+                              title="Click to copy"
+                              style={{ backgroundColor: '#ffedd5', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '1.2rem', fontWeight: 800, color: '#ea580c', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', margin: '0 0.25rem', border: '1px solid #fdba74', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fed7aa'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffedd5'}
+                            >
+                              01785872142
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </span> (bKash, Nagad, or Rocket)
+                          </p>
+                          <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: '0.5rem 0 0 0' }}>
+                            Step 2: Choose your service below and submit the transaction details for {useWallet ? ((req.budget * 1.05) - userBalance).toFixed(2) : (req.budget * 1.05).toFixed(2)} BDT.
+                          </p>
+                        </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                      <div>
-                        <label htmlFor={`account-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>MFS Account Number</label>
-                        <input
-                          id={`account-${req.id}`}
-                          type="text"
-                          required
-                          placeholder="e.g. 017XXXXXXXX"
-                          value={accountNumber}
-                          maxLength={11}
-                          onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                          style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                        />
+                        {/* MFS Providers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            onClick={() => setMfsType('BKASH')}
+                            style={{
+                              padding: '0.75rem',
+                              borderRadius: '8px',
+                              border: mfsType === 'BKASH' ? '2px solid #d1417a' : '1px solid var(--border-color)',
+                              background: mfsType === 'BKASH' ? '#fdf2f7' : 'white',
+                              color: mfsType === 'BKASH' ? '#d1417a' : 'var(--text-main)',
+                              fontWeight: 600
+                            }}
+                          >
+                            bKash
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMfsType('NAGAD')}
+                            style={{
+                              padding: '0.75rem',
+                              borderRadius: '8px',
+                              border: mfsType === 'NAGAD' ? '2px solid #f67221' : '1px solid var(--border-color)',
+                              background: mfsType === 'NAGAD' ? '#fff7ed' : 'white',
+                              color: mfsType === 'NAGAD' ? '#f67221' : 'var(--text-main)',
+                              fontWeight: 600
+                            }}
+                          >
+                            Nagad
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMfsType('ROCKET')}
+                            style={{
+                              padding: '0.75rem',
+                              borderRadius: '8px',
+                              border: mfsType === 'ROCKET' ? '2px solid #8c2a8c' : '1px solid var(--border-color)',
+                              background: mfsType === 'ROCKET' ? '#faf5ff' : 'white',
+                              color: mfsType === 'ROCKET' ? '#8c2a8c' : 'var(--text-main)',
+                              fontWeight: 600
+                            }}
+                          >
+                            Rocket
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                          <div>
+                            <label htmlFor={`account-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>MFS Account Number</label>
+                            <input
+                              id={`account-${req.id}`}
+                              type="text"
+                              required
+                              placeholder="e.g. 017XXXXXXXX"
+                              value={accountNumber}
+                              maxLength={11}
+                              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor={`amount-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Amount (BDT)</label>
+                            <input
+                              id={`amount-${req.id}`}
+                              type="number"
+                              required
+                              readOnly
+                              value={useWallet ? ((req.budget * 1.05) - Math.min(userBalance, req.budget * 1.05)).toFixed(2) : (req.budget * 1.05).toFixed(2)}
+                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: '#f1f5f9', cursor: 'not-allowed' }}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor={`txn-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Transaction ID</label>
+                            <input
+                              id={`txn-${req.id}`}
+                              type="text"
+                              required
+                              placeholder="e.g. TRX847927"
+                              value={transactionId}
+                              onChange={(e) => setTransactionId(e.target.value)}
+                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ backgroundColor: '#ecfdf5', border: '1px solid #6ee7b7', padding: '1.25rem', borderRadius: '8px', textAlign: 'center' }}>
+                        <p style={{ fontSize: '1.1rem', color: '#047857', margin: 0, fontWeight: 700 }}>
+                          ✨ 100% Wallet Payment Ready!
+                        </p>
+                        <p style={{ fontSize: '0.9rem', color: '#065f46', margin: '0.5rem 0 0 0' }}>
+                          Click the button below to deduct {(req.budget * 1.05).toFixed(2)} BDT from your Campus Wallet and activate this tutoring session instantly.
+                        </p>
                       </div>
-                      <div>
-                        <label htmlFor={`amount-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Amount (BDT)</label>
-                        <input
-                          id={`amount-${req.id}`}
-                          type="number"
-                          required
-                          readOnly
-                          value={amount}
-                          style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: '#f1f5f9', cursor: 'not-allowed' }}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor={`txn-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Transaction ID</label>
-                        <input
-                          id={`txn-${req.id}`}
-                          type="text"
-                          required
-                          placeholder="e.g. TRX847927"
-                          value={transactionId}
-                          onChange={(e) => setTransactionId(e.target.value)}
-                          style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                        />
-                      </div>
-                    </div>
+                    )}
 
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       <button
                         type="button"
-                        onClick={() => setActivePaymentId(null)}
+                        onClick={() => { setActivePaymentId(null); setUseWallet(false); }}
                         className="btn"
                         style={{ padding: '0.5rem 1rem', background: '#e2e8f0', color: 'var(--text-main)', borderRadius: '6px' }}
                       >
@@ -508,7 +563,7 @@ export default function StudentRequestList({ initialRequests }: RequestListProps
                         className="btn-primary"
                         style={{ padding: '0.5rem 1.25rem' }}
                       >
-                        {isPending ? '⏳ Submitting...' : 'Submit Payment'}
+                        {isPending ? '⏳ Submitting...' : (useWallet && userBalance >= (req.budget * 1.05) ? '⚡ Pay with Wallet (1-Click Verify)' : 'Submit Payment')}
                       </button>
                     </div>
                   </form>

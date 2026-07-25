@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 export default async function StudentPaymentsPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     redirect('/auth/student-signin?callbackUrl=/student/payments');
   }
 

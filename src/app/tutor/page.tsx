@@ -9,7 +9,7 @@ import { Users, BookOpen, CheckCircle, DollarSign, BookOpenCheck } from 'lucide-
 export default async function TutorDashboard() {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'TUTOR') {
+  if (!session || (session.user as any).role === 'ADMIN') {
     redirect('/auth/tutor-signin');
   }
 
