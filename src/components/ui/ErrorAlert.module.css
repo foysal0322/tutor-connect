@@ -1,0 +1,99 @@
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error {
+  background: var(--danger-light);
+  border-color: var(--danger-hover);
+  color: var(--danger-hover);
+}
+
+.warning {
+  background: var(--accent-light);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+.info {
+  background: var(--info-light);
+  border-color: var(--info-hover);
+  color: var(--info-hover);
+}
+
+.success {
+  background: var(--success-light);
+  border-color: var(--success-hover);
+  color: var(--success-hover);
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.messageContainer {
+  flex: 1;
+}
+
+.title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.message {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dismissButton:hover {
+  opacity: 1;
+}

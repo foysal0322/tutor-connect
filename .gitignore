@@ -48,4 +48,11 @@ next-env.d.ts
 
 # credentials
 test_credentials.txt
+credential.txt
+credential*.txt
+*credentials*
+*credentials.*
+*-secret*
+passwords.*
+secrets.*
 

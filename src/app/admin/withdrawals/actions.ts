@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { sendNoReplyEmail } from '@/lib/mail';
+import { idSchema } from '@/lib/validation';
 
 export async function verifyWithdrawalRequest(withdrawId: string, approve: boolean) {
   const session = await getServerSession(authOptions);
@@ -12,9 +13,16 @@ export async function verifyWithdrawalRequest(withdrawId: string, approve: boole
     return { error: 'Not authorized.' };
   }
 
+  // Validate the id argument (this action takes a string param, not FormData).
+  const idResult = idSchema.safeParse(withdrawId);
+  if (!idResult.success) {
+    return { error: 'Invalid withdrawal request id.' };
+  }
+  const safeId = idResult.data;
+
   try {
     const request = await prisma.withdrawalRequest.findUnique({
-      where: { id: withdrawId },
+      where: { id: safeId },
       include: { tutor: true }
     });
 
@@ -27,7 +35,7 @@ export async function verifyWithdrawalRequest(withdrawId: string, approve: boole
     }
 
     await prisma.withdrawalRequest.update({
-      where: { id: withdrawId },
+      where: { id: safeId },
       data: {
         status: approve ? 'APPROVED' : 'REJECTED'
       }

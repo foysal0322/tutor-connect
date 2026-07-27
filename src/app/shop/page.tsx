@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from './shop.module.css';
+
+export const metadata: Metadata = {
+  title: 'Campus Shop — nsuOne',
+  description:
+    'The nsuOne campus marketplace for study materials, course notes, and tutoring bundles. Coming soon.',
+  alternates: { canonical: '/shop' },
+};
 
 export default function ShopComingSoon() {
   return (

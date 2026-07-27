@@ -1,95 +1,80 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import authStyles from '../app/auth/auth.module.css';
 
-export default function SearchableCourseSelect({ courses, defaultValue = '' }: { courses: any[], defaultValue?: string }) {
-  const [query, setQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<any>(
-    courses.find(c => c.id === defaultValue) || null
-  );
+import { useId } from 'react';
 
-  useEffect(() => {
-    if (selectedCourse) {
-      setQuery(selectedCourse.name);
-    }
-  }, []);
+/**
+ * Accessible course picker built on the native <select>.
+ *
+ * The previous implementation was a custom dropdown on <div>s without any
+ * ARIA combobox semantics — screen-reader users couldn't operate it and
+ * keyboard users couldn't reliably select. Native <select> gets all of that
+ * for free.
+ *
+ * For lists of more than ~100 courses, swap to a full WAI-ARIA combobox
+ * (see FRONTEND_AUDIT.md D5). The dataset here is small enough that the
+ * native picker is the right call.
+ *
+ * External contract preserved: emits a form field named "courseId".
+ */
 
-  const filteredCourses = courses.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-  
-  const wrapperRef = useRef<HTMLDivElement>(null);
+interface Course {
+  id: string;
+  name: string;
+}
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        if (selectedCourse) {
-           setQuery(selectedCourse.name);
-        } else {
-           setQuery('');
-        }
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedCourse]);
+interface Props {
+  courses: Course[];
+  defaultValue?: string;
+  required?: boolean;
+  label?: string;
+}
+
+export default function SearchableCourseSelect({
+  courses,
+  defaultValue = '',
+  required,
+  label = 'Course',
+}: Props) {
+  const id = useId();
+  const hintId = `${id}-hint`;
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative' }}>
-      <input type="hidden" name="courseId" value={selectedCourse ? selectedCourse.id : ''} required />
-      <input 
-        type="text" 
-        className={authStyles.input}
-        placeholder="Search for a course..."
-        value={query}
-        onChange={(e) => {
-           setQuery(e.target.value);
-           setIsOpen(true);
-           setSelectedCourse(null);
+    <div style={{ marginBottom: 'var(--space-5)' }}>
+      <label
+        htmlFor={id}
+        style={{
+          display: 'block',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 500,
+          marginBottom: 'var(--space-2)',
+          color: 'var(--text-main)',
         }}
-        onFocus={() => setIsOpen(true)}
-      />
-      
-      {isOpen && (
-        <div style={{ 
-          position: 'absolute', 
-          top: '100%', 
-          left: 0, 
-          right: 0, 
-          maxHeight: '200px', 
-          overflowY: 'auto',
-          background: 'var(--card-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          marginTop: '4px',
-          zIndex: 10,
-          boxShadow: 'var(--shadow-md)'
-        }}>
-          {filteredCourses.length > 0 ? filteredCourses.map(course => (
-            <div 
-              key={course.id}
-              onClick={() => {
-                setSelectedCourse(course);
-                setQuery(course.name);
-                setIsOpen(false);
-              }}
-              style={{
-                padding: '0.75rem',
-                cursor: 'pointer',
-                borderBottom: '1px solid var(--border-color)',
-                color: 'var(--text-main)',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-main)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              {course.name}
-            </div>
-          )) : (
-            <div style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>No courses found</div>
-          )}
-        </div>
-      )}
+      >
+        {label}
+        {required && (
+          <span aria-label="required" style={{ color: 'var(--danger)', marginLeft: '0.25rem' }}>
+            *
+          </span>
+        )}
+      </label>
+      <select
+        id={id}
+        name="courseId"
+        className="form-select"
+        defaultValue={defaultValue}
+        required={required}
+        aria-describedby={hintId}
+      >
+        <option value="">Search for a course…</option>
+        {courses.map((course) => (
+          <option key={course.id} value={course.id}>
+            {course.name}
+          </option>
+        ))}
+      </select>
+      <div id={hintId} className="form-hint">
+        {courses.length} courses available
+      </div>
     </div>
   );
 }

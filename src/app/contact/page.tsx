@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { sendSupportEmail } from '@/lib/mail';
+
+export const metadata: Metadata = {
+  title: 'Contact Us — nsuOne',
+  description:
+    'Get in touch with the nsuOne team for support, partnership inquiries, or feedback. We typically respond within one business day.',
+  alternates: { canonical: '/contact' },
+};
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
   const params = await searchParams;

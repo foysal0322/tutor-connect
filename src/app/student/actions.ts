@@ -5,6 +5,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notifyNewCourseRequest, notifyPaymentSubmission, notifyRefundRequest } from '@/lib/discord';
+import {
+  parseFormData,
+  submitTutorRequestSchema,
+  submitPaymentSchema,
+  submitRefundRequestSchema,
+} from '@/lib/validation';
 
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -12,19 +18,15 @@ export async function submitTutorRequest(formData: FormData) {
     return { error: 'Not authorized.' };
   }
 
-  const studentId = (session.user as any).id;
-  const courseId = formData.get('courseId') as string;
-  const topic = formData.get('topic') as string;
-  const facultyName = formData.get('facultyName') as string;
-  const preferredMode = formData.get('preferredMode') as string;
-  const preferredDateTime = formData.get('preferredDateTime') as string;
-  const budget = parseFloat(formData.get('budget') as string);
-  const tutorId = formData.get('tutorId') as string || null;
-  const status = tutorId ? 'MATCHED' : 'PENDING';
-
-  if (!courseId || !topic || !preferredMode || isNaN(budget)) {
-    return { error: 'Please fill in all required fields.' };
+  const parsed = parseFormData(formData, submitTutorRequestSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
   }
+  const { courseId, topic, facultyName, preferredMode, preferredDateTime, budget } = parsed.data;
+  const tutorId = parsed.data.tutorId || null;
+
+  const studentId = (session.user as any).id;
+  const status = tutorId ? 'MATCHED' : 'PENDING';
 
   // Prevent duplicate requests for the same course
   const existing = await prisma.tutorRequest.findFirst({
@@ -105,28 +107,30 @@ export async function cancelTutorRequest(id: string) {
       data: { status: 'CANCELLED' }
     });
 
-    // Send discord notification (non-blocking)
+    // Send discord notification (non-blocking, env-driven)
     try {
-      const webhookUrl = 'REDACTED_WEBHOOK_URL';
-      const studentName = session.user?.name || 'A student';
-      const message = {
-        embeds: [{
-          title: '❌ Tutor Request Cancelled',
-          color: 15158332,
-          fields: [
-            { name: 'Student', value: studentName, inline: true },
-            { name: 'Course', value: existing.course.name, inline: true },
-            { name: 'Topic', value: existing.topic || 'General Help', inline: true }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
+      const webhookUrl = process.env.DISCORD_REQUESTS_WEBHOOK;
+      if (webhookUrl) {
+        const studentName = session.user?.name || 'A student';
+        const message = {
+          embeds: [{
+            title: '❌ Tutor Request Cancelled',
+            color: 15158332,
+            fields: [
+              { name: 'Student', value: studentName, inline: true },
+              { name: 'Course', value: existing.course.name, inline: true },
+              { name: 'Topic', value: existing.topic || 'General Help', inline: true }
+            ],
+            timestamp: new Date().toISOString()
+          }]
+        };
 
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message)
-      });
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(message)
+        });
+      }
     } catch (err) {
       console.error('Failed to send cancel discord notification', err);
     }
@@ -144,22 +148,22 @@ export async function submitPayment(formData: FormData) {
     return { error: 'Not authorized.' };
   }
 
-  const studentId = (session.user as any).id;
-  const requestId = formData.get('requestId') as string;
-  const mfsType = formData.get('mfsType') as string || 'CAMPUS_WALLET';
-  const accountNumber = formData.get('accountNumber') as string || 'WALLET';
-  const amount = parseFloat(formData.get('amount') as string || '0');
-  const transactionId = formData.get('transactionId') as string || `WLT-${Date.now()}`;
-  const walletAmountStr = formData.get('walletAmount') as string;
-  const walletAmount = walletAmountStr ? parseFloat(walletAmountStr) : 0;
-
-  if (!requestId) {
-    return { error: 'Request ID is required.' };
+  const parsed = parseFormData(formData, submitPaymentSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
   }
+  const { requestId, mfsType, amount } = parsed.data;
+  let { accountNumber, transactionId, walletAmount } = parsed.data;
+  // Normalise empty optionals
+  if (!accountNumber) accountNumber = 'WALLET';
+  if (!transactionId) transactionId = `WLT-${Date.now()}`;
+  if (!walletAmount) walletAmount = 0;
+
+  const studentId = (session.user as any).id;
 
   try {
     let totalPaid = amount;
-    let finalMfsType = mfsType;
+    let finalMfsType: string = mfsType;
     let newStatus = 'PAYMENT_PENDING';
 
     // Handle Wallet deduction if applied
@@ -288,13 +292,13 @@ export async function submitRefundRequest(formData: FormData) {
     return { error: 'Not authorized.' };
   }
 
-  const studentId = (session.user as any).id;
-  const requestId = formData.get('requestId') as string;
-  const details = formData.get('details') as string;
-
-  if (!requestId || !details?.trim()) {
-    return { error: 'Details/Reason is required.' };
+  const parsed = parseFormData(formData, submitRefundRequestSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
   }
+  const { requestId, details } = parsed.data;
+
+  const studentId = (session.user as any).id;
 
   try {
     // Check if there is already a refund request
@@ -311,7 +315,7 @@ export async function submitRefundRequest(formData: FormData) {
       data: {
         requestId,
         studentId,
-        details: details.trim(),
+        details,
         status: 'PENDING'
       }
     });

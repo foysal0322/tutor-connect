@@ -3,6 +3,12 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { sendNoReplyEmail } from '@/lib/mail';
+import {
+  rateLimit,
+  retryMessage,
+  OTP_ISSUE_RATE_LIMIT,
+  OTP_VERIFY_RATE_LIMIT,
+} from '@/lib/rateLimit';
 
 function maskEmail(email: string) {
   const parts = email.split('@');
@@ -16,6 +22,17 @@ function maskEmail(email: string) {
 // Action for users to request a password reset with OTP via Email
 export async function requestPasswordReset(identifier: string) {
   try {
+    // Rate-limit OTP issue by identifier to prevent abuse.
+    const key = `otp-issue:${(identifier || '').trim().toLowerCase()}`;
+    const rl = rateLimit(key, OTP_ISSUE_RATE_LIMIT.limit, OTP_ISSUE_RATE_LIMIT.windowMs);
+    if (!rl.ok) {
+      // Generic, constant-shape message — do not confirm whether the user exists.
+      return {
+        success: false,
+        message: retryMessage(rl.resetAt),
+      };
+    }
+
     // 1. Find user by email or nsuId
     const user = await prisma.user.findFirst({
       where: {
@@ -94,6 +111,17 @@ export async function requestPasswordReset(identifier: string) {
 // Action for users to verify OTP and set a new password
 export async function verifyAndResetPassword(userId: string, otp: string, newPassword: string) {
   try {
+    // Rate-limit OTP verify — 6-digit OTP has only 10^6 combinations;
+    // without throttling this is brute-forceable in minutes.
+    const rl = rateLimit(
+      `otp-verify:${userId}`,
+      OTP_VERIFY_RATE_LIMIT.limit,
+      OTP_VERIFY_RATE_LIMIT.windowMs,
+    );
+    if (!rl.ok) {
+      return { success: false, message: retryMessage(rl.resetAt) };
+    }
+
     const request = await prisma.passwordResetRequest.findFirst({
       where: {
         userId,

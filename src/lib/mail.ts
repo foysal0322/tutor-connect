@@ -1,12 +1,27 @@
 import nodemailer from 'nodemailer';
 
+// Email addresses are read from env so they can be changed without code edits,
+// but fall back to the canonical addresses so existing call sites keep working.
+const NO_REPLY_USER = process.env.MAIL_NOREPLY_USER ?? 'noreply.nsuone@gmail.com';
+const SUPPORT_USER = process.env.MAIL_SUPPORT_USER ?? 'support.nsuone@gmail.com';
+
+const NO_REPLY_PASS = process.env.MAIL_NOREPLY_PASS;
+const SUPPORT_PASS = process.env.MAIL_SUPPORT_PASS;
+
+if (!NO_REPLY_PASS && process.env.NODE_ENV === 'production') {
+  console.warn('MAIL_NOREPLY_PASS is not set — no-reply emails will fail.');
+}
+if (!SUPPORT_PASS && process.env.NODE_ENV === 'production') {
+  console.warn('MAIL_SUPPORT_PASS is not set — support emails will fail.');
+}
+
 // Transporter for notifications that do NOT require user replies
 // (new registration, forgot password, teacher allocation, status updates, etc.)
 export const noReplyTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'noreply.nsuone@gmail.com',
-    pass: 'ihhi qrbu rvze mief',
+    user: NO_REPLY_USER,
+    pass: NO_REPLY_PASS ?? '',
   },
 });
 
@@ -15,8 +30,8 @@ export const noReplyTransporter = nodemailer.createTransport({
 export const supportTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'support.nsuone@gmail.com',
-    pass: 'slcr kilu qhsk bzec',
+    user: SUPPORT_USER,
+    pass: SUPPORT_PASS ?? '',
   },
 });
 
@@ -31,7 +46,7 @@ interface SendEmailOptions {
 export async function sendNoReplyEmail({ to, subject, html, text }: SendEmailOptions) {
   try {
     const info = await noReplyTransporter.sendMail({
-      from: '"NSUone No-Reply" <noreply.nsuone@gmail.com>',
+      from: `"NSUone No-Reply" <${NO_REPLY_USER}>`,
       to,
       subject,
       html,
@@ -48,12 +63,12 @@ export async function sendNoReplyEmail({ to, subject, html, text }: SendEmailOpt
 export async function sendSupportEmail({ to, subject, html, text, replyTo }: SendEmailOptions) {
   try {
     const info = await supportTransporter.sendMail({
-      from: '"NSUone Support" <support.nsuone@gmail.com>',
+      from: `"NSUone Support" <${SUPPORT_USER}>`,
       to,
       subject,
       html,
       text: text || html.replace(/<[^>]*>?/gm, ''),
-      replyTo: replyTo || 'support.nsuone@gmail.com',
+      replyTo: replyTo || SUPPORT_USER,
     });
     console.log('Support email sent:', info.messageId);
     return { success: true, messageId: info.messageId };

@@ -1,18 +1,15 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { requireRole } from '@/lib/server/auth-gate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default async function TutorLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || (session.user as any)?.role === 'ADMIN') {
-    redirect('/auth/tutor-signin');
-  }
+  // Same unified-campus rule as the student layout.
+  const session = await requireRole(['STUDENT', 'TUTOR'], 'TUTOR', {
+    redirectTo: '/auth/tutor-signin',
+  });
 
   return (
-    <DashboardLayout 
-      role="TUTOR" 
+    <DashboardLayout
+      role="TUTOR"
       userName={session.user?.name}
       userEmail={session.user?.email}
     >

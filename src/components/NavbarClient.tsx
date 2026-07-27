@@ -1,14 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import NotificationBell from './NotificationBell';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
 
 export default function NavbarClient({ session }: { session: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  // Trap focus inside the mobile menu while it's open; restore to the trigger on close.
+  useFocusTrap(mobileNavRef, isMobileMenuOpen);
 
   const handleSupportClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setIsMobileMenuOpen(false);
@@ -30,7 +41,13 @@ export default function NavbarClient({ session }: { session: any }) {
           <span className={styles.logoHighlight}>nsu</span>One
         </Link>
         
-        <div className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
+        <div
+          ref={mobileNavRef}
+          className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}
+          id="mobile-navigation"
+          role="navigation"
+          aria-label="Main navigation"
+        >
           <Link href="/" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link href="/find-tutor" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
           <Link href={session ? "/tutor/expertise" : "/auth/student-register"} className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>
@@ -38,7 +55,7 @@ export default function NavbarClient({ session }: { session: any }) {
           </Link>
           <Link href="/shop" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
           <Link href="/tutorial" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
-          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick}>Contact</Link>
+          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick} aria-label="Contact support">Contact</Link>
         
           <div className={`${styles.authButtonsMobile}`}>
             <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>
@@ -65,8 +82,15 @@ export default function NavbarClient({ session }: { session: any }) {
           )}
         </div>
 
-        <button className={styles.mobileMenuBtn} onClick={toggleMenu} aria-label="Toggle menu">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <button
+          className={styles.mobileMenuBtn}
+          onClick={toggleMenu}
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-navigation"
+          aria-haspopup="true"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {isMobileMenuOpen ? (
               <>
                 <line x1="18" y1="6" x2="6" y2="18"></line>
