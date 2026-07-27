@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Menu, Search, Moon, Sun } from 'lucide-react';
+import { Menu, Moon, Sun } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
 import styles from './layout.module.css';
 
@@ -24,15 +24,6 @@ export default function TopNav({ onMenuClick, userName, role }: TopNavProps) {
         <button className={styles.menuToggle} onClick={onMenuClick}>
           <Menu size={24} />
         </button>
-        
-        <div className={styles.searchBar}>
-          <Search size={18} className="text-muted" />
-          <input 
-            type="text" 
-            placeholder="Search..." 
-            className={styles.searchInput}
-          />
-        </div>
       </div>
 
       <div className={styles.topNavRight}>

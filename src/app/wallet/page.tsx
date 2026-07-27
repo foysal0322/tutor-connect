@@ -24,9 +24,8 @@ export default async function WalletPage() {
       userName={session.user?.name}
       userEmail={session.user?.email}
     >
-      <div className="max-w-4xl">
-        <h1 className="mb-6 font-extrabold text-2xl md:text-3xl text-main">💰 My Campus Wallet</h1>
-        <WalletClient initialBalance={data.balance || 0} initialTransactions={data.transactions || []} />
+      <div className="w-full max-w-5xl mx-auto py-2">
+        <WalletClient initialBalance={data.balance || 0} initialTransactions={data.transactions || []} userName={session.user?.name || 'Student'} />
       </div>
     </DashboardLayout>
   );

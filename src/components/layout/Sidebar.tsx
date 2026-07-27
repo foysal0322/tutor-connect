@@ -19,8 +19,7 @@ import {
   Users,
   Eye,
   LifeBuoy,
-  ShieldAlert,
-  Key
+  ShieldAlert
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -65,7 +64,6 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
     if (pathname === '/admin/departments') keyToUpdate = 'departments';
     if (pathname === '/admin/courses') keyToUpdate = 'courses';
     if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
-    if (pathname === '/admin/password-resets') keyToUpdate = 'passwordResets';
 
     if (keyToUpdate) {
       setSeenCounts((prev: any) => {
@@ -82,7 +80,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   const getBadge = (key: string) => {
     if (!isMounted || role !== 'ADMIN' || !currentCounts) return null;
     
-    const actionableKeys = ['requests', 'withdrawals', 'support', 'passwordResets', 'refunds', 'consultancy'];
+    const actionableKeys = ['requests', 'withdrawals', 'support', 'refunds', 'consultancy'];
     
     if (actionableKeys.includes(key)) {
       // For actionable items, show absolute pending count
@@ -113,16 +111,16 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       case 'STUDENT':
       case 'TUTOR':
         return [
-          { name: '🎓 My Learning', href: '/student', icon: LayoutDashboard },
+          { name: 'My Learning', href: '/student', icon: LayoutDashboard },
           { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
           { name: 'Tuition Requests', href: '/student/request-tutor', icon: Calendar },
           { name: 'Payments', href: '/student/payments', icon: CreditCard },
-          { name: '👨‍🏫 My Teaching', href: '/tutor', icon: Briefcase },
+          { name: 'My Teaching', href: '/tutor', icon: Briefcase },
           { name: 'Offer Course', href: '/tutor/expertise', icon: GraduationCap },
           { name: 'Earnings & Withdrawals', href: '/tutor/earnings', icon: DollarSign },
-          { name: '💰 My Wallet', href: '/wallet', icon: CreditCard },
+          { name: 'My Wallet', href: '/wallet', icon: CreditCard },
           { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
-          { name: '👤 My Profile', href: '/student/profile', icon: User },
+          { name: 'My Profile', href: '/student/profile', icon: User },
         ];
       case 'ADMIN':
         return [
@@ -131,7 +129,6 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
           { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
           { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
           { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
-          { name: 'Password Resets', href: '/admin/password-resets', icon: Key, badgeKey: 'passwordResets' },
           { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
           { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },
           { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },

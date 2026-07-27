@@ -149,12 +149,12 @@ export default function EarningsClient({
             />
 
             <div className="form-group mb-0">
-              <label className="form-label">MFS Provider</label>
-              <div className="grid grid-cols-3 gap-2 mt-1">
+              <label className="form-label font-bold">MFS Provider</label>
+              <div className="grid grid-cols-3 gap-2.5 mt-1.5">
                 <button
                   type="button"
                   onClick={() => setMfsType('BKASH')}
-                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'BKASH' ? 'shadow-md text-white' : 'bg-white'}`}
+                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'BKASH' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
                   style={{
                     backgroundColor: mfsType === 'BKASH' ? '#E2136E' : 'white',
                     borderColor: mfsType === 'BKASH' ? '#E2136E' : 'var(--border-color)',
@@ -166,7 +166,7 @@ export default function EarningsClient({
                 <button
                   type="button"
                   onClick={() => setMfsType('NAGAD')}
-                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'NAGAD' ? 'shadow-md text-white' : 'bg-white'}`}
+                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'NAGAD' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
                   style={{
                     backgroundColor: mfsType === 'NAGAD' ? '#F58220' : 'white',
                     borderColor: mfsType === 'NAGAD' ? '#F58220' : 'var(--border-color)',
@@ -178,7 +178,7 @@ export default function EarningsClient({
                 <button
                   type="button"
                   onClick={() => setMfsType('ROCKET')}
-                  className={`p-2 rounded-md font-bold border transition-colors ${mfsType === 'ROCKET' ? 'shadow-md text-white' : 'bg-white'}`}
+                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'ROCKET' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
                   style={{
                     backgroundColor: mfsType === 'ROCKET' ? '#89288f' : 'white',
                     borderColor: mfsType === 'ROCKET' ? '#89288f' : 'var(--border-color)',

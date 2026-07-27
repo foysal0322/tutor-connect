@@ -1,20 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { rechargeWallet } from './actions';
-import FloatingInput from '@/components/ui/FloatingInput';
 import Spinner from '@/components/Spinner';
-import { CreditCard, DollarSign, ArrowUpRight, ArrowDownLeft, History, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { 
+  Wallet, History, PlusCircle, CheckCircle2, AlertCircle, Lock
+} from 'lucide-react';
 
-export default function WalletClient({ initialBalance, initialTransactions }: { initialBalance: number, initialTransactions: any[] }) {
+interface WalletClientProps {
+  initialBalance: number;
+  initialTransactions: any[];
+  userName?: string;
+}
+
+export default function WalletClient({ 
+  initialBalance, 
+  initialTransactions
+}: WalletClientProps) {
   const [balance, setBalance] = useState(initialBalance);
   const [transactions, setTransactions] = useState(initialTransactions);
-  const [activeTab, setActiveTab] = useState<'recharge' | 'history'>('recharge');
 
+  // Form states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [mfsType, setMfsType] = useState('DEMO_INSTANT');
+  const [amountVal, setAmountVal] = useState('');
 
   async function handleRecharge(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,177 +43,261 @@ export default function WalletClient({ initialBalance, initialTransactions }: { 
     } else if (res?.success && res.newBalance !== undefined) {
       const addedAmount = parseFloat(formData.get('amount') as string);
       setBalance(res.newBalance);
-      setSuccessMsg(`Successfully recharged ${addedAmount} BDT! Your new balance is ${res.newBalance} BDT.`);
+      setSuccessMsg(`Successfully deposited ৳${addedAmount.toLocaleString()} BDT!`);
       
-      // Prepend new transaction to UI list
       const newTxn = {
         id: `temp-${Date.now()}`,
         amount: addedAmount,
         type: 'RECHARGE',
-        description: `Wallet recharge via ${mfsType === 'DEMO_INSTANT' ? 'Instant Test Recharge' : mfsType}`,
+        description: `Deposit via ${mfsType === 'DEMO_INSTANT' ? 'Instant Demo' : mfsType}`,
         referenceId: formData.get('transactionId') || 'DEMO-TXN',
         createdAt: new Date().toISOString()
       };
       setTransactions(prev => [newTxn, ...prev]);
+      setAmountVal('');
       form?.reset();
     }
     setLoading(false);
   }
 
-  const getTxnIconAndColor = (type: string) => {
+  const getTxnBadge = (type: string) => {
     switch (type) {
       case 'RECHARGE':
-        return { icon: <ArrowDownLeft className="text-success" size={20} />, bg: 'bg-success-light', label: 'Recharge', sign: '+' };
+        return { label: 'Deposit', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200', sign: '+', color: 'text-emerald-600' };
       case 'EARNING_CREDIT':
-        return { icon: <ArrowDownLeft className="text-primary" size={20} />, bg: 'bg-primary-light', label: 'Earning', sign: '+' };
+        return { label: 'Earning', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200', sign: '+', color: 'text-indigo-600' };
       case 'TUITION_PAYMENT':
-        return { icon: <ArrowUpRight className="text-danger-hover" size={20} />, bg: 'bg-danger-light', label: 'Payment', sign: '-' };
+        return { label: 'Payment', bg: 'bg-rose-100 text-rose-800 border-rose-200', sign: '-', color: 'text-rose-600' };
       case 'WITHDRAWAL':
-        return { icon: <ArrowUpRight className="text-purple-600" size={20} />, bg: 'bg-purple-100', label: 'Withdrawal', sign: '-' };
+        return { label: 'Withdrawal', bg: 'bg-purple-100 text-purple-800 border-purple-200', sign: '-', color: 'text-purple-600' };
       default:
-        return { icon: <DollarSign className="text-muted" size={20} />, bg: 'bg-gray-100', label: type, sign: '' };
+        return { label: type, bg: 'bg-gray-100 text-gray-800 border-gray-200', sign: '', color: 'text-gray-700' };
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 max-w-4xl">
-      {/* Wallet Balance Card */}
-      <div className="card p-6 md:p-8 bg-gradient-to-r from-primary to-primary-hover text-white shadow-xl relative overflow-hidden">
-        <div className="absolute right-[-20px] top-[-20px] opacity-10 pointer-events-none">
-          <DollarSign size={220} />
+    <div className="flex flex-col gap-6 animate-fade-in w-full max-w-5xl">
+      
+      {/* SIMPLE BALANCE CARD */}
+      <div className="card p-6 md:p-8 bg-white border-t-4 border-t-primary border-x border-b border-color shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted block mb-1">
+            Available Wallet Balance
+          </span>
+          <div className="text-3xl md:text-4xl font-extrabold text-main flex items-baseline gap-2">
+            ৳{balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="text-lg font-bold text-primary">BDT</span>
+          </div>
+          <p className="text-xs text-muted mt-1 m-0">
+            Funds can be used for instant tuition payments or withdrawn to your MFS account.
+          </p>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
-          <div>
-            <span className="text-sm font-medium uppercase tracking-wider text-primary-light">Available Wallet Balance</span>
-            <div className="text-4xl md:text-5xl font-extrabold mt-1 tracking-tight flex items-baseline gap-2">
-              {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              <span className="text-2xl font-semibold">BDT</span>
-            </div>
-            <p className="text-xs text-primary-light/80 mt-2">
-              Use your wallet balance for 1-click tuition payments or withdraw your teaching earnings.
-            </p>
-          </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => setActiveTab('recharge')}
-              className={`px-5 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 shadow-md ${activeTab === 'recharge' ? 'bg-white text-primary' : 'bg-primary-dark/40 text-white hover:bg-primary-dark/60'}`}
-            >
-              <PlusCircle size={18} /> Recharge
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`px-5 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 shadow-md ${activeTab === 'history' ? 'bg-white text-primary' : 'bg-primary-dark/40 text-white hover:bg-primary-dark/60'}`}
-            >
-              <History size={18} /> History
-            </button>
-          </div>
+        <div className="p-4 rounded-2xl bg-primary-light text-primary flex items-center justify-center self-start sm:self-auto">
+          <Wallet size={32} />
         </div>
       </div>
 
-      {/* Tabs Content */}
-      {activeTab === 'recharge' && (
-        <div className="card p-6 sm:p-8 shadow-md border-t-4 border-t-primary animate-fade-in">
-          <h3 className="text-xl font-bold text-main mb-2 flex items-center gap-2">
-            <PlusCircle className="text-primary" size={22} /> Recharge Your Wallet
-          </h3>
-          <p className="text-muted text-sm mb-6">
-            Add funds instantly to your campus wallet. For testing or quick checkout, choose "Instant Demo Recharge".
+      {/* SIMPLE 2-COLUMN LAYOUT: DEPOSIT ON LEFT, HISTORY ON RIGHT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* LEFT COLUMN: DEPOSIT FORM (7 cols) */}
+        <div className="card p-6 sm:p-8 bg-white border border-color shadow-sm lg:col-span-7">
+          <div className="flex items-center gap-2 mb-2">
+            <PlusCircle className="text-primary" size={22} />
+            <h3 className="text-xl font-bold text-main m-0">Deposit Funds</h3>
+          </div>
+          <p className="text-sm text-muted m-0 mb-6">
+            Choose your MFS provider, enter the amount and transaction ID to top up your balance.
           </p>
 
-          {error && <div className="p-4 bg-danger-light text-danger-hover rounded-md font-medium text-sm mb-6 border border-danger-hover">{error}</div>}
-          {successMsg && <div className="p-4 bg-success-light text-success-hover rounded-md font-medium text-sm mb-6 border border-success flex items-center gap-2"><CheckCircle2 size={18} /> {successMsg}</div>}
+          {error && (
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold mb-6 flex items-center gap-2">
+              <AlertCircle size={18} className="text-rose-600 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          <form onSubmit={handleRecharge} className="flex flex-col gap-5">
-            <div className="form-group mb-0">
-              <label className="form-label text-sm font-semibold mb-2">Select Payment Method</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { id: 'DEMO_INSTANT', name: '⚡ Instant Demo', desc: 'Auto-credit test' },
-                  { id: 'bKash', name: '📱 bKash', desc: 'Personal / Merchant' },
-                  { id: 'Nagad', name: '📱 Nagad', desc: 'Personal / Merchant' },
-                  { id: 'Rocket', name: '🚀 Rocket', desc: 'DBBL Mobile' }
-                ].map((method) => (
-                  <div
-                    key={method.id}
-                    onClick={() => setMfsType(method.id)}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all flex flex-col items-center text-center ${mfsType === method.id ? 'border-primary bg-primary-light/30 shadow-md font-semibold' : 'border-color hover:border-primary/50'}`}
-                  >
-                    <span className="text-sm font-bold text-main">{method.name}</span>
-                    <span className="text-[0.65rem] text-muted mt-1">{method.desc}</span>
-                  </div>
-                ))}
+          {successMsg && (
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-semibold mb-6 flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleRecharge} className="flex flex-col gap-6">
+            
+            {/* LARGE RESIZED MFS BUTTONS WITH WITHDRAWAL PAGE STYLING */}
+            <div>
+              <label className="text-xs font-bold text-muted uppercase tracking-wider block mb-3">
+                Select MFS Provider
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMfsType('DEMO_INSTANT')}
+                  className={`py-3.5 px-4 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'DEMO_INSTANT' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
+                  style={{
+                    backgroundColor: mfsType === 'DEMO_INSTANT' ? '#10B981' : 'white',
+                    borderColor: mfsType === 'DEMO_INSTANT' ? '#10B981' : 'var(--border-color)',
+                    color: mfsType === 'DEMO_INSTANT' ? 'white' : '#10B981'
+                  }}
+                >
+                  Instant Demo
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMfsType('bKash')}
+                  className={`py-3.5 px-4 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'bKash' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
+                  style={{
+                    backgroundColor: mfsType === 'bKash' ? '#E2136E' : 'white',
+                    borderColor: mfsType === 'bKash' ? '#E2136E' : 'var(--border-color)',
+                    color: mfsType === 'bKash' ? 'white' : '#E2136E'
+                  }}
+                >
+                  bKash
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMfsType('Nagad')}
+                  className={`py-3.5 px-4 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'Nagad' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
+                  style={{
+                    backgroundColor: mfsType === 'Nagad' ? '#F58220' : 'white',
+                    borderColor: mfsType === 'Nagad' ? '#F58220' : 'var(--border-color)',
+                    color: mfsType === 'Nagad' ? 'white' : '#F58220'
+                  }}
+                >
+                  Nagad
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMfsType('Rocket')}
+                  className={`py-3.5 px-4 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'Rocket' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
+                  style={{
+                    backgroundColor: mfsType === 'Rocket' ? '#89288f' : 'white',
+                    borderColor: mfsType === 'Rocket' ? '#89288f' : 'var(--border-color)',
+                    color: mfsType === 'Rocket' ? 'white' : '#89288f'
+                  }}
+                >
+                  Rocket
+                </button>
               </div>
             </div>
 
-            <FloatingInput
-              name="amount"
-              type="number"
-              step="any"
-              min="50"
-              required
-              label="Recharge Amount (BDT)"
-              placeholder="e.g. 500 or 1000"
-            />
+            {/* LARGE RESIZED AMOUNT INPUT TEXT BOX */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-muted uppercase tracking-wider">
+                Deposit Amount (Min 50 BDT)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-extrabold text-muted pointer-events-none">
+                  ৳
+                </span>
+                <input
+                  name="amount"
+                  type="number"
+                  step="any"
+                  min="50"
+                  required
+                  value={amountVal}
+                  onChange={(e) => setAmountVal(e.target.value)}
+                  placeholder="e.g. 500 or 1000"
+                  className="w-full pl-11 pr-4 py-3.5 text-xl sm:text-2xl font-extrabold text-main bg-gray-50 border-2 border-color rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-all shadow-inner"
+                />
+              </div>
+            </div>
 
+            {/* RESIZED VERIFICATION TEXT BOXES FOR MFS */}
             {mfsType !== 'DEMO_INSTANT' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in">
-                <FloatingInput
-                  name="accountNumber"
-                  type="text"
-                  required
-                  label="Your MFS Account Number"
-                  placeholder="e.g. 017XXXXXXXX"
-                />
-                <FloatingInput
-                  name="transactionId"
-                  type="text"
-                  required
-                  label="Transaction ID (TrxID)"
-                  placeholder="e.g. 9J8H7G6F"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-fade-in">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-muted uppercase tracking-wider">Your MFS Number</label>
+                  <input
+                    name="accountNumber"
+                    type="text"
+                    required
+                    placeholder="e.g. 017XXXXXXXX"
+                    className="w-full px-4 py-3 text-base font-semibold text-main bg-gray-50 border-2 border-color rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-muted uppercase tracking-wider">Transaction ID (TrxID)</label>
+                  <input
+                    name="transactionId"
+                    type="text"
+                    required
+                    placeholder="e.g. 9J8H7G6F21"
+                    className="w-full px-4 py-3 text-base font-semibold text-main bg-gray-50 border-2 border-color rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-all"
+                  />
+                </div>
               </div>
             )}
 
-            <button type="submit" className="btn-primary py-3 justify-center font-semibold text-base mt-2 shadow-md" disabled={loading}>
-              {loading ? <><Spinner size={20} /> Processing Recharge...</> : `Confirm & Recharge Wallet`}
+            {mfsType === 'DEMO_INSTANT' && (
+              <div className="p-3.5 rounded-xl bg-gray-50 border border-color text-xs text-muted leading-relaxed">
+                <strong className="text-main">Demo Mode:</strong> No account number or SMS transaction ID is required. Funds will credit instantly for testing.
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="btn-primary py-3.5 rounded-xl font-bold text-base justify-center shadow-md hover:shadow-lg transition-all mt-1"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Spinner size={18} /> Processing Deposit...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Lock size={18} /> Confirm Deposit
+                </span>
+              )}
             </button>
           </form>
         </div>
-      )}
 
-      {activeTab === 'history' && (
-        <div className="card p-6 sm:p-8 shadow-md animate-fade-in">
-          <h3 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
-            <History className="text-primary" size={22} /> Wallet Transaction History
-          </h3>
+        {/* RIGHT COLUMN: TRANSACTION HISTORY (5 cols) */}
+        <div className="card p-6 sm:p-8 bg-white border border-color shadow-sm lg:col-span-5 flex flex-col h-full min-h-[420px]">
+          <div className="flex items-center justify-between pb-3.5 border-b border-color mb-4">
+            <div className="flex items-center gap-2">
+              <History className="text-primary" size={20} />
+              <h3 className="text-lg font-bold text-main m-0">Transaction History</h3>
+            </div>
+            <span className="text-xs bg-gray-100 text-muted font-bold px-2.5 py-1 rounded-full">
+              {transactions.length} items
+            </span>
+          </div>
 
           {transactions.length === 0 ? (
-            <div className="text-center py-12 text-muted bg-gray-50/50 rounded-lg border border-dashed border-color">
-              No transactions recorded in your wallet yet.
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-12 text-muted">
+              <History size={36} className="text-gray-300 mb-2.5" />
+              <p className="text-sm font-semibold text-main m-0">No transactions found</p>
+              <p className="text-xs text-muted m-0 mt-1">Your deposit and payment logs will appear here.</p>
             </div>
           ) : (
-            <div className="flex flex-col divide-y divide-color">
+            <div className="flex flex-col divide-y divide-color overflow-y-auto max-h-[520px] pr-1">
               {transactions.map((txn: any) => {
-                const { icon, bg, label, sign } = getTxnIconAndColor(txn.type);
+                const badge = getTxnBadge(txn.type);
                 return (
-                  <div key={txn.id} className="py-4 flex justify-between items-center gap-4 hover:bg-gray-50/50 px-2 rounded transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${bg} shrink-0`}>
-                        {icon}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-main text-sm md:text-base">{txn.description}</div>
-                        <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
-                          <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-medium">{label}</span>
-                          {txn.referenceId && <span>Ref: {txn.referenceId}</span>}
-                          <span>• {new Date(txn.createdAt).toLocaleDateString()}</span>
-                        </div>
+                  <div key={txn.id} className="py-4 flex items-center justify-between gap-3 hover:bg-gray-50/75 px-2 -mx-2 rounded-xl transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-main text-sm truncate">{txn.description}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${badge.bg}`}>
+                          {badge.label}
+                        </span>
+                        <span className="text-xs text-muted">
+                          {new Date(txn.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
                       </div>
                     </div>
 
-                    <div className={`font-bold text-base md:text-lg whitespace-nowrap ${sign === '+' ? 'text-success' : 'text-main'}`}>
-                      {sign}{txn.amount.toFixed(2)} BDT
+                    <div className={`font-extrabold text-base whitespace-nowrap ${badge.color}`}>
+                      {badge.sign}৳{parseFloat(txn.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                   </div>
                 );
@@ -210,7 +305,9 @@ export default function WalletClient({ initialBalance, initialTransactions }: { 
             </div>
           )}
         </div>
-      )}
+
+      </div>
+
     </div>
   );
 }

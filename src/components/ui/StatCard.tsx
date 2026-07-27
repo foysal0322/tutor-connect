@@ -14,14 +14,14 @@ type StatCardProps = {
 export default function StatCard({ title, value, icon, trend, className = '' }: StatCardProps) {
   return (
     <div className={`card ${className}`}>
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-sm font-medium text-muted">{title}</h3>
-        <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>
+      <div className="flex justify-between items-start mb-4 gap-2 min-w-0">
+        <h3 className="text-sm font-medium text-muted truncate min-w-0 flex-1">{title}</h3>
+        <div className="p-2 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>
           {icon}
         </div>
       </div>
-      <div>
-        <div className="text-2xl font-bold text-main mb-1">{value}</div>
+      <div className="min-w-0">
+        <div className="text-2xl font-bold text-main mb-1 truncate">{value}</div>
         {trend && (
           <div className={`text-xs font-medium flex items-center gap-1 ${trend.isPositive ? 'text-success' : 'text-danger'}`}>
             <span>{trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%</span>
