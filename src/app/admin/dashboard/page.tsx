@@ -1,30 +1,86 @@
 import { prisma } from '@/lib/prisma';
-import StatCard from '@/components/ui/StatCard';
-import { Users, GraduationCap, BookOpen, Clock } from 'lucide-react';
+import DashboardContent from './DashboardContent';
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export default async function AdminDashboard() {
-  const [totalStudents, totalTutors, totalRequests, pendingRequests] = await Promise.all([
+  const [
+    totalStudents,
+    totalTutors,
+    blockedUsers,
+    totalRequests,
+    pendingRequests,
+    matchedRequests,
+    paymentPendingRequests,
+    completedRequests,
+    totalDepartments,
+    totalCourses,
+    totalExpertises,
+    pendingWithdrawalsCount,
+    pendingWithdrawalsAmountResult,
+    pendingSupportTickets,
+    pendingRefunds,
+    totalBudgetResult,
+    topCoursesRaw
+  ] = await Promise.all([
     prisma.user.count({ where: { role: 'STUDENT' } }),
     prisma.user.count({ where: { role: 'TUTOR' } }),
+    prisma.user.count({ where: { isBlocked: true } }),
     prisma.tutorRequest.count(),
     prisma.tutorRequest.count({ where: { status: 'PENDING' } }),
+    prisma.tutorRequest.count({ where: { status: { in: ['MATCHED', 'ACCEPTED'] } } }),
+    prisma.tutorRequest.count({ where: { status: 'PAYMENT_PENDING' } }),
+    prisma.tutorRequest.count({ where: { status: 'COMPLETED' } }),
+    prisma.department.count(),
+    prisma.course.count(),
+    prisma.tutorExpertise.count({ where: { isActive: true } }),
+    prisma.withdrawalRequest.count({ where: { status: 'PENDING' } }),
+    prisma.withdrawalRequest.aggregate({ where: { status: 'PENDING' }, _sum: { amount: true } }),
+    prisma.supportTicket.count({ where: { status: 'PENDING' } }),
+    prisma.refundRequest.count({ where: { status: 'PENDING' } }),
+    prisma.tutorRequest.aggregate({ _sum: { budget: true } }),
+    prisma.course.findMany({
+      take: 20,
+      include: {
+        _count: {
+          select: { requests: true, expertises: true }
+        }
+      }
+    })
   ]);
-  
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="card max-w-3xl mb-6">
-        <h2 className="text-xl mb-2">Dashboard Overview</h2>
-        <p className="text-muted">Welcome to the nsuOne admin portal.</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Students" value={totalStudents} icon={<GraduationCap size={20} />} />
-        <StatCard title="Total Tutors" value={totalTutors} icon={<Users size={20} />} />
-        <StatCard title="Total Requests" value={totalRequests} icon={<BookOpen size={20} />} />
-        <StatCard title="Pending Requests" value={pendingRequests} icon={<Clock size={20} />} />
-      </div>
-    </div>
-  );
+
+  const stats = {
+    totalStudents,
+    totalTutors,
+    blockedUsers,
+    totalRequests,
+    pendingRequests,
+    matchedRequests,
+    paymentPendingRequests,
+    completedRequests,
+    totalDepartments,
+    totalCourses,
+    totalExpertises,
+    pendingWithdrawalsCount,
+    pendingWithdrawalsAmount: pendingWithdrawalsAmountResult._sum.amount || 0,
+    pendingSupportTickets,
+    pendingRefunds,
+    totalBudget: totalBudgetResult._sum.budget || 0,
+  };
+
+  const topCourses = topCoursesRaw
+    .map(c => ({
+      name: c.name,
+      requests: c._count.requests,
+      expertises: c._count.expertises
+    }))
+    .sort((a, b) => (b.requests + b.expertises) - (a.requests + a.expertises))
+    .slice(0, 6);
+
+  const dashboardData = {
+    stats,
+    topCourses
+  };
+
+  return <DashboardContent data={dashboardData} />;
 }
