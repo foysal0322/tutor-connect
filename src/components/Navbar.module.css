@@ -35,9 +35,9 @@
 .navLink {
   font-weight: 600;
   color: #334155; /* A deeper, richer slate color instead of muted gray */
-  font-size: 0.95rem; 
+  font-size: 0.95rem;
   position: relative;
-  white-space: nowrap; 
+  white-space: nowrap;
   transition: color 0.3s ease;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .disabledLink:hover {
-  color: var(--text-muted);
+  color: #475569; /* Darker for better contrast on disabled state */
 }
 .disabledLink:hover::after {
   width: 0;

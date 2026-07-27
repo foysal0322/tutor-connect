@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { submitPayment, completeTutorRequest, submitRefundRequest, cancelTutorRequest } from './actions';
 import { useToast } from '@/components/ToastProvider';
+import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 import styles from '../dashboard.module.css';
 
 interface RequestListProps {
@@ -452,51 +453,8 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                           </p>
                         </div>
 
-                        {/* MFS Providers */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                          <button
-                            type="button"
-                            onClick={() => setMfsType('BKASH')}
-                            style={{
-                              padding: '0.75rem',
-                              borderRadius: '8px',
-                              border: mfsType === 'BKASH' ? '2px solid #d1417a' : '1px solid var(--border-color)',
-                              background: mfsType === 'BKASH' ? '#fdf2f7' : 'white',
-                              color: mfsType === 'BKASH' ? '#d1417a' : 'var(--text-main)',
-                              fontWeight: 600
-                            }}
-                          >
-                            bKash
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setMfsType('NAGAD')}
-                            style={{
-                              padding: '0.75rem',
-                              borderRadius: '8px',
-                              border: mfsType === 'NAGAD' ? '2px solid #f67221' : '1px solid var(--border-color)',
-                              background: mfsType === 'NAGAD' ? '#fff7ed' : 'white',
-                              color: mfsType === 'NAGAD' ? '#f67221' : 'var(--text-main)',
-                              fontWeight: 600
-                            }}
-                          >
-                            Nagad
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setMfsType('ROCKET')}
-                            style={{
-                              padding: '0.75rem',
-                              borderRadius: '8px',
-                              border: mfsType === 'ROCKET' ? '2px solid #8c2a8c' : '1px solid var(--border-color)',
-                              background: mfsType === 'ROCKET' ? '#faf5ff' : 'white',
-                              color: mfsType === 'ROCKET' ? '#8c2a8c' : 'var(--text-main)',
-                              fontWeight: 600
-                            }}
-                          >
-                            Rocket
-                          </button>
-                        </div>
+                        {/* MFS Providers — shared MfsProviderSelect component */}
+                        <MfsProviderSelect value={mfsType} onChange={setMfsType} />
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
                           <div>

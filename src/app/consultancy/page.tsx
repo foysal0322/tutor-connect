@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { sendSupportEmail } from '@/lib/mail';
+
+export const metadata: Metadata = {
+  title: 'Academic Consultancy — nsuOne',
+  description:
+    'Book a one-on-one academic consultancy session with experienced NSU seniors and tutors for course selection, career guidance, and study planning.',
+  alternates: { canonical: '/consultancy' },
+};
 
 export default function ConsultancyPage() {
   async function submitConsultancy(formData: FormData) {

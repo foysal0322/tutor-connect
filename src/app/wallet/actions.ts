@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { parseFormData, rechargeWalletSchema } from '@/lib/validation';
 
 export async function rechargeWallet(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -11,20 +12,13 @@ export async function rechargeWallet(formData: FormData) {
     return { error: 'Not authorized. Please sign in.' };
   }
 
+  const parsed = parseFormData(formData, rechargeWalletSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+  const { amount, mfsType, accountNumber, transactionId } = parsed.data;
+
   const userId = (session.user as any).id;
-  const amountStr = formData.get('amount') as string;
-  const mfsType = formData.get('mfsType') as string;
-  const accountNumber = formData.get('accountNumber') as string || 'N/A';
-  const transactionId = formData.get('transactionId') as string || `TXN-${Date.now()}`;
-
-  const amount = parseFloat(amountStr);
-  if (isNaN(amount) || amount <= 0) {
-    return { error: 'Please enter a valid positive recharge amount.' };
-  }
-
-  if (amount < 50) {
-    return { error: 'Minimum recharge amount is 50 BDT.' };
-  }
 
   try {
     // Increment user balance

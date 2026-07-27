@@ -5,6 +5,8 @@ import { submitTutorRequest } from '../actions';
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter, useSearchParams } from 'next/navigation';
 import FloatingInput from '@/components/ui/FloatingInput';
+import LoadingButton from '@/components/ui/LoadingButton';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 export default function RequestTutorForm({ courses, selectedTutor }: { courses: any[], selectedTutor?: any }) {
   const [error, setError] = useState('');
@@ -37,19 +39,29 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
     try {
       const res = await submitTutorRequest(formData);
       if (res?.error) {
-        setError(res.error);
+        setError(`Failed to submit request: ${res.error}`);
       } else if (res?.success) {
         router.push('/student');
       }
     } catch (err) {
-      setError('An error occurred while submitting the request.');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while submitting the request.';
+      setError(errorMessage);
+      console.error('Tutor request submission error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
     <div className="card w-full">
-      {error && <div className="mb-6 p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover">{error}</div>}
+      {error && (
+        <ErrorAlert
+          type="error"
+          title="Submission Error"
+          message={error}
+          onDismiss={() => setError('')}
+        />
+      )}
 
       {selectedTutor && (
         <div className="mb-6 p-4 bg-primary-light text-primary border border-primary rounded-md">
@@ -122,17 +134,14 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
           </div>
         )}
 
-        <button type="submit" className="btn-primary mt-4 w-full md:w-auto self-start" disabled={loading}>
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Submitting...
-            </>
-          ) : 'Submit Request'}
-        </button>
+        <LoadingButton
+          type="submit"
+          loading={loading}
+          loadingText="Submitting..."
+          className="mt-4 w-full md:w-auto self-start"
+        >
+          Submit Request
+        </LoadingButton>
       </form>
     </div>
   );

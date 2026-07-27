@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './find-tutor.module.css';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -56,7 +56,46 @@ export default function FindTutorClient({
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
   const [activeReviewsTutor, setActiveReviewsTutor] = useState<any>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Focus trap for modal
+  useEffect(() => {
+    if (activeReviewsTutor) {
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements?.[0] as HTMLElement;
+      const lastElement = focusableElements?.[focusableElements.length - 1] as HTMLElement;
+
+      firstElement?.focus();
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              e.preventDefault();
+              lastElement?.focus();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              e.preventDefault();
+              firstElement?.focus();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleTab);
+      return () => document.removeEventListener('keydown', handleTab);
+    }
+  }, [activeReviewsTutor]);
+
+  const handleModalKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && activeReviewsTutor) {
+      setActiveReviewsTutor(null);
+    }
+  };
 
   // Filter logic — uses debounced search to avoid filtering on every keystroke
   const filteredExpertises = initialExpertises.filter((exp) => {
@@ -181,10 +220,11 @@ export default function FindTutorClient({
                   Request Tutor for this Course
                 </Link>
                 {exp.tutor.reviews && exp.tutor.reviews.length > 0 && (
-                  <button 
-                    className="btn" 
+                  <button
+                    className="btn"
                     onClick={() => setActiveReviewsTutor(exp.tutor)}
                     style={{ background: '#f1f5f9', color: 'var(--text-main)', width: '100%', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.75rem' }}
+                    aria-label={`See ${exp.tutor.reviews.length} review${exp.tutor.reviews.length !== 1 ? 's' : ''} for ${exp.tutor.name}`}
                   >
                     See {exp.tutor.reviews.length} Review{exp.tutor.reviews.length !== 1 ? 's' : ''}
                   </button>
@@ -217,13 +257,33 @@ export default function FindTutorClient({
       
       {/* Reviews Modal */}
       {activeReviewsTutor && (
-        <div className={styles.modalOverlay} onClick={() => setActiveReviewsTutor(null)}>
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setActiveReviewsTutor(null)}
+          aria-hidden="true"
+        >
+          <div
+            className={styles.modalContent}
+            onClick={e => e.stopPropagation()}
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`modal-title-${activeReviewsTutor.id}`}
+            onKeyDown={handleModalKeyDown}
+          >
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Reviews for {activeReviewsTutor.name}</h3>
-              <button className={styles.closeBtn} onClick={() => setActiveReviewsTutor(null)}>✕</button>
+              <h3 className={styles.modalTitle} id={`modal-title-${activeReviewsTutor.id}`}>
+                Reviews for {activeReviewsTutor.name}
+              </h3>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setActiveReviewsTutor(null)}
+                aria-label="Close reviews modal"
+              >
+                ✕
+              </button>
             </div>
-            <div className={styles.modalBody}>
+            <div className={styles.modalBody} role="region" aria-live="polite" aria-atomic="true">
               {activeReviewsTutor.reviews && activeReviewsTutor.reviews.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {activeReviewsTutor.reviews.map((r: any) => (

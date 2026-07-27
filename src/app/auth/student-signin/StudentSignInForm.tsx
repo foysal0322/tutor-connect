@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import FloatingInput from '@/components/ui/FloatingInput';
+import LoadingButton from '@/components/ui/LoadingButton';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 import { LogIn } from 'lucide-react';
 
 export default function StudentSignInForm() {
@@ -26,19 +28,26 @@ export default function StudentSignInForm() {
     const identifier = formData.get('identifier') as string;
     const password = formData.get('password') as string;
 
-    const res = await signIn('credentials', {
-      redirect: false,
-      identifier,
-      password,
-      role: 'STUDENT'
-    });
+    try {
+      const res = await signIn('credentials', {
+        redirect: false,
+        identifier,
+        password,
+        role: 'STUDENT'
+      });
 
-    if (res?.error) {
-      setError(res.error);
+      if (res?.error) {
+        setError(`Authentication failed: ${res.error}`);
+        setLoading(false);
+      } else {
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred during sign in.';
+      setError(errorMessage);
       setLoading(false);
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
+      console.error('Sign in error:', err);
     }
   }
 
@@ -54,15 +63,31 @@ export default function StudentSignInForm() {
         </div>
         
         {registered && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">Registration successful! Please sign in.</div>}
-        {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
+        {error && (
+          <ErrorAlert
+            type="error"
+            title="Sign In Error"
+            message={error}
+            onDismiss={() => setError('')}
+          />
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <FloatingInput name="identifier" type="text" label="Email or NSU ID" required />
           <FloatingInput name="password" type="password" label="Password" required />
 
-          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-2" disabled={loading}>
-            {loading ? <><Spinner size={18} /> Signing in...</> : 'Sign In'}
-          </button>
+          <LoadingButton
+            type="submit"
+            loading={loading}
+            loadingText="Signing in..."
+            className="px-4 py-3 font-semibold rounded-lg w-full flex items-center justify-center gap-2 mt-2"
+            style={{
+              background: 'var(--primary)',
+              color: 'white'
+            }}
+          >
+            Sign In
+          </LoadingButton>
         </form>
 
         <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">

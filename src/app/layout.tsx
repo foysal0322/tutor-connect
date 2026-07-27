@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import NextTopLoader from 'nextjs-toploader';
 import { ToastProvider } from '@/components/ToastProvider';
 import VisitorTracker from '@/components/VisitorTracker';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,15 +33,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <ToastProvider>
-          <VisitorTracker />
-          <NextTopLoader color="var(--primary)" showSpinner={false} />
-          <Navbar />
-          <main style={{ minHeight: 'calc(100vh - 400px)' }}>
-            {children}
-          </main>
-          <Footer />
-        </ToastProvider>
+        <a href="#main" className="skip-link">Skip to content</a>
+        <ErrorBoundary context="Root Layout">
+          <ToastProvider>
+            <VisitorTracker />
+            <NextTopLoader color="var(--primary)" showSpinner={false} />
+            <Navbar />
+            <main id="main" style={{ minHeight: 'calc(100vh - 400px)' }}>
+              {children}
+            </main>
+            <Footer />
+          </ToastProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

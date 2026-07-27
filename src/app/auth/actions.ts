@@ -3,23 +3,17 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { sendNoReplyEmail } from '@/lib/mail';
+import { parseFormData, registerUserSchema } from '@/lib/validation';
 
 export async function registerUser(formData: FormData, role: 'STUDENT' | 'TUTOR') {
-  const name = formData.get('name') as string;
-  const nsuId = formData.get('nsuId') as string;
-  const email = formData.get('email') as string;
-  const contact = formData.get('contact') as string;
-  const gender = formData.get('gender') as string;
-  const departmentId = formData.get('departmentId') as string;
-  const password = formData.get('password') as string;
-  const confirmPassword = formData.get('confirmPassword') as string;
-  
-  // Specific to TUTOR
-  const cgpa = formData.get('cgpa') ? parseFloat(formData.get('cgpa') as string) : null;
-
-  if (password !== confirmPassword) {
-    return { error: 'Passwords do not match.' };
+  const parsed = parseFormData(formData, registerUserSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
   }
+  const {
+    name, nsuId, email, contact, gender, departmentId,
+    password, cgpa,
+  } = parsed.data;
 
   // Check unique constraints
   const existingUser = await prisma.user.findFirst({

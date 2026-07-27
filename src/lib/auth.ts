@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { rateLimit, LOGIN_RATE_LIMIT } from "./rateLimit";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -21,6 +22,15 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error("Missing credentials");
+        }
+
+        // Rate-limit by identifier to prevent password brute force.
+        // IP-based limiting belongs in middleware; see FRONTEND_AUDIT.md A6.
+        const identifier = credentials.identifier.trim().toLowerCase();
+        const rl = rateLimit(`login:${identifier}`, LOGIN_RATE_LIMIT.limit, LOGIN_RATE_LIMIT.windowMs);
+        if (!rl.ok) {
+          // Generic message — do not leak whether the account exists.
+          throw new Error("Too many sign-in attempts. Please try again later.");
         }
 
         // Only fetch required fields — never load the full user row
@@ -43,7 +53,8 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          throw new Error("User not found");
+          // Generic message — do not leak whether the email/NSU ID exists.
+          throw new Error("Invalid credentials");
         }
 
         // In a Unified Campus System, we allow any non-admin user (STUDENT or TUTOR) to sign in seamlessly
@@ -58,7 +69,7 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid credentials");
         }
 
         return {

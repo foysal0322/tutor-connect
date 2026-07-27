@@ -6,6 +6,8 @@ import { verifyPaymentAction, verifyRefundAction } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import { useDebounce } from '@/hooks/useDebounce';
 import FloatingInput from '@/components/ui/FloatingInput';
+import LoadingButton from '@/components/ui/LoadingButton';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 export default function RequestManager({ initialRequests, tutors }: { initialRequests: any[], tutors: any[] }) {
   const [requests, setRequests] = useState(initialRequests);
@@ -13,6 +15,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
   const [statusFilter, setStatusFilter] = useState('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; extra?: any } | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const { toast } = useToast();
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -66,23 +69,34 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
   const handleVerifyPayment = async (requestId: string, approve: boolean) => {
     setConfirmAction(null);
     setLoadingId(requestId);
-    const res = await verifyPaymentAction(requestId, approve);
-    if (res?.error) {
-      toast.error(res.error);
-    } else {
-      toast.success(approve ? 'Payment approved — session is now active.' : 'Payment rejected.');
-      setRequests(prev => prev.map(r => {
-        if (r.id === requestId) {
-          return {
-            ...r,
-            status: approve ? 'ACCEPTED' : 'MATCHED',
-            payment: approve ? r.payment : null
-          };
-        }
-        return r;
-      }));
+    setGlobalError(null);
+
+    try {
+      const res = await verifyPaymentAction(requestId, approve);
+      if (res?.error) {
+        setGlobalError(`Payment verification failed: ${res.error}`);
+        toast.error(res.error);
+      } else {
+        toast.success(approve ? 'Payment approved — session is now active.' : 'Payment rejected.');
+        setRequests(prev => prev.map(r => {
+          if (r.id === requestId) {
+            return {
+              ...r,
+              status: approve ? 'ACCEPTED' : 'MATCHED',
+              payment: approve ? r.payment : null
+            };
+          }
+          return r;
+        }));
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to verify payment. Please try again.';
+      setGlobalError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Payment verification error:', error);
+    } finally {
+      setLoadingId(null);
     }
-    setLoadingId(null);
   };
 
   const handleVerifyRefund = async (refundRequestId: string, requestId: string, approve: boolean) => {
@@ -157,6 +171,25 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
 
   return (
     <div className="card p-0 overflow-hidden">
+      {/* Global Error Alert */}
+      {globalError && (
+        <ErrorAlert
+          type="error"
+          title="Operation Failed"
+          message={globalError}
+          onDismiss={() => setGlobalError(null)}
+          actions={
+            <button
+              onClick={() => setGlobalError(null)}
+              className="btn-secondary"
+              style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+            >
+              Dismiss
+            </button>
+          }
+        />
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 p-4 border-b border-color bg-gray-50/50">
         <div className="flex-1">
@@ -255,23 +288,53 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                             {confirmAction?.type === `pay-approve-${req.id}` ? (
                               <>
                                 <span className="text-success-hover font-semibold self-center mr-2">Approve?</span>
-                                <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs">
-                                  {loadingId === req.id ? '...' : 'Yes, Approve'}
-                                </button>
-                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                                <LoadingButton
+                                  onClick={() => handleVerifyPayment(req.id, true)}
+                                  loading={loadingId === req.id}
+                                  loadingText="..."
+                                  className="bg-success text-white px-3 py-1 text-xs"
+                                  aria-label="Approve payment for {req.course.name} request from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Yes, Approve
+                                </LoadingButton>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel payment approval">Cancel</button>
                               </>
                             ) : confirmAction?.type === `pay-reject-${req.id}` ? (
                               <>
                                 <span className="text-danger-hover font-semibold self-center mr-2">Reject?</span>
-                                <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs">
-                                  {loadingId === req.id ? '...' : 'Yes, Reject'}
-                                </button>
-                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                                <LoadingButton
+                                  onClick={() => handleVerifyPayment(req.id, false)}
+                                  loading={loadingId === req.id}
+                                  loadingText="..."
+                                  className="bg-danger text-white px-3 py-1 text-xs"
+                                  aria-label="Reject payment for {req.course.name} request from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Yes, Reject
+                                </LoadingButton>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel payment rejection">Cancel</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs">Approve</button>
-                                <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs">Reject</button>
+                                <LoadingButton
+                                  onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })}
+                                  loading={loadingId === req.id}
+                                  className="bg-success text-white px-3 py-1 text-xs"
+                                  aria-label="Initiate payment approval for {req.course.name} request from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Approve
+                                </LoadingButton>
+                                <LoadingButton
+                                  onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })}
+                                  loading={loadingId === req.id}
+                                  className="bg-danger text-white px-3 py-1 text-xs"
+                                  aria-label="Initiate payment rejection for {req.course.name} request from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Reject
+                                </LoadingButton>
                               </>
                             )}
                           </div>
@@ -288,23 +351,53 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                             {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
                               <>
                                 <span className="text-success-hover font-semibold self-center mr-2">Approve?</span>
-                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs">
-                                  {loadingId === pendingRefund.id ? '...' : 'Yes, Approve'}
-                                </button>
-                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                                <LoadingButton
+                                  onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)}
+                                  loading={loadingId === pendingRefund.id}
+                                  loadingText="..."
+                                  className="bg-success text-white px-3 py-1 text-xs"
+                                  aria-label="Approve refund request for {req.course.name} from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Yes, Approve
+                                </LoadingButton>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel refund approval">Cancel</button>
                               </>
                             ) : confirmAction?.type === `ref-reject-${pendingRefund.id}` ? (
                               <>
                                 <span className="text-danger-hover font-semibold self-center mr-2">Reject?</span>
-                                <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs">
-                                  {loadingId === pendingRefund.id ? '...' : 'Yes, Reject'}
-                                </button>
-                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                                <LoadingButton
+                                  onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)}
+                                  loading={loadingId === pendingRefund.id}
+                                  loadingText="..."
+                                  className="bg-danger text-white px-3 py-1 text-xs"
+                                  aria-label="Reject refund request for {req.course.name} from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Yes, Reject
+                                </LoadingButton>
+                                <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel refund rejection">Cancel</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs">Approve</button>
-                                <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs">Reject</button>
+                                <LoadingButton
+                                  onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })}
+                                  loading={loadingId === pendingRefund.id}
+                                  className="bg-success text-white px-3 py-1 text-xs"
+                                  aria-label="Initiate refund approval for {req.course.name} from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Approve
+                                </LoadingButton>
+                                <LoadingButton
+                                  onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })}
+                                  loading={loadingId === pendingRefund.id}
+                                  className="bg-danger text-white px-3 py-1 text-xs"
+                                  aria-label="Initiate refund rejection for {req.course.name} from {req.student.name}"
+                                  style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem' }}
+                                >
+                                  Reject
+                                </LoadingButton>
                               </>
                             )}
                           </div>
@@ -392,22 +485,22 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                         <div className="flex gap-2">
                           {confirmAction?.type === `pay-approve-${req.id}` ? (
                             <>
-                              <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">
+                              <button onClick={() => handleVerifyPayment(req.id, true)} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1" aria-label="Confirm payment approval for {req.course.name} request from {req.student.name}">
                                 {loadingId === req.id ? '...' : 'Confirm'}
                               </button>
-                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel payment approval">Cancel</button>
                             </>
                           ) : confirmAction?.type === `pay-reject-${req.id}` ? (
                             <>
-                              <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">
+                              <button onClick={() => handleVerifyPayment(req.id, false)} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1" aria-label="Confirm payment rejection for {req.course.name} request from {req.student.name}">
                                 {loadingId === req.id ? '...' : 'Confirm'}
                               </button>
-                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel payment rejection">Cancel</button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">Approve</button>
-                              <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">Reject</button>
+                              <button onClick={() => setConfirmAction({ type: `pay-approve-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1" aria-label="Initiate payment approval for {req.course.name} request from {req.student.name}">Approve</button>
+                              <button onClick={() => setConfirmAction({ type: `pay-reject-${req.id}`, id: req.id })} disabled={loadingId === req.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1" aria-label="Initiate payment rejection for {req.course.name} request from {req.student.name}">Reject</button>
                             </>
                           )}
                         </div>
@@ -422,22 +515,22 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                         <div className="flex gap-2">
                           {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
                             <>
-                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">
+                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, true)} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1" aria-label="Confirm refund approval for {req.course.name} from {req.student.name}">
                                 {loadingId === pendingRefund.id ? '...' : 'Confirm'}
                               </button>
-                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel refund approval">Cancel</button>
                             </>
                           ) : confirmAction?.type === `ref-reject-${pendingRefund.id}` ? (
                             <>
-                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">
+                              <button onClick={() => handleVerifyRefund(pendingRefund.id, req.id, false)} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1" aria-label="Confirm refund rejection for {req.course.name} from {req.student.name}">
                                 {loadingId === pendingRefund.id ? '...' : 'Confirm'}
                               </button>
-                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs">Cancel</button>
+                              <button onClick={() => setConfirmAction(null)} className="btn bg-gray-200 text-main px-3 py-1 text-xs" aria-label="Cancel refund rejection">Cancel</button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1">Approve Refund</button>
-                              <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1">Reject Refund</button>
+                              <button onClick={() => setConfirmAction({ type: `ref-approve-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-success text-white px-3 py-1 text-xs flex-1" aria-label="Initiate refund approval for {req.course.name} from {req.student.name}">Approve Refund</button>
+                              <button onClick={() => setConfirmAction({ type: `ref-reject-${pendingRefund.id}`, id: pendingRefund.id })} disabled={loadingId === pendingRefund.id} className="btn bg-danger text-white px-3 py-1 text-xs flex-1" aria-label="Initiate refund rejection for {req.course.name} from {req.student.name}">Reject Refund</button>
                             </>
                           )}
                         </div>

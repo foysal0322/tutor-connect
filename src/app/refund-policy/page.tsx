@@ -1,3 +1,12 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Refund Policy — nsuOne',
+  description:
+    'nsuOne refund policy: eligibility, processing windows, and how to request a refund for tutoring sessions and wallet recharges.',
+  alternates: { canonical: '/refund-policy' },
+};
+
 export default function RefundPolicyPage() {
   return (
     <div className="container animate-fade-in" style={{ padding: '4rem 1.5rem', maxWidth: '800px' }}>

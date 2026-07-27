@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import {
@@ -9,10 +10,23 @@ import {
   Calendar, Sparkles, ArrowRight, AlertTriangle,
   TrendingUp, UserCheck
 } from 'lucide-react';
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip as RechartsTooltip, PieChart, Pie, Cell
-} from 'recharts';
+
+// Recharts is the single biggest dependency in the admin bundle (~400KB).
+// Dynamic-import with ssr:false splits it into its own chunk that loads
+// AFTER the dashboard shell paints. See FRONTEND_AUDIT.md F2.
+const chartLoading = () => (
+  <div className="w-full h-full flex items-center justify-center text-muted text-sm">
+    Loading charts…
+  </div>
+);
+const CoursesBarChart = dynamic(() => import('./CoursesBarChart'), {
+  ssr: false,
+  loading: chartLoading,
+});
+const StatusDonut = dynamic(() => import('./StatusDonut'), {
+  ssr: false,
+  loading: chartLoading,
+});
 
 interface DashboardData {
   stats: {
@@ -324,40 +338,7 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
           </div>
 
           <div className="w-full h-[340px] pt-2">
-            {formattedTopCourses.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={formattedTopCourses} margin={{ top: 20, right: 10, left: 0, bottom: 45 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis 
-                    dataKey="displayName" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    angle={-25}
-                    textAnchor="end"
-                    height={60}
-                    tick={{ fontSize: 11, fill: '#64748B' }} 
-                  />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
-                  <RechartsTooltip 
-                    cursor={{ fill: '#F8FAFC' }}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.08)', background: '#FFFFFF' }}
-                    formatter={(value: any, name: any) => [value, name]}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload.length > 0) {
-                        return (payload[0].payload as any).fullName;
-                      }
-                      return label;
-                    }}
-                  />
-                  <Bar dataKey="requests" name="Student Requests" fill="#4F46E5" radius={[6, 6, 0, 0]} barSize={24} />
-                  <Bar dataKey="expertises" name="Tutor Offerings" fill="#10B981" radius={[6, 6, 0, 0]} barSize={24} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted text-sm">
-                No course data available yet.
-              </div>
-            )}
+            <CoursesBarChart data={formattedTopCourses} />
           </div>
         </div>
 
@@ -374,32 +355,7 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
           </div>
 
           <div className="w-full h-[240px] my-4">
-            {statusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={6}
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted text-sm">
-                No request status data yet.
-              </div>
-            )}
+            <StatusDonut data={statusData} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4 border-t border-color text-xs mt-auto">

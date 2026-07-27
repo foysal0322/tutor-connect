@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import EmptyState from './EmptyState';
 
 export type ColumnDef<T> = {
   header: string;
@@ -17,6 +18,11 @@ type DataGridProps<T> = {
   searchKeys?: (keyof T | string)[];
   itemsPerPage?: number;
   emptyMessage?: string;
+  /**
+   * Full custom empty state — takes precedence over emptyMessage.
+   * Pass title/description/action to render the shared EmptyState component.
+   */
+  emptyState?: { title: string; description?: string; icon?: React.ReactNode; action?: React.ReactNode };
 };
 
 export default function DataGrid<T extends Record<string, any>>({
@@ -25,7 +31,8 @@ export default function DataGrid<T extends Record<string, any>>({
   searchable = true,
   searchKeys = [],
   itemsPerPage = 10,
-  emptyMessage = 'No data available.'
+  emptyMessage = 'No data available.',
+  emptyState,
 }: DataGridProps<T>) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -97,24 +104,45 @@ export default function DataGrid<T extends Record<string, any>>({
         <table className="data-grid hidden md:table">
           <thead>
             <tr>
-              {columns.map((col, i) => (
-                <th 
-                  key={i}
-                  className={col.sortable ? 'cursor-pointer select-none' : ''}
-                  onClick={() => {
-                    if (col.sortable && col.accessorKey) {
-                      handleSort(String(col.accessorKey));
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-1">
-                    {col.header}
-                    {col.sortable && sortConfig?.key === col.accessorKey && (
-                      sortConfig?.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+              {columns.map((col, i) => {
+                const sortState =
+                  col.sortable && sortConfig?.key === col.accessorKey
+                    ? (sortConfig?.direction === 'asc' ? 'ascending' : 'descending')
+                    : col.sortable ? 'none' : undefined;
+                return (
+                  <th
+                    key={i}
+                    aria-sort={sortState as any}
+                    className={col.sortable ? 'cursor-pointer select-none' : ''}
+                  >
+                    {col.sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => col.accessorKey && handleSort(String(col.accessorKey))}
+                        style={{
+                          all: 'unset',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          width: '100%',
+                          cursor: 'pointer',
+                          font: 'inherit',
+                          color: 'inherit',
+                        }}
+                      >
+                        <span>{col.header}</span>
+                        {col.sortable && sortConfig?.key === col.accessorKey && (
+                          sortConfig?.direction === 'asc'
+                            ? <ChevronUp size={14} aria-hidden="true" />
+                            : <ChevronDown size={14} aria-hidden="true" />
+                        )}
+                      </button>
+                    ) : (
+                      <span>{col.header}</span>
                     )}
-                  </div>
-                </th>
-              ))}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -130,8 +158,17 @@ export default function DataGrid<T extends Record<string, any>>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="text-center py-8 text-muted">
-                  {emptyMessage}
+                <td colSpan={columns.length}>
+                  {emptyState ? (
+                    <EmptyState
+                      title={emptyState.title}
+                      description={emptyState.description}
+                      icon={emptyState.icon ?? <Inbox size={32} aria-hidden="true" />}
+                      action={emptyState.action}
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-muted">{emptyMessage}</div>
+                  )}
                 </td>
               </tr>
             )}
@@ -154,9 +191,18 @@ export default function DataGrid<T extends Record<string, any>>({
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-muted">
-              {emptyMessage}
-            </div>
+            emptyState ? (
+              <EmptyState
+                title={emptyState.title}
+                description={emptyState.description}
+                icon={emptyState.icon ?? <Inbox size={32} aria-hidden="true" />}
+                action={emptyState.action}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted">
+                {emptyMessage}
+              </div>
+            )
           )}
         </div>
       </div>

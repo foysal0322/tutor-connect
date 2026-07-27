@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { submitWithdrawalRequest } from './actions';
 import FloatingInput from '@/components/ui/FloatingInput';
+import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 
 interface EarningsClientProps {
   completedRequests: any[];
@@ -150,43 +151,8 @@ export default function EarningsClient({
 
             <div className="form-group mb-0">
               <label className="form-label font-bold">MFS Provider</label>
-              <div className="grid grid-cols-3 gap-2.5 mt-1.5">
-                <button
-                  type="button"
-                  onClick={() => setMfsType('BKASH')}
-                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'BKASH' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
-                  style={{
-                    backgroundColor: mfsType === 'BKASH' ? '#E2136E' : 'white',
-                    borderColor: mfsType === 'BKASH' ? '#E2136E' : 'var(--border-color)',
-                    color: mfsType === 'BKASH' ? 'white' : '#E2136E'
-                  }}
-                >
-                  bKash
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMfsType('NAGAD')}
-                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'NAGAD' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
-                  style={{
-                    backgroundColor: mfsType === 'NAGAD' ? '#F58220' : 'white',
-                    borderColor: mfsType === 'NAGAD' ? '#F58220' : 'var(--border-color)',
-                    color: mfsType === 'NAGAD' ? 'white' : '#F58220'
-                  }}
-                >
-                  Nagad
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMfsType('ROCKET')}
-                  className={`py-3 px-2 rounded-xl font-bold border-2 transition-all text-sm sm:text-base ${mfsType === 'ROCKET' ? 'shadow-md text-white' : 'bg-white hover:shadow-sm'}`}
-                  style={{
-                    backgroundColor: mfsType === 'ROCKET' ? '#89288f' : 'white',
-                    borderColor: mfsType === 'ROCKET' ? '#89288f' : 'var(--border-color)',
-                    color: mfsType === 'ROCKET' ? 'white' : '#89288f'
-                  }}
-                >
-                  Rocket
-                </button>
+              <div className="mt-1.5">
+                <MfsProviderSelect value={mfsType} onChange={setMfsType} />
               </div>
             </div>
 

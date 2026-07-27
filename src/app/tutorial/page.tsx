@@ -1,3 +1,12 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'How It Works — nsuOne',
+  description:
+    'A step-by-step guide to finding a tutor, booking a session, paying securely, and reviewing your tutor on nsuOne.',
+  alternates: { canonical: '/tutorial' },
+};
+
 export default function TutorialPage() {
   return (
     <div className="container animate-fade-in" style={{ padding: '4rem 1.5rem', maxWidth: '800px' }}>

@@ -1,18 +1,16 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { requireRole } from '@/lib/server/auth-gate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || (session.user as any)?.role === 'ADMIN') {
-    redirect('/auth/student-signin');
-  }
+  // nsuOne is a unified campus marketplace — both STUDENT and TUTOR can use
+  // the student dashboard. Admins are bounced to their own sign-in.
+  const session = await requireRole(['STUDENT', 'TUTOR'], 'STUDENT', {
+    redirectTo: '/auth/student-signin',
+  });
 
   return (
-    <DashboardLayout 
-      role="STUDENT" 
+    <DashboardLayout
+      role="STUDENT"
       userName={session.user?.name}
       userEmail={session.user?.email}
     >

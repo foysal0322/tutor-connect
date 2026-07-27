@@ -96,7 +96,7 @@
 .empty {
   padding: 2rem;
   text-align: center;
-  color: #6b7280;
+  color: #4b5563; /* Darker for WCAG AA compliance */
   font-size: 0.9rem;
 }
 
@@ -142,7 +142,7 @@
 .item p {
   margin: 0 0 0.5rem 0;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: #374151; /* Darker for WCAG AA compliance */
   line-height: 1.4;
 }
 
@@ -154,7 +154,7 @@
 
 .time {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #6b7280; /* Darker for better readability */
 }
 
 .unreadDot {

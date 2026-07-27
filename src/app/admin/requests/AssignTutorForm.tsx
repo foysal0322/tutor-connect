@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { assignTutorToRequest } from './actions';
+import LoadingButton from '@/components/ui/LoadingButton';
 
 export default function AssignTutorForm({ requestId, courseId, tutors }: { requestId: string, courseId: string, tutors: any[] }) {
   const [loading, setLoading] = useState(false);
@@ -28,9 +29,14 @@ export default function AssignTutorForm({ requestId, courseId, tutors }: { reque
           <option key={t.id} value={t.id}>{t.name} (Fee: {t.expertises.find((e: any) => e.courseId === courseId)?.sessionFee} BDT)</option>
         ))}
       </select>
-      <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }} disabled={loading}>
-        {loading ? 'Assigning...' : 'Assign'}
-      </button>
+      <LoadingButton
+        type="submit"
+        loading={loading}
+        loadingText="Assigning..."
+        style={{ padding: '0.5rem 1rem' }}
+      >
+        Assign
+      </LoadingButton>
     </form>
   );
 }

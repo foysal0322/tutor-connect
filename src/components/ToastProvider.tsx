@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -11,7 +11,7 @@ interface Toast {
   exiting?: boolean;
 }
 
-interface ToastContextValue {
+interface ToastActions {
   toast: {
     success: (message: string) => void;
     error: (message: string) => void;
@@ -19,7 +19,11 @@ interface ToastContextValue {
   };
 }
 
-const ToastContext = createContext<ToastContextValue | null>(null);
+// Split into two contexts so action-only consumers don't re-render
+// every time a toast enters or leaves the visible list.
+const ToastActionsContext = createContext<ToastActions | null>(null);
+// State context is read only by the host that renders the toast container.
+const ToastStateContext = createContext<Toast[] | null>(null);
 
 const ICONS: Record<ToastType, string> = {
   success: '✓',
@@ -60,58 +64,65 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const contextValue: ToastContextValue = {
-    toast: {
-      success: (msg) => addToast(msg, 'success'),
-      error: (msg) => addToast(msg, 'error'),
-      info: (msg) => addToast(msg, 'info'),
-    }
-  };
+  // Actions context is stable across renders — consumers that only call
+  // toast.success/error/info do not re-render when toasts change.
+  const actions = useMemo<ToastActions>(
+    () => ({
+      toast: {
+        success: (msg: string) => addToast(msg, 'success'),
+        error: (msg: string) => addToast(msg, 'error'),
+        info: (msg: string) => addToast(msg, 'info'),
+      },
+    }),
+    [addToast],
+  );
 
   return (
-    <ToastContext.Provider value={contextValue}>
-      {children}
-      <div className="toast-container" aria-live="polite" aria-label="Notifications">
-        {toasts.map(t => (
-          <div
-            key={t.id}
-            role="alert"
-            className={`toast toast-${t.type}${t.exiting ? ' toast-exit' : ''}`}
-          >
-            <span className="toast-icon" aria-hidden="true">{ICONS[t.type]}</span>
-            <span style={{ flex: 1 }}>{t.message}</span>
-            <button
-              onClick={() => dismiss(t.id)}
-              aria-label="Dismiss notification"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                opacity: 0.6,
-                padding: '0 0.25rem',
-                color: 'inherit',
-              }}
+    <ToastActionsContext.Provider value={actions}>
+      <ToastStateContext.Provider value={toasts}>
+        {children}
+        <div className="toast-container" aria-live="polite" aria-label="Notifications">
+          {toasts.map(t => (
+            <div
+              key={t.id}
+              role="alert"
+              className={`toast toast-${t.type}${t.exiting ? ' toast-exit' : ''}`}
             >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
-    </ToastContext.Provider>
+              <span className="toast-icon" aria-hidden="true">{ICONS[t.type]}</span>
+              <span style={{ flex: 1 }}>{t.message}</span>
+              <button
+                onClick={() => dismiss(t.id)}
+                aria-label="Dismiss notification"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  opacity: 0.6,
+                  padding: '0 0.25rem',
+                  color: 'inherit',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      </ToastStateContext.Provider>
+    </ToastActionsContext.Provider>
   );
 }
 
 /**
  * Hook to show toast notifications anywhere in the app.
- * 
+ *
  * @example
  * const { toast } = useToast();
  * toast.success('Profile updated!');
  * toast.error('Something went wrong.');
  */
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
+export function useToast(): ToastActions {
+  const ctx = useContext(ToastActionsContext);
   if (!ctx) throw new Error('useToast must be used within a ToastProvider');
   return ctx;
 }

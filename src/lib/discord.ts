@@ -1,5 +1,17 @@
-const WEBHOOK_1 = 'https://discord.com/api/webhooks/1524396301213634721/2PNCOLQrLGcU63CDrn6K51IloIi17qZxNfwAC_aJb_w1-ClHpKIZ-MTviuvepdtsrMSn';
-const WEBHOOK_2 = 'https://discord.com/api/webhooks/1524397722210402375/sQ_MKPS5wD0i8v87MtKXYr_tNyccw1kN8_0_5tBuBW0zzxwgloNI5Z7czdHoSAk2w_Bf';
+// Webhook URLs are bearer credentials — never hardcode them in source.
+// Read from env. If unset, notifications are silently skipped (with a one-time
+// dev warning) so the app still works in environments that don't care about Discord.
+const WEBHOOK_1 = process.env.DISCORD_NOTIFICATIONS_WEBHOOK;
+const WEBHOOK_2 = process.env.DISCORD_ALERTS_WEBHOOK;
+
+let warnedMissingWebhooks = false;
+function missingWebhookWarning(which: string) {
+  if (warnedMissingWebhooks) return;
+  warnedMissingWebhooks = true;
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(`[discord] ${which} env var is not set; notifications will be skipped.`);
+  }
+}
 
 type Embed = {
   title?: string;
@@ -8,7 +20,11 @@ type Embed = {
   fields?: Array<{ name: string; value: string; inline?: boolean }>;
 };
 
-async function sendWebhook(url: string, content: string, embeds?: Embed[]) {
+async function sendWebhook(url: string | undefined, content: string, embeds?: Embed[]) {
+  if (!url) {
+    missingWebhookWarning('DISCORD_*_WEBHOOK');
+    return;
+  }
   try {
     const res = await fetch(url, {
       method: 'POST',

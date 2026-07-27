@@ -3,7 +3,7 @@
   --primary: #4F46E5; /* Indigo */
   --primary-hover: #4338CA;
   --primary-light: #EEF2FF;
-  
+
   --accent: #F59E0B; /* Amber */
   --accent-hover: #D97706;
   --accent-light: #FEF3C7;
@@ -15,7 +15,7 @@
   --danger: #EF4444; /* Rose */
   --danger-hover: #DC2626;
   --danger-light: #FEE2E2;
-  
+
   --info: #3B82F6; /* Blue */
   --info-hover: #2563EB;
   --info-light: #DBEAFE;
@@ -24,25 +24,103 @@
   --bg-color: #F8FAFC;
   --card-bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
-  
+
   --text-main: #0F172A;
-  --text-muted: #64748B;
+  /* Tightened from #5A6374 to #475569 — passes WCAG AA at 4.5:1 on white and on --bg-color.
+     See FRONTEND_AUDIT.md D7. */
+  --text-muted: #475569;
   --border-color: #E2E8F0;
   --input-bg: #F8FAFC;
 
-  /* Geometry & Shadows */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-full: 9999px;
+  /* --- Spacing scale (FRONTEND_AUDIT.md C1) -----------------------------
+     4px base unit. Prefer these over ad-hoc rem/px in component CSS. */
+  --space-0: 0;
+  --space-1: 0.25rem;   /*  4px */
+  --space-2: 0.5rem;    /*  8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  /* Semantic aliases */
+  --space-xs: var(--space-2);
+  --space-sm: var(--space-3);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-6);
+  --space-xl: var(--space-8);
+  --space-2xl: var(--space-12);
 
+  /* --- Border radius (FRONTEND_AUDIT.md C2) -----------------------------
+     Define the previously-undefined --radius as an alias of --radius-md so
+     existing call sites that use var(--radius) keep working. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --radius: var(--radius-md); /* alias — do not introduce new usages; prefer --radius-md */
+
+  /* --- Typography scale (FRONTEND_AUDIT.md C5) -------------------------- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  clamp(2rem, 1.6rem + 1.5vw, 2.5rem);   /* 32 → 40 */
+  --text-5xl:  clamp(2.5rem, 2rem + 2vw, 4rem);       /* 40 → 64 (display) */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+
+  /* --- Animation tokens (FRONTEND_AUDIT.md C6) -------------------------- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* Geometry & Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
   --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
-  
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* --- Skip-to-content link (FRONTEND_AUDIT.md D3) ------------------------
+   Visually hidden until focused. Keyboard users press Tab once to bypass the
+   entire navbar/sidebar and jump straight to main content. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10000;
+  padding: var(--space-2) var(--space-4);
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 * {
@@ -400,9 +478,63 @@ h4 { font-size: 1.25rem; }
 .btn-action {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   font-weight: 500;
   box-shadow: none;
+}
+
+/* --- Button primitive extensions (FRONTEND_AUDIT.md C7) ---------------- */
+.btn-sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+.btn-lg {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-lg);
+}
+.btn-block {
+  width: 100%;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-main);
+  box-shadow: none;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+/* Loading state — spinner is a small CSS-only disc with a reduced-motion-safe pulse. */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin 0.6s linear infinite;
+  color: var(--primary);
+}
+.btn-danger .btn-spinner { color: white; }
+.btn-secondary .btn-spinner { color: var(--text-main); }
+
+/* Visible focus ring for keyboard users (FRONTEND_AUDIT.md C7 a11y). */
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-outline:focus-visible,
+.btn-ghost:focus-visible,
+.btn-danger:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .btn-icon {
@@ -488,6 +620,27 @@ h4 { font-size: 1.25rem; }
   margin-top: 0.25rem;
 }
 
+/* Hint text shown below an input (FRONTEND_AUDIT.md D2). */
+.form-hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+/* Visually-hidden text — kept on the accessibility tree, removed from the
+   visual layout. Used for icon-only buttons, required indicators, etc. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -495,7 +648,7 @@ h4 { font-size: 1.25rem; }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn var(--duration-slow) var(--ease-entrance) forwards;
 }
 
 @keyframes spin {
@@ -523,6 +676,26 @@ h4 { font-size: 1.25rem; }
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
+}
+
+/* --- Reduced-motion guard (FRONTEND_AUDIT.md C6 + D8) ------------------
+   Honor the user's OS-level preference. Applies to all animations declared
+   above and any element-level transitions downstream. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Replace the spinner with a static "Loading…" affordance. The element
+     keeps its dimensions so layout doesn't shift. */
+  .animate-spin {
+    animation: none !important;
+    opacity: 0.75;
+  }
 }
 
 /* Data Grid (Table Replacement) */
