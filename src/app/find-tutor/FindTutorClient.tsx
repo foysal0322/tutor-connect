@@ -1,9 +1,49 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import styles from './find-tutor.module.css';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
+import styles from "./find-tutor.module.css";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import {
+  Search,
+  Loader2,
+  X,
+  ArrowRight,
+  Star,
+  Users,
+  MessageSquareQuote,
+  Clock,
+  BookOpen,
+  Telescope,
+  HandHeart,
+  ChevronDown,
+} from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Types — mirror the server-mapped shape from page.tsx               */
+/* ------------------------------------------------------------------ */
+
+interface Review {
+  id: string;
+  rating: number;
+  review: string;
+  studentName: string;
+  courseName: string;
+  date: string;
+}
+
+interface TutorSummary {
+  id: string;
+  name: string;
+  cgpa: number | null;
+  gender: string | null;
+  studentsTaught?: number;
+  averageRating?: string | null;
+  reviews?: Review[];
+  department: { name: string } | null;
+}
 
 interface Expertise {
   id: string;
@@ -11,28 +51,10 @@ interface Expertise {
   courseId: string;
   semesterCompleted: string;
   facultyName: string;
-  courseGrade: string;
+  courseGrade: string | null;
   availability: string;
   sessionFee: number;
-  tutor: {
-    id: string;
-    name: string;
-    cgpa: number | null;
-    gender: string | null;
-    studentsTaught?: number;
-    averageRating?: string | null;
-    reviews?: {
-      id: string;
-      rating: number;
-      review: string;
-      studentName: string;
-      courseName: string;
-      date: string;
-    }[];
-    department: {
-      name: string;
-    } | null;
-  };
+  tutor: TutorSummary;
   course: {
     id: string;
     name: string;
@@ -45,6 +67,28 @@ interface Department {
   name: string;
 }
 
+/* ------------------------------------------------------------------ */
+/* Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+/** First letters of the first and last name words — used for the monogram avatar. */
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  const first = parts[0][0] ?? "";
+  const last = parts.length > 1 ? (parts[parts.length - 1][0] ?? "") : "";
+  return (first + last).toUpperCase();
+}
+
+/** Deterministic fee formatting — avoids SSR/CSR locale mismatches. */
+function formatFee(fee: number): string {
+  return `BDT ${Math.round(fee)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Component                                                          */
+/* ------------------------------------------------------------------ */
+
 export default function FindTutorClient({
   initialExpertises,
   departments,
@@ -52,264 +96,568 @@ export default function FindTutorClient({
   initialExpertises: Expertise[];
   departments: Department[];
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDept, setSelectedDept] = useState('');
-  const [selectedGender, setSelectedGender] = useState('');
-  const [activeReviewsTutor, setActiveReviewsTutor] = useState<any>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDept, setSelectedDept] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
+  const [activeReviewsTutor, setActiveReviewsTutor] =
+    useState<TutorSummary | null>(null);
+
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const modalTitleId = useId();
 
-  // Focus trap for modal
+  // Trap focus inside the reviews modal while it is open. The hook also
+  // restores focus to the trigger button and locks body scroll on close.
+  useFocusTrap(panelRef, !!activeReviewsTutor);
+
+  // Escape to close the modal (the focus-trap hook intentionally leaves
+  // Escape handling to the caller).
   useEffect(() => {
-    if (activeReviewsTutor) {
-      const focusableElements = modalRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements?.[0] as HTMLElement;
-      const lastElement = focusableElements?.[focusableElements.length - 1] as HTMLElement;
-
-      firstElement?.focus();
-
-      const handleTab = (e: KeyboardEvent) => {
-        if (e.key === 'Tab') {
-          if (e.shiftKey) {
-            if (document.activeElement === firstElement) {
-              e.preventDefault();
-              lastElement?.focus();
-            }
-          } else {
-            if (document.activeElement === lastElement) {
-              e.preventDefault();
-              firstElement?.focus();
-            }
-          }
-        }
-      };
-
-      document.addEventListener('keydown', handleTab);
-      return () => document.removeEventListener('keydown', handleTab);
+    if (!activeReviewsTutor) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setActiveReviewsTutor(null);
     }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [activeReviewsTutor]);
 
-  const handleModalKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && activeReviewsTutor) {
-      setActiveReviewsTutor(null);
-    }
-  };
+  // Searching state — true for the brief window between a keystroke and the
+  // 300ms debounce settling. Drives the inline "updating" affordance.
+  const isSearching =
+    searchQuery.trim() !== "" && searchQuery !== debouncedSearch;
 
-  // Filter logic — uses debounced search to avoid filtering on every keystroke
-  const filteredExpertises = initialExpertises.filter((exp) => {
-    const tutorName = exp.tutor.name.toLowerCase();
-    const courseName = exp.course.name.toLowerCase();
-    const query = debouncedSearch.toLowerCase();
+  const filteredExpertises = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    return initialExpertises.filter((exp) => {
+      const matchesSearch =
+        !query ||
+        exp.tutor.name.toLowerCase().includes(query) ||
+        exp.course.name.toLowerCase().includes(query);
+      const matchesDept =
+        !selectedDept || exp.course.departmentId === selectedDept;
+      const matchesGender =
+        !selectedGender || exp.tutor.gender === selectedGender;
+      return matchesSearch && matchesDept && matchesGender;
+    });
+  }, [initialExpertises, debouncedSearch, selectedDept, selectedGender]);
 
-    const matchesSearch = tutorName.includes(query) || courseName.includes(query);
-    const matchesDept = selectedDept === '' || exp.course.departmentId === selectedDept || (exp.tutor.department && exp.tutor.department.name === selectedDept);
-    const matchesGender = selectedGender === '' || exp.tutor.gender === selectedGender;
+  const totalOptions = initialExpertises.length;
+  const hasFilters =
+    searchQuery.trim() !== "" || selectedDept !== "" || selectedGender !== "";
+  const selectedDeptName =
+    departments.find((d) => d.id === selectedDept)?.name ?? "";
 
-    return matchesSearch && matchesDept && matchesGender;
-  });
+  function clearAll() {
+    setSearchQuery("");
+    setSelectedDept("");
+    setSelectedGender("");
+  }
+
+  const reviewCount = activeReviewsTutor?.reviews?.length ?? 0;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Find a Private Tutor</h1>
-        <p className={styles.subtitle}>Browse expert tutors for your specific NSU courses</p>
-      </div>
+    <div className={styles.page}>
+      {/* ============================================================ */}
+      {/* HERO                                                         */}
+      {/* ============================================================ */}
+      <section className={styles.hero}>
+        <div className={styles.heroInner}>
+          <span className={styles.kicker}>
+            <span className={styles.kickerDot} aria-hidden='true' />
+            NSU Private Tutoring
+          </span>
 
-      {/* Filter Section */}
-      <div className={styles.searchSection}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Search Tutors or Courses</label>
-          <input
-            type="text"
-            placeholder="e.g. CSE115, John Doe..."
-            className={styles.input}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <h1 className={styles.heroTitle}>
+            Find the <span className={styles.heroAccent}>right tutor</span> for
+            your NSU course
+          </h1>
+
+          <p className={styles.heroSubtitle}>
+            Search by course or tutor name to connect with experienced North
+            South University students who can help you master your courses, prep
+            for exams, and lift your grades.
+          </p>
+
+          {/* Search */}
+          <div className={styles.searchWrap}>
+            <label htmlFor='find-tutor-search' className='sr-only'>
+              Search tutors by course name or tutor name
+            </label>
+            <Search className={styles.searchIcon} aria-hidden='true' />
+            <input
+              id='find-tutor-search'
+              type='text'
+              className={styles.searchInput}
+              placeholder='Search by course name or tutor name...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete='off'
+              aria-describedby='find-tutor-hint'
+            />
+            {isSearching && (
+              <Loader2 className={styles.searchLive} aria-hidden='true' />
+            )}
+            {searchQuery && !isSearching && (
+              <button
+                type='button'
+                className={styles.searchClear}
+                onClick={() => setSearchQuery("")}
+                aria-label='Clear search'
+              >
+                <X size={16} aria-hidden='true' />
+              </button>
+            )}
+          </div>
+
+          <p className={styles.searchHint} id='find-tutor-hint'>
+            <strong>{totalOptions}</strong> tutor options across{" "}
+            <strong>{departments.length}</strong> departments
+          </p>
         </div>
+      </section>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Department</label>
-          <select
-            className={styles.select}
-            value={selectedDept}
-            onChange={(e) => setSelectedDept(e.target.value)}
-          >
-            <option value="">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* ============================================================ */}
+      {/* CONTENT                                                      */}
+      {/* ============================================================ */}
+      <div className={styles.content}>
+        {/* ----- Toolbar: result summary + active chips + filters ----- */}
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarMain}>
+            <p className={styles.resultSummary} aria-live='polite'>
+              {hasFilters ? (
+                <>
+                  Showing{" "}
+                  <span className={styles.resultStrong}>
+                    {filteredExpertises.length}
+                  </span>{" "}
+                  of {totalOptions} options
+                </>
+              ) : (
+                <>
+                  <span className={styles.resultStrong}>{totalOptions}</span>{" "}
+                  tutor options available
+                </>
+              )}
+            </p>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Gender</label>
-          <select
-            className={styles.select}
-            value={selectedGender}
-            onChange={(e) => setSelectedGender(e.target.value)}
-          >
-            <option value="">Any Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Results Section */}
-      <div className={styles.resultsGrid}>
-        {filteredExpertises.length > 0 ? (
-          filteredExpertises.map((exp) => (
-            <div key={exp.id} className={styles.card}>
-              <div>
-                <div className={styles.cardHeader}>
-                  <div>
-                    <h3 className={styles.tutorName}>{exp.tutor.name}</h3>
-                    <div className={styles.tutorDept}>
-                      {exp.tutor.department?.name || 'NSU'} Student
-                    </div>
-                  </div>
-                  {exp.tutor.cgpa && (
-                    <span className={styles.badgeCGPA}>CGPA {exp.tutor.cgpa.toFixed(2)}</span>
-                  )}
-                </div>
-
-                <div className={styles.courseHeader}>{exp.course.name}</div>
-                
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)' }}>
-                    🎓 {exp.tutor.studentsTaught || 0} students taught
-                  </span>
-                  {exp.tutor.averageRating && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#b45309' }}>
-                      <span style={{ color: '#fbbf24' }}>★</span> {exp.tutor.averageRating}
+            {hasFilters && (
+              <div className={styles.chips} aria-label='Active filters'>
+                {searchQuery && (
+                  <span className={styles.chip}>
+                    <span className={styles.chipLabel}>
+                      &ldquo;{searchQuery}&rdquo;
                     </span>
-                  )}
-                </div>
+                    <button
+                      type='button'
+                      className={styles.chipRemove}
+                      onClick={() => setSearchQuery("")}
+                      aria-label={`Clear search ${searchQuery}`}
+                    >
+                      <X size={12} aria-hidden='true' />
+                    </button>
+                  </span>
+                )}
+                {selectedDept && (
+                  <span className={styles.chip}>
+                    <span className={styles.chipLabel}>{selectedDeptName}</span>
+                    <button
+                      type='button'
+                      className={styles.chipRemove}
+                      onClick={() => setSelectedDept("")}
+                      aria-label={`Clear department filter ${selectedDeptName}`}
+                    >
+                      <X size={12} aria-hidden='true' />
+                    </button>
+                  </span>
+                )}
+                {selectedGender && (
+                  <span className={styles.chip}>
+                    <span className={styles.chipLabel}>{selectedGender}</span>
+                    <button
+                      type='button'
+                      className={styles.chipRemove}
+                      onClick={() => setSelectedGender("")}
+                      aria-label={`Clear gender filter ${selectedGender}`}
+                    >
+                      <X size={12} aria-hidden='true' />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
 
-                <ul className={styles.detailsList}>
-                  <li>
-                    <span>Grade Obtained:</span>
-                    <strong>{exp.courseGrade || 'Not specified'}</strong>
-                  </li>
-                  <li>
-                    <span>Taken Under:</span>
-                    <strong>{exp.facultyName}</strong>
-                  </li>
-                  <li>
-                    <span>Availability:</span>
-                    <strong>{exp.availability}</strong>
-                  </li>
-                  <li>
-                    <span>Session Fee:</span>
-                    <strong>{exp.sessionFee} BDT / Session</strong>
-                  </li>
-                </ul>
+          <div className={styles.filters}>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel} htmlFor='filter-dept'>
+                Department
+              </label>
+              <div className={styles.selectWrap}>
+                <select
+                  id='filter-dept'
+                  className={`${styles.select} ${selectedDept ? styles.selectActive : ""}`}
+                  value={selectedDept}
+                  onChange={(e) => setSelectedDept(e.target.value)}
+                >
+                  <option value=''>All departments</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className={styles.selectIcon} aria-hidden='true' />
+              </div>
+            </div>
+
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel} htmlFor='filter-gender'>
+                Gender
+              </label>
+              <div className={styles.selectWrap}>
+                <select
+                  id='filter-gender'
+                  className={`${styles.select} ${selectedGender ? styles.selectActive : ""}`}
+                  value={selectedGender}
+                  onChange={(e) => setSelectedGender(e.target.value)}
+                >
+                  <option value=''>Any gender</option>
+                  <option value='Male'>Male</option>
+                  <option value='Female'>Female</option>
+                </select>
+                <ChevronDown className={styles.selectIcon} aria-hidden='true' />
+              </div>
+            </div>
+
+            {hasFilters && (
+              <button
+                type='button'
+                className={styles.clearAll}
+                onClick={clearAll}
+              >
+                <X size={15} aria-hidden='true' />
+                Clear all
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ----- Results ----- */}
+        <div className={styles.results}>
+          {filteredExpertises.length > 0 ? (
+            <div className={styles.grid}>
+              {filteredExpertises.map((exp) => {
+                const reviews = exp.tutor.reviews ?? [];
+                const hasReviews = reviews.length > 0;
+                return (
+                  <article key={exp.id} className={styles.card}>
+                    {/* Identity */}
+                    <div className={styles.cardTop}>
+                      <div className={styles.avatar} aria-hidden='true'>
+                        {getInitials(exp.tutor.name)}
+                      </div>
+                      <div className={styles.identity}>
+                        <h3 className={styles.tutorName}>{exp.tutor.name}</h3>
+                        <p className={styles.tutorDept}>
+                          {exp.tutor.department?.name ??
+                            "North South University"}
+                        </p>
+                      </div>
+                      {exp.tutor.cgpa != null && (
+                        <span className={styles.cgpaBadge}>
+                          CGPA {exp.tutor.cgpa.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Course expertise */}
+                    <div className={styles.courseBlock}>
+                      <BookOpen
+                        className={styles.courseIcon}
+                        aria-hidden='true'
+                      />
+                      <div className={styles.courseMeta}>
+                        <span className={styles.courseLabel}>Teaches</span>
+                        <span className={styles.courseName}>
+                          {exp.course.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Academic performance */}
+                    <dl className={styles.stats}>
+                      {exp.courseGrade && (
+                        <div className={styles.statCell}>
+                          <dt className={styles.statLabel}>Grade</dt>
+                          <dd className={styles.statValue}>
+                            {exp.courseGrade}
+                          </dd>
+                        </div>
+                      )}
+                      {exp.facultyName && (
+                        <div className={styles.statCell}>
+                          <dt className={styles.statLabel}>Faculty</dt>
+                          <dd className={styles.statValue}>
+                            {exp.facultyName}
+                          </dd>
+                        </div>
+                      )}
+                      {exp.semesterCompleted && (
+                        <div className={styles.statCell}>
+                          <dt className={styles.statLabel}>Completed</dt>
+                          <dd className={styles.statValue}>
+                            {exp.semesterCompleted}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+
+                    {/* Trust */}
+                    <div className={styles.trustRow}>
+                      {exp.tutor.averageRating ? (
+                        <span className={styles.rating}>
+                          <Star
+                            className={styles.starIcon}
+                            aria-hidden='true'
+                          />
+                          {exp.tutor.averageRating}
+                        </span>
+                      ) : (exp.tutor.studentsTaught ?? 0) > 0 ? (
+                        <span className={styles.ratingNew}>No ratings yet</span>
+                      ) : (
+                        <span className={styles.ratingNew}>
+                          New to tutoring
+                        </span>
+                      )}
+                      <span className={styles.trustDot} aria-hidden='true' />
+                      <span className={styles.trustMeta}>
+                        <Users className={styles.metaIcon} aria-hidden='true' />
+                        {exp.tutor.studentsTaught ?? 0} taught
+                      </span>
+                      {hasReviews && (
+                        <>
+                          <span
+                            className={styles.trustDot}
+                            aria-hidden='true'
+                          />
+                          <span className={styles.trustMeta}>
+                            <MessageSquareQuote
+                              className={styles.metaIcon}
+                              aria-hidden='true'
+                            />
+                            {reviews.length} review
+                            {reviews.length !== 1 ? "s" : ""}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Availability + fee */}
+                    <div className={styles.availFee}>
+                      <span className={styles.avail} title={exp.availability}>
+                        <span className={styles.availDot} aria-hidden='true' />
+                        <Clock className={styles.metaIcon} aria-hidden='true' />
+                        <span className={styles.availText}>
+                          {exp.availability}
+                        </span>
+                      </span>
+                      <span className={styles.fee}>
+                        {formatFee(exp.sessionFee)}{" "}
+                        <span className={styles.feeUnit}>/ session</span>
+                      </span>
+                    </div>
+
+                    {/* Footer actions — primary CTA leads, reviews secondary */}
+                    <div className={styles.cardFooter}>
+                      {hasReviews && (
+                        <button
+                          type='button'
+                          className={styles.reviewsBtn}
+                          onClick={() => setActiveReviewsTutor(exp.tutor)}
+                        >
+                          View {reviews.length} review
+                          {reviews.length !== 1 ? "s" : ""}
+                        </button>
+                      )}
+                      <Link
+                        href={`/student/request-tutor?courseId=${exp.course.id}&tutorId=${exp.tutor.id}`}
+                        className={styles.cta}
+                      >
+                        Request Tutor for this Course
+                        <ArrowRight
+                          className={styles.ctaIcon}
+                          aria-hidden='true'
+                        />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon} aria-hidden='true'>
+                <Telescope />
+              </div>
+              <h3 className={styles.emptyTitle}>No tutors found</h3>
+              <p className={styles.emptyText}>
+                We couldn&apos;t find a tutor matching your search. Try a
+                different course name, or clear your filters to see everyone.
+              </p>
+              <div className={styles.emptyActions}>
+                {hasFilters && (
+                  <button
+                    type='button'
+                    className='btn-secondary'
+                    onClick={clearAll}
+                  >
+                    Clear all filters
+                  </button>
+                )}
+                <Link href='/student/request-tutor' className='btn-primary'>
+                  Request a tutor
+                  <ArrowRight size={16} aria-hidden='true' />
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ----- Fallback CTA ----- */}
+        <section className={styles.fallback}>
+          <div className={styles.fallbackIcon} aria-hidden='true'>
+            <HandHeart />
+          </div>
+          <div className={styles.fallbackBody}>
+            <h2 className={styles.fallbackTitle}>
+              Can&apos;t find the right tutor?
+            </h2>
+            <p className={styles.fallbackText}>
+              Tell us which course you need help with and your preferred
+              schedule. We&apos;ll match you with a qualified tutor who meets
+              your criteria.
+            </p>
+          </div>
+          <div className={styles.fallbackAction}>
+            <Link href='/student/request-tutor' className={styles.fallbackBtn}>
+              Request a Tutor
+              <ArrowRight size={18} aria-hidden='true' />
+            </Link>
+          </div>
+        </section>
+      </div>
+
+      {/* ============================================================ */}
+      {/* REVIEWS MODAL                                                */}
+      {/* ============================================================ */}
+      {activeReviewsTutor &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className={styles.modalOverlay}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setActiveReviewsTutor(null);
+            }}
+          >
+            <div
+              ref={panelRef}
+              className={styles.modalPanel}
+              role='dialog'
+              aria-modal='true'
+              aria-labelledby={modalTitleId}
+              tabIndex={-1}
+            >
+              <div className={styles.modalHeader}>
+                <div className={styles.modalAvatar} aria-hidden='true'>
+                  {getInitials(activeReviewsTutor.name)}
+                </div>
+                <div className={styles.modalHeadInfo}>
+                  <h2 id={modalTitleId} className={styles.modalTitle}>
+                    {activeReviewsTutor.name}
+                  </h2>
+                  <span className={styles.modalSubtitle}>
+                    {activeReviewsTutor.averageRating ? (
+                      <>
+                        <Star
+                          className={styles.modalSubtitleStar}
+                          aria-hidden='true'
+                        />
+                        <strong>{activeReviewsTutor.averageRating}</strong>
+                        <span className={styles.trustDot} aria-hidden='true' />
+                        <span>
+                          {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+                        </span>
+                      </>
+                    ) : (
+                      <span>
+                        {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <button
+                  type='button'
+                  className={styles.modalClose}
+                  onClick={() => setActiveReviewsTutor(null)}
+                  aria-label='Close reviews'
+                >
+                  <X size={20} aria-hidden='true' />
+                </button>
               </div>
 
-              <div className={styles.footerActions} style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                <Link
-                  href={`/student/request-tutor?courseId=${exp.course.id}&tutorId=${exp.tutor.id}`}
-                  className={`btn-primary ${styles.requestBtn}`}
-                  style={{ width: '100%', textAlign: 'center' }}
-                >
-                  Request Tutor for this Course
-                </Link>
-                {exp.tutor.reviews && exp.tutor.reviews.length > 0 && (
-                  <button
-                    className="btn"
-                    onClick={() => setActiveReviewsTutor(exp.tutor)}
-                    style={{ background: '#f1f5f9', color: 'var(--text-main)', width: '100%', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.75rem' }}
-                    aria-label={`See ${exp.tutor.reviews.length} review${exp.tutor.reviews.length !== 1 ? 's' : ''} for ${exp.tutor.name}`}
-                  >
-                    See {exp.tutor.reviews.length} Review{exp.tutor.reviews.length !== 1 ? 's' : ''}
-                  </button>
+              <div className={styles.modalBody}>
+                {reviewCount > 0 ? (
+                  activeReviewsTutor.reviews!.map((r) => (
+                    <div key={r.id} className={styles.reviewItem}>
+                      <div className={styles.reviewHead}>
+                        <span className={styles.reviewAuthor}>
+                          {r.studentName}{" "}
+                          <span className={styles.reviewCourse}>
+                            · {r.courseName}
+                          </span>
+                        </span>
+                        <span
+                          className={styles.reviewStars}
+                          aria-label={`Rated ${r.rating} out of 5`}
+                        >
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`${styles.reviewStar} ${i < r.rating ? "" : styles.reviewStarEmpty}`}
+                              aria-hidden='true'
+                            />
+                          ))}
+                        </span>
+                      </div>
+                      {r.review && r.review.trim() !== "" ? (
+                        <p className={styles.reviewText}>
+                          &ldquo;{r.review}&rdquo;
+                        </p>
+                      ) : (
+                        <p className={styles.reviewTextEmpty}>
+                          No written review provided.
+                        </p>
+                      )}
+                      <span className={styles.reviewDate}>
+                        {new Date(r.date).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.modalEmpty}>
+                    <p className={styles.modalEmptyTitle}>No reviews yet</p>
+                    <p>Be the first student to share your experience.</p>
+                  </div>
                 )}
               </div>
             </div>
-          ))
-        ) : (
-          <div className={styles.emptyState}>
-            <h3 className={styles.emptyTitle}>No Tutors Found</h3>
-            <p className={styles.emptyText}>Try adjusting your search query or filters.</p>
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
-
-      {/* Fallback Section */}
-      <div className={styles.fallbackSection}>
-        <h2 className={styles.fallbackTitle}>Couldn&apos;t find the right tutor?</h2>
-        <p className={styles.fallbackText}>
-          Post a custom tutor request and we will notify tutors who meet your criteria.
-        </p>
-        <Link 
-          href="/student/request-tutor" 
-          className="btn-primary" 
-          style={{ display: 'inline-block', fontSize: '1.1rem', padding: '0.75rem 2rem' }}
-        >
-          Request a Specific Tutor
-        </Link>
-      </div>
-      
-      {/* Reviews Modal */}
-      {activeReviewsTutor && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setActiveReviewsTutor(null)}
-          aria-hidden="true"
-        >
-          <div
-            className={styles.modalContent}
-            onClick={e => e.stopPropagation()}
-            ref={modalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`modal-title-${activeReviewsTutor.id}`}
-            onKeyDown={handleModalKeyDown}
-          >
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle} id={`modal-title-${activeReviewsTutor.id}`}>
-                Reviews for {activeReviewsTutor.name}
-              </h3>
-              <button
-                className={styles.closeBtn}
-                onClick={() => setActiveReviewsTutor(null)}
-                aria-label="Close reviews modal"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.modalBody} role="region" aria-live="polite" aria-atomic="true">
-              {activeReviewsTutor.reviews && activeReviewsTutor.reviews.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {activeReviewsTutor.reviews.map((r: any) => (
-                    <div key={r.id} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ fontWeight: 600 }}>{r.studentName} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.85rem' }}>({r.courseName})</span></span>
-                        <span style={{ color: '#fbbf24', fontSize: '1.1rem' }}>
-                          {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
-                        </span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-main)', fontStyle: 'italic' }}>
-                        {r.review ? `"${r.review}"` : 'No written review provided.'}
-                      </p>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', textAlign: 'right' }}>
-                        {new Date(r.date).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '2rem 0' }}>No reviews yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

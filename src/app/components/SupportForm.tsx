@@ -2,6 +2,17 @@
 
 import { useState } from 'react';
 import { submitSupportTicket } from '../actions/support';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
+import { LifeBuoy, MessageSquare, Phone, Send, User } from 'lucide-react';
+import {
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+} from '@/components/forms';
 
 export default function SupportForm() {
   const [loading, setLoading] = useState(false);
@@ -27,105 +38,89 @@ export default function SupportForm() {
     setLoading(false);
   }
 
-  if (success) {
-    return (
-      <div className="card" style={{ textAlign: 'center' }}>
-        <h3 style={{ color: 'var(--success-hover)', marginBottom: 'var(--space-2)', fontSize: 'var(--text-xl)' }}>
-          Thank you!
-        </h3>
-        <p className="text-muted">We&apos;ve received your message and will review it shortly.</p>
-        <button
-          type="button"
-          onClick={() => setSuccess(false)}
-          className="btn-secondary btn-sm"
-          style={{ marginTop: 'var(--space-4)' }}
-        >
-          Submit another
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <form className="card" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      {error && (
-        <div
-          role="alert"
-          style={{
-            background: 'var(--danger-light)',
-            color: 'var(--danger-hover)',
-            padding: 'var(--space-3)',
-            borderRadius: 'var(--radius-md)',
-            fontSize: 'var(--text-sm)',
-          }}
-        >
-          {error}
+    <FormCard
+      surface="embedded"
+      icon={<LifeBuoy size={28} />}
+      title="Send us a message"
+      subtitle="We typically respond within one business day."
+    >
+      {success ? (
+        <div style={{ textAlign: 'center' }}>
+          <FormAlert tone="success">
+            Thank you! We&apos;ve received your message and will review it shortly.
+          </FormAlert>
+          <button
+            type="button"
+            onClick={() => setSuccess(false)}
+            className="btn-secondary"
+            style={{ marginTop: '0.5rem' }}
+          >
+            Submit another
+          </button>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate>
+          {error && <FormAlert>{error}</FormAlert>}
+
+          <FormSection label="Your Details" icon={<User size={14} />}>
+            <Input
+              containerClassName={fieldClass}
+              name="name"
+              type="text"
+              label="Name"
+              placeholder="Your name"
+              required
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="you@example.com"
+              required
+            />
+          </FormSection>
+
+          <FormSection label="More Details" icon={<Phone size={14} />}>
+            <Input
+              containerClassName={fieldClass}
+              name="contact"
+              type="tel"
+              label="Contact number"
+              placeholder="Your phone number"
+              required
+            />
+            <Select
+              containerClassName={fieldClass}
+              name="type"
+              label="What can we help with?"
+              required
+              placeholderOption="Select an option"
+              options={[
+                { value: 'REFUND', label: 'Request a refund' },
+                { value: 'COMPLAINT', label: 'Submit a complaint' },
+                { value: 'SUGGESTION', label: 'Give a suggestion' },
+              ]}
+            />
+          </FormSection>
+
+          <FormSection label="Message" icon={<MessageSquare size={14} />} columns={1}>
+            <Textarea
+              containerClassName={fieldClass}
+              name="message"
+              label="Message"
+              required
+              rows={4}
+              placeholder="Please provide details..."
+            />
+          </FormSection>
+
+          <FormSubmit loading={loading} loadingText="Submitting..." icon={<Send size={18} />}>
+            Submit message
+          </FormSubmit>
+        </form>
       )}
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" htmlFor="support-name">Name</label>
-          <input
-            id="support-name"
-            name="name"
-            type="text"
-            required
-            className="form-input"
-            placeholder="Your name"
-          />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" htmlFor="support-email">Email</label>
-          <input
-            id="support-email"
-            name="email"
-            type="email"
-            required
-            className="form-input"
-            placeholder="you@example.com"
-          />
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" htmlFor="support-contact">Contact number</label>
-          <input
-            id="support-contact"
-            name="contact"
-            type="tel"
-            required
-            className="form-input"
-            placeholder="Your phone number"
-          />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" htmlFor="support-type">What can we help with?</label>
-          <select id="support-type" name="type" required className="form-select" defaultValue="">
-            <option value="" disabled>Select an option</option>
-            <option value="REFUND">Request a refund</option>
-            <option value="COMPLAINT">Submit a complaint</option>
-            <option value="SUGGESTION">Give a suggestion</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label" htmlFor="support-message">Message</label>
-        <textarea
-          id="support-message"
-          name="message"
-          required
-          rows={4}
-          className="form-textarea"
-          placeholder="Please provide details…"
-        />
-      </div>
-
-      <button type="submit" disabled={loading} className="btn-primary" style={{ padding: 'var(--space-3)' }}>
-        {loading ? 'Submitting…' : 'Submit message'}
-      </button>
-    </form>
+    </FormCard>
   );
 }

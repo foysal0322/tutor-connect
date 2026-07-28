@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import NotificationBell from './NotificationBell';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
@@ -21,18 +22,21 @@ export default function NavbarClient({ session }: { session: any }) {
   // Trap focus inside the mobile menu while it's open; restore to the trigger on close.
   useFocusTrap(mobileNavRef, isMobileMenuOpen);
 
-  const handleSupportClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    setIsMobileMenuOpen(false);
-    
-    // If we are already on the homepage, we can scroll manually
-    if (window.location.pathname === '/') {
-      e.preventDefault();
-      const supportSection = document.getElementById('support');
-      if (supportSection) {
-        supportSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
+  const pathname = usePathname();
+
+  // Resolve the session-dependent href once so both the link and its active
+  // state stay in sync.
+  const teachHref = session ? '/tutor/expertise' : '/auth/student-register';
+
+  // A nav item is active when we are on its exact route or a child of it.
+  // "/" is exact-only so it never matches every page.
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
   };
+
+  const activeClass = (href: string) =>
+    isActive(href) ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink;
 
   return (
     <nav className={styles.navbar}>
@@ -48,14 +52,14 @@ export default function NavbarClient({ session }: { session: any }) {
           role="navigation"
           aria-label="Main navigation"
         >
-          <Link href="/" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <Link href="/find-tutor" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
-          <Link href={session ? "/tutor/expertise" : "/auth/student-register"} className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link href="/" className={activeClass("/")} aria-current={isActive("/") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+          <Link href="/find-tutor" className={activeClass("/find-tutor")} aria-current={isActive("/find-tutor") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
+          <Link href={teachHref} className={activeClass(teachHref)} aria-current={isActive(teachHref) ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>
             {session ? "Teach a Course" : "Register"}
           </Link>
-          <Link href="/shop" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
-          <Link href="/tutorial" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
-          <Link href="/#support" className={styles.navLink} onClick={handleSupportClick} aria-label="Contact support">Contact</Link>
+          <Link href="/shop" className={activeClass("/shop")} aria-current={isActive("/shop") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
+          <Link href="/tutorial" className={activeClass("/tutorial")} aria-current={isActive("/tutorial") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
+          <Link href="/contact" className={activeClass("/contact")} aria-current={isActive("/contact") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
         
           <div className={`${styles.authButtonsMobile}`}>
             <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>

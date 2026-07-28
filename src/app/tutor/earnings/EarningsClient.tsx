@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react';
 import { submitWithdrawalRequest } from './actions';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
+import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 
 interface EarningsClientProps {
   completedRequests: any[];
@@ -116,16 +118,8 @@ export default function EarningsClient({
         </div>
       </div>
 
-      {error && (
-        <div className="p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-4 bg-success-light text-success-hover rounded-md font-medium border border-success-hover">
-          {success}
-        </div>
-      )}
+      {error && <FormAlert>{error}</FormAlert>}
+      {success && <FormAlert tone="success">{success}</FormAlert>}
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -139,6 +133,7 @@ export default function EarningsClient({
 
           <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
             <Input
+              containerClassName={fieldClass}
               name="amount"
               type="number"
               min="100"
@@ -149,7 +144,7 @@ export default function EarningsClient({
               onChange={(e) => setAmount(e.target.value)}
             />
 
-            <div className="form-group mb-0">
+            <div className={`form-group mb-0 ${fieldClass}`}>
               <label className="form-label font-bold">MFS Provider</label>
               <div className="mt-1.5">
                 <MfsProviderSelect value={mfsType} onChange={setMfsType} />
@@ -157,6 +152,7 @@ export default function EarningsClient({
             </div>
 
             <Input
+              containerClassName={fieldClass}
               name="accountNumber"
               type="text"
               required
@@ -167,17 +163,17 @@ export default function EarningsClient({
               onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
             />
 
-            <div className="form-group mb-0">
-              <label className="form-label">Transfer Type</label>
-              <select
-                value={transferType}
-                onChange={(e) => setTransferType(e.target.value as any)}
-                className="form-select"
-              >
-                <option value="SEND_MONEY">Send Money</option>
-                <option value="PAYMENT">Payment</option>
-              </select>
-            </div>
+            <Select
+              containerClassName={fieldClass}
+              name="transferType"
+              label="Transfer Type"
+              value={transferType}
+              onChange={(e) => setTransferType(e.target.value as any)}
+              options={[
+                { value: 'SEND_MONEY', label: 'Send Money' },
+                { value: 'PAYMENT', label: 'Payment' },
+              ]}
+            />
 
             {/* Breakdown section */}
             {amount && (
@@ -202,13 +198,9 @@ export default function EarningsClient({
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={isPending || balance <= 0}
-              className="btn-primary w-full justify-center mt-2"
-            >
-              {isPending ? 'Submitting...' : (balance <= 0 ? 'No balance available' : 'Request Withdrawal')}
-            </button>
+            <FormSubmit loading={isPending} loadingText="Submitting..." disabled={balance <= 0}>
+              {balance <= 0 ? 'No balance available' : 'Request Withdrawal'}
+            </FormSubmit>
           </form>
         </div>
 

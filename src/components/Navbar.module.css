@@ -60,6 +60,16 @@
   width: 100%;
 }
 
+/* Active route: hold the primary color and keep the underline visible so the
+   user can see exactly where they are. Mirrors the hover treatment. */
+.navLinkActive {
+  color: var(--primary);
+}
+
+.navLinkActive::after {
+  width: 100%;
+}
+
 .disabledLink {
   opacity: 0.8;
   cursor: default;

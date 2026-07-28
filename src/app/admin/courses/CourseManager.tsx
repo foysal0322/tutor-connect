@@ -3,6 +3,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { addCourse, updateCourse, deleteCourse, importCourses, deleteBulkCourses } from '@/app/actions/admin';
 import { Input } from '@/components/ui/Input';
+import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 import { Upload, Trash2, Search, CheckSquare } from 'lucide-react';
 
 // NOTE: This table is not migrated to <DataGrid>. It needs (a) row-level
@@ -156,17 +157,21 @@ export default function CourseManager({ courses }: { courses: any[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium">{error}</div>}
-      {success && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium">{success}</div>}
+      {error && <FormAlert>{error}</FormAlert>}
+      {success && <FormAlert tone="success">{success}</FormAlert>}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">
           <h2 className="text-lg font-bold text-main mb-4">Manually Add Course</h2>
           <form id="add-course-form" action={handleAdd} className="flex flex-col gap-4">
-            <Input name="name" type="text" label="Course Name (e.g. ACT201: Intro...)" required />
-            <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 font-semibold rounded-lg transition-colors w-full" disabled={loading}>
-              Add Course
-            </button>
+            <Input
+              containerClassName={fieldClass}
+              name="name"
+              type="text"
+              label="Course Name (e.g. ACT201: Intro...)"
+              required
+            />
+            <FormSubmit loading={loading} loadingText="Adding...">Add Course</FormSubmit>
           </form>
         </div>
 
@@ -253,10 +258,10 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                       <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
                         <input type="hidden" name="id" value={course.id} />
                         <div className="flex-1">
-                          <Input name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                          <Input containerClassName={fieldClass} name="name" type="text" defaultValue={course.name} label="Course Name" required />
                         </div>
-                        <div className="flex gap-2 items-center mt-1">
-                          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
+                        <div className="flex gap-2 items-center">
+                          <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">Save</FormSubmit>
                           <button type="button" onClick={() => setEditingId(null)} className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
                         </div>
                       </form>
@@ -309,9 +314,9 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                   {editingId === course.id ? (
                       <form action={handleEdit} className="flex flex-col gap-3 w-full">
                         <input type="hidden" name="id" value={course.id} />
-                        <Input name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                        <Input containerClassName={fieldClass} name="name" type="text" defaultValue={course.name} label="Course Name" required />
                         <div className="flex gap-2">
-                          <button type="submit" className="btn flex-1 bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
+                          <FormSubmit fullWidth={false} className="flex-1 justify-center" loading={loading} loadingText="Saving...">Save</FormSubmit>
                           <button type="button" onClick={() => setEditingId(null)} className="btn flex-1 bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
                         </div>
                       </form>
