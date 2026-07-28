@@ -4,90 +4,80 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import styles from './home.module.css';
 
+const faqs = [
+  {
+    q: 'How do I request a tutor?',
+    a: 'Click "Find a Tutor" and either browse our verified tutors or submit a custom tutor request with your specific course, budget, and time requirements.',
+  },
+  {
+    q: 'How does payment work?',
+    a: 'Payments are processed securely through bKash, Nagad, or Rocket. You pay the platform to lock in your session, and we release the funds to the tutor once the session is successfully completed.',
+  },
+  {
+    q: 'Can I become a tutor?',
+    a: 'Yes! A perfect CGPA isn\'t required. If you understand a course well, you can register as a tutor, set your own fees, and start earning.',
+  },
+  {
+    q: 'Is consultancy free?',
+    a: 'Your first consultancy session is completely free. We believe peer-to-peer guidance is essential. For subsequent sessions, a minimal fee may be charged to support our senior consultants.',
+  },
+  {
+    q: 'When is One Shop launching?',
+    a: 'One Shop is currently in development and will launch next semester as the ultimate marketplace for NSUers to buy and sell campus essentials.',
+  },
+];
+
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs = [
-    {
-      q: 'How do I request a tutor?',
-      a: 'Simply click on "Find a Tutor" and either browse our verified tutors or submit a custom tutor request with your specific course, budget, and time requirements.'
-    },
-    {
-      q: 'How does payment work?',
-      a: 'Payments are processed securely through bKash, Nagad, or Rocket. You pay the platform to lock in your session, and we release the funds to the tutor once the session is successfully completed.'
-    },
-    {
-      q: 'Can I become a tutor?',
-      a: 'Yes! Having a perfect CGPA or grade is not mandatory. If you understand a course well, you can register as a tutor, set your own fees, and start earning.'
-    },
-    {
-      q: 'Is consultancy free?',
-      a: 'Your first consultancy session is completely free! We believe peer-to-peer guidance is essential. For subsequent sessions, a minimal fee might be charged to support our senior consultants.'
-    },
-    {
-      q: 'When is One Shop launching?',
-      a: 'One Shop is currently in development and will launch next semester. It will be the ultimate marketplace for NSUers to buy and sell campus essentials.'
-    }
-  ];
-
   return (
-    <section className={styles.sectionAlt} style={{ padding: '6rem 1.5rem' }}>
-      <div className="container" style={{ maxWidth: '800px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
-            Frequently Asked Questions
-          </h2>
+    <section className={styles.sectionAlt + ' ' + styles.section}>
+      <div className={styles.sectionInner}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.eyebrow}>FAQ</span>
+          <h2 className={styles.title}>Frequently asked questions</h2>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {faqs.map((faq, idx) => (
-            <div key={idx} style={{
-              background: 'white',
-              border: '1px solid var(--border-color)',
-              borderRadius: '16px',
-              overflow: 'hidden'
-            }}>
-              <button
-                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '1.5rem',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '1.1rem',
-                  fontWeight: 600,
-                  color: 'var(--text-main)'
-                }}
+        <div className={styles.faqList}>
+          {faqs.map((faq, idx) => {
+            const isOpen = openIndex === idx;
+            const panelId = `faq-panel-${idx}`;
+            const buttonId = `faq-button-${idx}`;
+            return (
+              <div
+                key={idx}
+                className={`${styles.faqItem} ${isOpen ? styles.faqItemOpen : ''}`}
               >
-                {faq.q}
-                <ChevronDown 
-                  size={20} 
-                  style={{ 
-                    color: 'var(--text-muted)', 
-                    transform: openIndex === idx ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s ease'
-                  }} 
-                />
-              </button>
-              
-              <div style={{
-                maxHeight: openIndex === idx ? '200px' : '0',
-                opacity: openIndex === idx ? 1 : 0,
-                overflow: 'hidden',
-                transition: 'all 0.3s ease',
-                padding: openIndex === idx ? '0 1.5rem 1.5rem 1.5rem' : '0 1.5rem'
-              }}>
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                  {faq.a}
-                </p>
+                <h3 style={{ margin: 0 }}>
+                  <button
+                    type="button"
+                    id={buttonId}
+                    className={styles.faqButton}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => setOpenIndex(isOpen ? null : idx)}
+                  >
+                    {faq.q}
+                    <ChevronDown
+                      size={20}
+                      className={`${styles.faqChevron} ${isOpen ? styles.faqChevronOpen : ''}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </h3>
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  className={`${styles.faqPanel} ${isOpen ? styles.faqPanelOpen : ''}`}
+                >
+                  <div className={styles.faqPanelInner}>
+                    <p className={styles.faqAnswer}>{faq.a}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

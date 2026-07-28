@@ -6,12 +6,10 @@ import HowItWorks from './components/home/HowItWorks';
 import RequestedCoursesPreview from './components/home/RequestedCoursesPreview';
 import FeaturedTutorsPreview from './components/home/FeaturedTutorsPreview';
 import Testimonials from './components/home/Testimonials';
-import OneShopPreview from './components/home/OneShopPreview';
-import AcademicSupport from './components/home/AcademicSupport';
 import FaqSection from './components/home/FaqSection';
 import FinalCta from './components/home/FinalCta';
 import SupportForm from './components/SupportForm';
-import styles from './page.module.css';
+import styles from './components/home/home.module.css';
 
 // Cache homepage data for 5 minutes — stats don't need to be real-time
 export const revalidate = 300;
@@ -57,7 +55,7 @@ export default async function Home() {
     }),
   ]);
 
-  // Mock student reviews
+  // Student reviews shown in the Testimonials carousel
   const reviews = [
     { id: 1, name: 'Alice Rahman', course: 'CSE115', rating: 5, comment: 'NSUOne completely saved me. The tutor explained pointers so clearly that I aced my midterm!' },
     { id: 2, name: 'Tarik Islam', course: 'MAT120', rating: 5, comment: 'Getting free consultancy before advising was a game changer. I finally mapped out a solid plan to pull up my CGPA.' },
@@ -65,37 +63,32 @@ export default async function Home() {
   ];
 
   return (
-    <div className="animate-fade-in" style={{ backgroundColor: '#ffffff' }}>
+    <div className="animate-fade-in">
       <HeroSection />
       <TrustStats />
       <CoreFeatures />
       <HowItWorks />
-      
-      <div style={{ background: '#f8fafc' }}>
-        <RequestedCoursesPreview requests={requests} />
-      </div>
-      
+      <RequestedCoursesPreview requests={requests} />
       <FeaturedTutorsPreview tutors={tutors} />
       <Testimonials reviews={reviews} />
-      <OneShopPreview />
-      <AcademicSupport />
       <FaqSection />
-      
-      {/* Support / Contact Section */}
-      <section id="support" className="container" style={{ padding: '6rem 1.5rem' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: '2rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-main)' }}>Contact Support</h2>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+      <FinalCta />
+
+      {/* Contact / Support — kept on the homepage so the navbar Contact link can deep-link. */}
+      <section id="support" className={styles.contact}>
+        <div className={styles.contactInner}>
+          <span className={styles.eyebrow}>We&apos;re here to help</span>
+          <h2 className={styles.contactTitle}>Contact support</h2>
+          <p className={styles.contactLede}>
             Have a suggestion, want to file a complaint, or need a refund? Let us know below.
           </p>
-          <p style={{ textAlign: 'center', color: 'var(--text-main)', fontWeight: 600, marginBottom: '2.5rem' }}>
-            For any urgent query call: <a href="tel:01711223344" style={{ color: 'var(--primary)' }}>01711223344</a>
+          <p className={styles.contactPhone}>
+            For any urgent query call:{' '}
+            <a href="tel:01711223344" className={styles.contactPhoneLink}>01711223344</a>
           </p>
           <SupportForm />
         </div>
       </section>
-
-      <FinalCta />
     </div>
   );
 }
