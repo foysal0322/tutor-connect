@@ -1,6 +1,17 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { sendSupportEmail } from '@/lib/mail';
+import { Mail, MessageSquare, User } from 'lucide-react';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import {
+  FormPage,
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormSuccess,
+  fieldClass,
+} from '@/components/forms';
 
 export const metadata: Metadata = {
   title: 'Contact Us — nsuOne',
@@ -9,7 +20,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
 };
 
-export default async function ContactPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>;
+}) {
   const params = await searchParams;
   const isSuccess = params.success === 'true';
 
@@ -52,7 +67,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
             <p style="color: #64748b; font-size: 0.9em;">NSUone Support Team</p>
           </div>
-        `
+        `,
       });
     } catch (err) {
       console.error('Failed to send contact email:', err);
@@ -62,42 +77,53 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   }
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '4rem 1.5rem', maxWidth: '600px' }}>
-      <h1 style={{ color: 'var(--primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Contact Us</h1>
-      
-      <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
+    <FormPage>
+      <FormCard
+        icon={<Mail size={28} />}
+        title="Contact Us"
+        subtitle="Have any questions? We're here to help!"
+      >
         {isSuccess ? (
-          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-            <div style={{ width: '60px', height: '60px', background: 'var(--success-light)', color: 'var(--success-hover)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.75rem' }}>✓</div>
-            <h2 style={{ color: 'var(--success-hover)', marginBottom: '0.5rem' }}>Message Sent!</h2>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Thank you for reaching out. We have sent a confirmation email to your inbox and our support team will get in touch with you shortly.</p>
-            <a href="/" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>Return to Home</a>
-          </div>
+          <FormSuccess title="Message Sent!">
+            Thank you for reaching out. We have sent a confirmation email to your inbox and our
+            support team will get in touch with you shortly.
+          </FormSuccess>
         ) : (
-          <>
-            <p style={{ marginBottom: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-              Have any questions? We're here to help!
-            </p>
+          <form action={submitContact} noValidate>
+            <FormSection label="Your Details" icon={<User size={14} />}>
+              <Input
+                containerClassName={fieldClass}
+                name="name"
+                type="text"
+                label="Name"
+                placeholder="Your name"
+                required
+              />
+              <Input
+                containerClassName={fieldClass}
+                name="email"
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                required
+              />
+            </FormSection>
 
-            <form action={submitContact} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Name</label>
-                <input name="name" type="text" required className="form-input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Email</label>
-                <input name="email" type="email" required className="form-input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Message</label>
-                <textarea name="message" required rows={4} className="form-input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}></textarea>
-              </div>
-              <button type="submit" className="btn-primary" style={{ marginTop: '1rem' }}>Send Message</button>
-            </form>
-          </>
+            <FormSection label="Message" icon={<MessageSquare size={14} />} columns={1}>
+              <Textarea
+                containerClassName={fieldClass}
+                name="message"
+                label="Message"
+                required
+                rows={4}
+                placeholder="How can we help?"
+              />
+            </FormSection>
+
+            <FormSubmit icon={<Mail size={18} />}>Send Message</FormSubmit>
+          </form>
         )}
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }
-

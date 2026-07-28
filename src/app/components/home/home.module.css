@@ -111,8 +111,16 @@
   padding: var(--space-20) var(--space-6) var(--space-16);
   overflow: hidden;
   background:
-    radial-gradient(60% 50% at 85% 15%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 70%),
-    radial-gradient(50% 40% at 10% 90%, color-mix(in srgb, var(--info) 8%, transparent), transparent 70%);
+    radial-gradient(
+      60% 50% at 85% 15%,
+      color-mix(in srgb, var(--primary) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 40% at 10% 90%,
+      color-mix(in srgb, var(--info) 8%, transparent),
+      transparent 70%
+    );
 }
 
 .heroGrid {
@@ -218,8 +226,9 @@
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  box-shadow: 0 30px 60px -20px rgba(15, 23, 42, 0.18),
-              0 8px 20px -8px rgba(79, 70, 229, 0.08);
+  box-shadow:
+    0 30px 60px -20px rgba(15, 23, 42, 0.18),
+    0 8px 20px -8px rgba(79, 70, 229, 0.08);
   padding: var(--space-6);
   position: relative;
   z-index: 2;
@@ -287,7 +296,11 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), color-mix(in srgb, var(--info) 18%, transparent));
+  background: linear-gradient(
+    135deg,
+    var(--primary-light),
+    color-mix(in srgb, var(--info) 18%, transparent)
+  );
   color: var(--primary);
   font-weight: 700;
   display: flex;
@@ -427,7 +440,7 @@
 }
 
 .statItem:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   right: calc(var(--space-4) * -0.5);
   top: 50%;
@@ -467,9 +480,10 @@
   padding: var(--space-8);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  transition: transform var(--duration-base) var(--ease-standard),
-              box-shadow var(--duration-base) var(--ease-standard),
-              border-color var(--duration-base) var(--ease-standard);
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
   text-decoration: none;
   color: inherit;
   height: 100%;
@@ -523,8 +537,9 @@
   font-size: var(--text-sm);
   opacity: 0;
   transform: translateX(-4px);
-  transition: opacity var(--duration-base) var(--ease-standard),
-              transform var(--duration-base) var(--ease-standard);
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
 }
 
 .featureCard:hover .featureArrow {
@@ -562,8 +577,9 @@
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  transition: transform var(--duration-base) var(--ease-standard),
-              box-shadow var(--duration-base) var(--ease-standard);
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .step:hover {
@@ -621,9 +637,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform var(--duration-base) var(--ease-standard),
-              box-shadow var(--duration-base) var(--ease-standard),
-              border-color var(--duration-base) var(--ease-standard);
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
 }
 
 .requestCard:hover {
@@ -714,8 +731,9 @@
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  transition: transform var(--duration-base) var(--ease-standard),
-              box-shadow var(--duration-base) var(--ease-standard);
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .tutorCard:hover {
@@ -734,7 +752,11 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), color-mix(in srgb, var(--info) 18%, transparent));
+  background: linear-gradient(
+    135deg,
+    var(--primary-light),
+    color-mix(in srgb, var(--info) 18%, transparent)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -886,9 +908,10 @@
   justify-content: center;
   cursor: pointer;
   color: var(--text-main);
-  transition: background var(--duration-fast) var(--ease-standard),
-              border-color var(--duration-fast) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard);
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .testimonialBtn:hover {
@@ -920,8 +943,9 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: background var(--duration-fast) var(--ease-standard),
-              width var(--duration-fast) var(--ease-standard);
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    width var(--duration-fast) var(--ease-standard);
 }
 
 .testimonialDotActive {
@@ -1034,7 +1058,11 @@
   right: -5%;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 70%
+  );
 }
 
 .finalCtaGlowB {
@@ -1042,7 +1070,11 @@
   left: -10%;
   width: 480px;
   height: 480px;
-  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 70%
+  );
 }
 
 .finalCtaInner {
@@ -1089,14 +1121,15 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-  transition: transform var(--duration-fast) var(--ease-standard),
-              box-shadow var(--duration-fast) var(--ease-standard);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .ctaPrimary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
 }
 
 .ctaPrimary:focus-visible {
@@ -1204,8 +1237,12 @@
   .heroVisual {
     min-height: auto;
   }
-  .mockBubbleTop { right: 2%; }
-  .mockBubbleBottom { left: 2%; }
+  .mockBubbleTop {
+    right: 2%;
+  }
+  .mockBubbleBottom {
+    left: 2%;
+  }
   .featuresGrid {
     grid-template-columns: 1fr;
   }
@@ -1239,7 +1276,9 @@
   .heroActions .btnOutline {
     width: 100%;
   }
-  .mockBubble { display: none; }
+  .mockBubble {
+    display: none;
+  }
   .stepsGrid {
     grid-template-columns: 1fr;
   }
@@ -1247,7 +1286,9 @@
     grid-template-columns: 1fr;
     gap: var(--space-6);
   }
-  .statItem::after { display: none !important; }
+  .statItem::after {
+    display: none !important;
+  }
   .testimonialCard {
     padding: var(--space-8) var(--space-5);
   }
@@ -1261,7 +1302,8 @@
     flex-direction: column;
     width: 100%;
   }
-  .ctaPrimary, .ctaSecondary {
+  .ctaPrimary,
+  .ctaSecondary {
     width: 100%;
     justify-content: center;
   }

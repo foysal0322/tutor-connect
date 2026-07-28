@@ -1,10 +1,20 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { CheckCircle2, MessageSquareText, User } from 'lucide-react';
+import { MessageSquareText, User } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { sendSupportEmail } from '@/lib/mail';
-import styles from './consultancy.module.css';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Textarea } from '@/components/ui/Textarea';
+import {
+  FormPage,
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormSuccess,
+  fieldClass,
+  gridFullClass,
+} from '@/components/forms';
 
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
@@ -79,114 +89,61 @@ export default async function ConsultancyPage({
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.inner}>
-        <div className={styles.card}>
-          {/* Header */}
-          <div className={styles.header}>
-            <div className={styles.iconBadge}>
-              <MessageSquareText size={28} />
-            </div>
-            <div>
-              <h1 className={styles.headerTitle}>Get Free Consultancy</h1>
-              <p className={styles.headerSub}>
-                Book a one-on-one session with a senior mentor for course selection,
-                semester planning, or career guidance.
-              </p>
-            </div>
-          </div>
+    <FormPage>
+      <FormCard
+        icon={<MessageSquareText size={28} />}
+        title="Get Free Consultancy"
+        subtitle="Book a one-on-one session with a senior mentor for course selection, semester planning, or career guidance."
+      >
+        {isSuccess ? (
+          <FormSuccess title="Request Submitted!">
+            Thank you for reaching out. We&apos;ve sent a confirmation to your email and a mentor
+            will contact you shortly.
+          </FormSuccess>
+        ) : (
+          <form action={submitConsultancy} noValidate>
+            {/* Section: Identity */}
+            <FormSection label="Your Identity" icon={<User size={14} />} columns={1}>
+              <Input
+                containerClassName={fieldClass}
+                name="nsuId"
+                type="text"
+                label="Your NSU ID"
+                placeholder="e.g. 2211458642"
+                required
+              />
+            </FormSection>
 
-          {isSuccess ? (
-            <div className={styles.success}>
-              <div className={styles.successBadge}>
-                <CheckCircle2 size={36} />
-              </div>
-              <h2 className={styles.successTitle}>Request Submitted!</h2>
-              <p className={styles.successText}>
-                Thank you for reaching out. We&apos;ve sent a confirmation to your email
-                and a mentor will contact you shortly.
-              </p>
-              <Link href="/" className={styles.homeLink}>
-                Return to Home
-              </Link>
-            </div>
-          ) : (
-            <form action={submitConsultancy} noValidate>
-              {/* Section: Identity */}
-              <section className={styles.section}>
-                <div className={styles.sectionLabel}>
-                  <span className={styles.sectionIcon}>
-                    <User size={14} />
-                  </span>
-                  <span className={styles.sectionText}>Your Identity</span>
-                  <span className={styles.sectionRule} />
-                </div>
+            {/* Section: Consultancy Details */}
+            <FormSection label="Consultancy Details" icon={<MessageSquareText size={14} />}>
+              <Select
+                containerClassName={fieldClass}
+                name="topic"
+                label="Topic"
+                required
+                placeholderOption="Select a topic"
+                options={[
+                  { value: 'Course Selection Advice', label: 'Course Selection Advice' },
+                  { value: 'Semester Planning', label: 'Semester Planning' },
+                  { value: 'Internship Guidance', label: 'Internship Guidance' },
+                  { value: 'Career Advice', label: 'Career Advice' },
+                  { value: 'Study Strategy', label: 'Study Strategy' },
+                ]}
+              />
+              <Textarea
+                containerClassName={`${fieldClass} ${gridFullClass}`}
+                name="details"
+                label="Additional Details"
+                required
+                rows={4}
+                placeholder="Briefly describe what you need help with..."
+              />
+            </FormSection>
 
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="nsuId">
-                    Your NSU ID
-                  </label>
-                  <input
-                    id="nsuId"
-                    name="nsuId"
-                    type="text"
-                    required
-                    placeholder="e.g. 2211458642"
-                    className={styles.input}
-                  />
-                </div>
-              </section>
-
-              {/* Section: Consultancy Details */}
-              <section className={styles.section}>
-                <div className={styles.sectionLabel}>
-                  <span className={styles.sectionIcon}>
-                    <MessageSquareText size={14} />
-                  </span>
-                  <span className={styles.sectionText}>Consultancy Details</span>
-                  <span className={styles.sectionRule} />
-                </div>
-
-                <div className={styles.grid}>
-                  <div className={styles.field}>
-                    <label className={styles.label} htmlFor="topic">
-                      Topic
-                    </label>
-                    <select id="topic" name="topic" required className={styles.select} defaultValue="">
-                      <option value="" disabled>
-                        Select a topic
-                      </option>
-                      <option value="Course Selection Advice">Course Selection Advice</option>
-                      <option value="Semester Planning">Semester Planning</option>
-                      <option value="Internship Guidance">Internship Guidance</option>
-                      <option value="Career Advice">Career Advice</option>
-                      <option value="Study Strategy">Study Strategy</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.field} style={{ gridColumn: '1 / -1' }}>
-                    <label className={styles.label} htmlFor="details">
-                      Additional Details
-                    </label>
-                    <textarea
-                      id="details"
-                      name="details"
-                      required
-                      rows={4}
-                      placeholder="Briefly describe what you need help with..."
-                      className={styles.textarea}
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <button type="submit" className={styles.submit}>
-                <MessageSquareText size={18} /> Submit Request
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+            <FormSubmit icon={<MessageSquareText size={18} />}>Submit Request</FormSubmit>
+          </form>
+        )}
+      </FormCard>
+    </FormPage>
   );
 }

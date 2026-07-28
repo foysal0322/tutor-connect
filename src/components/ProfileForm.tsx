@@ -4,17 +4,26 @@ import { useState } from 'react';
 import { updateUserProfile } from '@/app/actions/user';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { GraduationCap, Lock, Mail, User, UserCircle } from 'lucide-react';
+import {
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  gridFullClass,
+} from '@/components/forms';
 
-export default function ProfileForm({ 
-  user, 
-  departments = [], 
+export default function ProfileForm({
+  user,
+  departments = [],
   isAdmin = false,
-  customAction
-}: { 
-  user: any, 
-  departments?: any[], 
-  isAdmin?: boolean,
-  customAction?: (formData: FormData) => Promise<any>
+  customAction,
+}: {
+  user: any;
+  departments?: any[];
+  isAdmin?: boolean;
+  customAction?: (formData: FormData) => Promise<any>;
 }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -24,7 +33,7 @@ export default function ProfileForm({
     setLoading(true);
     setError('');
     setSuccess(false);
-    
+
     try {
       const actionToRun = customAction || updateUserProfile;
       const res = await actionToRun(formData);
@@ -39,38 +48,70 @@ export default function ProfileForm({
     setLoading(false);
   }
 
+  const showCgpa = user.role !== 'ADMIN' || (isAdmin && user.role !== 'ADMIN');
+
   return (
-    <div className="card max-w-2xl w-full">
-      {error && <div className="mb-6 p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover">{error}</div>}
-      {success && <div className="mb-6 p-4 bg-success-light text-success-hover rounded-md font-medium border border-success-hover">Profile updated successfully!</div>}
+    <FormCard
+      surface="embedded"
+      icon={<UserCircle size={28} />}
+      title="Profile"
+      subtitle="Update your personal, academic, and security details."
+    >
+      {error && <FormAlert>{error}</FormAlert>}
+      {success && <FormAlert tone="success">Profile updated successfully!</FormAlert>}
 
-      <form action={handleSubmit} className="flex flex-col gap-4">
-
+      <form action={handleSubmit} noValidate>
         {isAdmin && (
-          <Select
-            name="role"
-            label="Role"
-            defaultValue={user.role}
-            options={[
-              { value: 'STUDENT', label: 'Student' },
-              { value: 'TUTOR', label: 'Tutor' },
-              { value: 'ADMIN', label: 'Admin' },
-            ]}
-          />
+          <FormSection label="Role" icon={<UserCircle size={14} />} columns={1}>
+            <Select
+              containerClassName={fieldClass}
+              name="role"
+              label="Role"
+              defaultValue={user.role}
+              options={[
+                { value: 'STUDENT', label: 'Student' },
+                { value: 'TUTOR', label: 'Tutor' },
+                { value: 'ADMIN', label: 'Admin' },
+              ]}
+            />
+          </FormSection>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input name="name" label="Full Name" defaultValue={user.name} required />
-          <Input name="nsuId" label="NSU ID" defaultValue={user.nsuId} required />
-        </div>
+        <FormSection label="Personal Information" icon={<User size={14} />}>
+          <Input
+            containerClassName={fieldClass}
+            name="name"
+            label="Full Name"
+            defaultValue={user.name}
+            required
+          />
+          <Input
+            containerClassName={fieldClass}
+            name="nsuId"
+            label="NSU ID"
+            defaultValue={user.nsuId}
+            required
+          />
+        </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input name="email" type="email" label="Email Address" defaultValue={user.email} required />
-          <Input name="contact" label="Contact Number" defaultValue={user.contact} required />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormSection label="Contact & Department" icon={<Mail size={14} />}>
+          <Input
+            containerClassName={fieldClass}
+            name="email"
+            type="email"
+            label="Email Address"
+            defaultValue={user.email}
+            required
+          />
+          <Input
+            containerClassName={fieldClass}
+            name="contact"
+            label="Contact Number"
+            defaultValue={user.contact}
+            required
+          />
           <Select
+            containerClassName={fieldClass}
             name="gender"
             label="Gender"
             defaultValue={user.gender || ''}
@@ -81,19 +122,20 @@ export default function ProfileForm({
               { value: 'Other', label: 'Other' },
             ]}
           />
-
           <Select
+            containerClassName={fieldClass}
             name="departmentId"
             label="Department"
             defaultValue={user.departmentId || ''}
             placeholderOption="Select Department"
             options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
           />
-        </div>
+        </FormSection>
 
-        {(user.role !== 'ADMIN' || (isAdmin && user.role !== 'ADMIN')) && (
-          <>
+        {showCgpa && (
+          <FormSection label="Academic" icon={<GraduationCap size={14} />}>
             <Input
+              containerClassName={fieldClass}
               name="cgpa"
               type="number"
               step="any"
@@ -102,33 +144,42 @@ export default function ProfileForm({
               label="CGPA"
               defaultValue={user.cgpa || ''}
             />
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-muted hover:text-main transition-colors">
-              <input type="checkbox" name="hideCgpa" defaultChecked={user.hideCgpa} className="w-4 h-4 rounded border-color text-primary focus:ring-primary" />
-              Hide my CGPA from students
-            </label>
-          </>
+            <div className={`${fieldClass} ${gridFullClass}`}>
+              <label
+                className="flex items-center gap-2 cursor-pointer text-sm hover:text-main transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <input
+                  type="checkbox"
+                  name="hideCgpa"
+                  defaultChecked={user.hideCgpa}
+                  className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+                />
+                Hide my CGPA from students
+              </label>
+            </div>
+          </FormSection>
         )}
 
-        <div className="my-2 border-t border-color"></div>
-        <h4 className="text-lg mb-2">Change Password <span className="text-muted text-sm font-normal">(Optional)</span></h4>
+        <FormSection label="Change Password (Optional)" icon={<Lock size={14} />}>
+          <Input
+            containerClassName={fieldClass}
+            name="password"
+            type="password"
+            label="New Password"
+          />
+          <Input
+            containerClassName={fieldClass}
+            name="confirmPassword"
+            type="password"
+            label="Confirm New Password"
+          />
+        </FormSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input name="password" type="password" label="New Password" />
-          <Input name="confirmPassword" type="password" label="Confirm New Password" />
-        </div>
-
-        <button type="submit" className="btn-primary mt-4 w-full md:w-auto self-start" disabled={loading}>
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Updating...
-            </>
-          ) : 'Update Profile'}
-        </button>
+        <FormSubmit loading={loading} loadingText="Updating..." icon={<UserCircle size={18} />}>
+          Update Profile
+        </FormSubmit>
       </form>
-    </div>
+    </FormCard>
   );
 }

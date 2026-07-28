@@ -5,13 +5,31 @@ import { addTutorExpertise, updateTutorExpertise } from '../actions';
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { BookOpen, Clock, GraduationCap, Save } from 'lucide-react';
+import {
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  gridFullClass,
+} from '@/components/forms';
 
-export default function AddExpertiseForm({ courses, initialData, onSuccess, onCancel }: { courses: any[], initialData?: any, onSuccess?: () => void, onCancel?: () => void }) {
+export default function AddExpertiseForm({
+  courses,
+  initialData,
+  onSuccess,
+  onCancel,
+}: {
+  courses: any[];
+  initialData?: any;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const [isGradeOpen, setIsGradeOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(initialData?.courseGrade || '');
   const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F', 'I', 'W'];
 
@@ -31,12 +49,12 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
   function parseStartTime(str: string) {
     if (!str) return '';
     const timeStr = str.split(' (')[1]?.replace(')', '');
-    return timeStr === 'All Day' ? '' : (timeStr?.split('-')[0] || '');
+    return timeStr === 'All Day' ? '' : timeStr?.split('-')[0] || '';
   }
   function parseEndTime(str: string) {
     if (!str) return '';
     const timeStr = str.split(' (')[1]?.replace(')', '');
-    return timeStr === 'All Day' ? '' : (timeStr?.split('-')[1] || '');
+    return timeStr === 'All Day' ? '' : timeStr?.split('-')[1] || '';
   }
 
   // Availability State
@@ -70,9 +88,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
 
   const toggleDay = (day: string) => {
     if (isAllDay) return;
-    setSelectedDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
+    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
 
   const handleAllDayChange = (checked: boolean) => {
@@ -102,7 +118,9 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
       return;
     }
 
-    const availabilityString = isAllDay ? 'Everyday' : `${selectedDays.join(', ')} (${startTime}-${endTime})`;
+    const availabilityString = isAllDay
+      ? 'Everyday'
+      : `${selectedDays.join(', ')} (${startTime}-${endTime})`;
     formData.set('availability', availabilityString);
     formData.set('semesterCompleted', semesterCompleted);
     formData.set('facultyName', facultyName);
@@ -134,84 +152,97 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
 
   return (
     <div className="w-full">
-      {error && <div className="p-4 bg-danger-light text-danger-hover rounded-md font-medium border border-danger-hover mb-6">{error}</div>}
+      {error && <FormAlert>{error}</FormAlert>}
 
-      <form action={handleSubmit} className="flex flex-col gap-5">
-        <div className="form-group mb-0">
-          <label className="form-label text-sm font-semibold mb-1">Course</label>
-          <SearchableCourseSelect courses={courses} defaultValue={initialData?.courseId} />
-        </div>
-
-        {!initialData && (
-          <Input
-            name="cgpa"
-            type="number"
-            step="any"
-            min="0"
-            max="4.0"
-            label="Your Overall CGPA (Optional)"
-            placeholder="e.g. 3.75"
-          />
-        )}
-
-        <Input
-          name="semesterCompleted"
-          type="text"
-          required
-          label="Semester Completed"
-          placeholder="e.g. Spring 2023"
-          value={semesterCompleted}
-          onChange={(e) => setSemesterCompleted(e.target.value)}
-        />
-
-        <Input
-          name="facultyName"
-          type="text"
-          required
-          label="Faculty Name"
-          placeholder="Who taught you?"
-          value={facultyName}
-          onChange={(e) => setFacultyName(e.target.value)}
-        />
-
-        <div className="form-group mb-0 relative">
-          <label className="form-label text-sm font-semibold mb-1">Course Grade</label>
-          <div
-            className="form-select flex justify-between items-center cursor-pointer"
-            onClick={() => setIsGradeOpen(!isGradeOpen)}
-          >
-            <span className={selectedGrade ? 'text-main' : 'text-muted'}>{selectedGrade || 'Select Grade'}</span>
-            <span className={`text-xs transition-transform ${isGradeOpen ? 'rotate-180' : ''}`}>▼</span>
+      <form action={handleSubmit} noValidate>
+        <FormSection label="Course Details" icon={<BookOpen size={14} />}>
+          <div className={`${fieldClass} ${gridFullClass}`}>
+            <label className="form-label">Course</label>
+            <SearchableCourseSelect courses={courses} defaultValue={initialData?.courseId} />
           </div>
-          {isGradeOpen && (
-            <ul className="absolute top-full left-0 right-0 bg-white border border-color rounded-md z-50 max-h-[180px] overflow-y-auto mt-1 shadow-lg">
-              {grades.map(g => (
-                <li
-                  key={g}
-                  onClick={() => { setSelectedGrade(g); setIsGradeOpen(false); }}
-                  className={`p-3 cursor-pointer border-b border-color last:border-b-0 hover:bg-gray-50 transition-colors ${selectedGrade === g ? 'bg-primary-light text-primary font-semibold' : 'text-main'}`}
-                >
-                  {g}
-                </li>
-              ))}
-            </ul>
-          )}
-          <label className="flex items-center gap-2 cursor-pointer text-sm text-muted mt-2 hover:text-main transition-colors w-fit">
-            <input 
-              type="checkbox" 
-              name="hideGrade" 
-              defaultChecked={initialData?.hideGrade} 
-              value="true" 
-              className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+
+          {!initialData && (
+            <Input
+              containerClassName={fieldClass}
+              name="cgpa"
+              type="number"
+              step="any"
+              min="0"
+              max="4.0"
+              label="Your Overall CGPA (Optional)"
+              placeholder="e.g. 3.75"
             />
-            Hide my acquired grade for this course from students
-          </label>
-        </div>
+          )}
 
-        <div className="form-group mb-0">
-          <label className="form-label text-sm font-semibold mb-2">Availability</label>
+          <Input
+            containerClassName={fieldClass}
+            name="semesterCompleted"
+            type="text"
+            required
+            label="Semester Completed"
+            placeholder="e.g. Spring 2023"
+            value={semesterCompleted}
+            onChange={(e) => setSemesterCompleted(e.target.value)}
+          />
 
-          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-main mb-3 w-fit hover:text-primary transition-colors">
+          <Input
+            containerClassName={fieldClass}
+            name="facultyName"
+            type="text"
+            required
+            label="Faculty Name"
+            placeholder="Who taught you?"
+            value={facultyName}
+            onChange={(e) => setFacultyName(e.target.value)}
+          />
+
+          <Input
+            containerClassName={fieldClass}
+            name="sessionFee"
+            type="number"
+            min="100"
+            step="any"
+            required
+            label="Session Fee (BDT)"
+            placeholder="e.g. 500.50"
+            value={sessionFee}
+            onChange={(e) => setSessionFee(e.target.value)}
+          />
+        </FormSection>
+
+        <FormSection label="Grade" icon={<GraduationCap size={14} />}>
+          <Select
+            containerClassName={fieldClass}
+            name="courseGrade"
+            label="Course Grade"
+            required
+            placeholderOption="Select Grade"
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(e.target.value)}
+            options={grades.map((g) => ({ value: g, label: g }))}
+          />
+          <div className={`${fieldClass} ${gridFullClass}`}>
+            <label
+              className="flex items-center gap-2 cursor-pointer text-sm hover:text-main transition-colors w-fit"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <input
+                type="checkbox"
+                name="hideGrade"
+                defaultChecked={initialData?.hideGrade}
+                value="true"
+                className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+              />
+              Hide my acquired grade for this course from students
+            </label>
+          </div>
+        </FormSection>
+
+        <FormSection label="Availability" icon={<Clock size={14} />} columns={1}>
+          <label
+            className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-main w-fit hover:text-primary transition-colors"
+            style={{ marginBottom: '0.75rem' }}
+          >
             <input
               type="checkbox"
               checked={isAllDay}
@@ -221,16 +252,16 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
             Everyday
           </label>
 
-          <div className="flex gap-2 flex-wrap mb-4">
-            {daysOfWeek.map(day => (
+          <div className="flex gap-2 flex-wrap" style={{ marginBottom: '1rem' }}>
+            {daysOfWeek.map((day) => (
               <button
                 key={day}
                 type="button"
                 onClick={() => toggleDay(day)}
                 disabled={isAllDay}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                  selectedDays.includes(day) 
-                    ? 'bg-primary border-primary text-white shadow-md' 
+                  selectedDays.includes(day)
+                    ? 'bg-primary border-primary text-white shadow-md'
                     : 'border-color text-main hover:border-primary/50'
                 } ${isAllDay ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
@@ -240,7 +271,9 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           </div>
 
           {!isAllDay && (
-            <div className="flex gap-4 items-center bg-gray-50 p-4 rounded-md border border-color">
+            <div
+              className={`flex gap-4 items-center bg-gray-50 p-4 rounded-md border border-color ${fieldClass}`}
+            >
               <input
                 type="time"
                 value={startTime}
@@ -256,26 +289,25 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
               />
             </div>
           )}
-        </div>
+        </FormSection>
 
-        <Input
-          name="sessionFee"
-          type="number"
-          min="100"
-          step="any"
-          required
-          label="Session Fee (BDT)"
-          placeholder="e.g. 500.50"
-          value={sessionFee}
-          onChange={(e) => setSessionFee(e.target.value)}
-        />
-
-        <div className="flex gap-4 mt-2">
-          <button type="submit" className="btn-primary flex-1 justify-center" disabled={loading}>
-            {loading ? 'Saving...' : (initialData ? 'Save Changes' : 'Add Expertise')}
-          </button>
+        <div className="flex gap-4" style={{ marginTop: '0.5rem' }}>
+          <FormSubmit
+            fullWidth={false}
+            className="flex-1 justify-center"
+            loading={loading}
+            loadingText="Saving..."
+            icon={<Save size={18} />}
+          >
+            {initialData ? 'Save Changes' : 'Add Expertise'}
+          </FormSubmit>
           {onCancel && (
-            <button type="button" onClick={onCancel} className="btn-outline flex-1 justify-center" disabled={loading}>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-outline flex-1 justify-center"
+              disabled={loading}
+            >
               Cancel
             </button>
           )}

@@ -32,6 +32,10 @@
   --border-color: #E2E8F0;
   --input-bg: #F8FAFC;
 
+  /* Layout. Consumed by the shared form theme (FormPage) so the full-viewport
+     form height tracks the real navbar height instead of a hardcoded 80px. */
+  --navbar-height: 80px;
+
   /* Neutral surface scale (the Tailwind gray palette used inline across the app).
      Used by .bg-gray-*, hover variants, borders, skeletons, and any neutral surface.
      Defined here so dark mode can flip them in one place. See plan.md Step 5. */

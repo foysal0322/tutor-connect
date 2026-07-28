@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { addDepartment, updateDepartment, deleteDepartment } from '@/app/actions/admin';
 import { Input } from '@/components/ui/Input';
+import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 
 // NOTE: This table is not migrated to <DataGrid> because it uses inline-edit
 // (clicking Edit turns the row itself into a form). DataGrid's cell renderer
@@ -43,17 +44,19 @@ export default function DepartmentManager({ departments }: { departments: any[] 
 
   return (
     <div className="flex flex-col gap-6">
-      {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium">{error}</div>}
-      
+      {error && <FormAlert>{error}</FormAlert>}
+
       <div className="card">
         <h2 className="text-lg font-bold text-main mb-4">Add New Department</h2>
-        <form id="add-dept-form" action={handleAdd} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex-1 w-full">
-            <Input name="name" type="text" label="Department Name" required />
-          </div>
-          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-6 py-3 font-semibold rounded-lg transition-colors w-full sm:w-auto mt-1" disabled={loading}>
-            Add Department
-          </button>
+        <form id="add-dept-form" action={handleAdd} className="flex flex-col gap-4">
+          <Input
+            containerClassName={fieldClass}
+            name="name"
+            type="text"
+            label="Department Name"
+            required
+          />
+          <FormSubmit loading={loading} loadingText="Adding...">Add Department</FormSubmit>
         </form>
       </div>
 
@@ -67,18 +70,34 @@ export default function DepartmentManager({ departments }: { departments: any[] 
               </tr>
             </thead>
             <tbody>
-              {departments.map(dept => (
+              {departments.map((dept) => (
                 <tr key={dept.id}>
                   <td colSpan={editingId === dept.id ? 2 : 1}>
                     {editingId === dept.id ? (
                       <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
                         <input type="hidden" name="id" value={dept.id} />
                         <div className="flex-1">
-                          <Input name="name" type="text" defaultValue={dept.name} label="Department Name" required />
+                          <Input
+                            containerClassName={fieldClass}
+                            name="name"
+                            type="text"
+                            defaultValue={dept.name}
+                            label="Department Name"
+                            required
+                          />
                         </div>
-                        <div className="flex gap-2 items-center mt-1">
-                          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
-                          <button type="button" onClick={() => setEditingId(null)} className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>
+                        <div className="flex gap-2 items-center">
+                          <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
+                            Save
+                          </FormSubmit>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                            disabled={loading}
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </form>
                     ) : (

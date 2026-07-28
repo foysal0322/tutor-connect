@@ -74,7 +74,9 @@ export default async function Home() {
       <FaqSection />
       <FinalCta />
 
-      {/* Contact / Support — kept on the homepage so the navbar Contact link can deep-link. */}
+      {/* Contact / Support — homepage reference block. The navbar Contact link
+          routes to the dedicated /contact page; this section stays as an
+          on-page way to reach support without leaving the homepage. */}
       <section id="support" className={styles.contact}>
         <div className={styles.contactInner}>
           <span className={styles.eyebrow}>We&apos;re here to help</span>

@@ -4,15 +4,23 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Spinner from '@/components/Spinner';
 import { Input } from '@/components/ui/Input';
 import { LogIn } from 'lucide-react';
+import {
+  FormPage,
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  footerLinkClass,
+} from '@/components/forms';
 
 export default function TutorSignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
-  
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,48 +37,64 @@ export default function TutorSignInForm() {
       redirect: false,
       identifier,
       password,
-      role: 'TUTOR'
+      role: 'TUTOR',
     });
 
     if (res?.error) {
       setError(res.error);
       setLoading(false);
     } else {
-      router.push('/tutor'); // Redirect to tutor dashboard
+      router.push('/tutor');
       router.refresh();
     }
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-gray-50/50">
-      <div className="card w-full max-w-md p-8 sm:p-10 shadow-lg border-t-4 border-t-primary">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
-            <LogIn size={24} />
-          </div>
-          <h2 className="text-2xl font-bold text-main">Campus Account Sign In</h2>
-          <p className="text-muted text-sm mt-2">Welcome back! Access your dual-role Teaching & Learning dashboard.</p>
-        </div>
-        
-        {registered && <div className="bg-success-light text-success-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">Registration successful! Please sign in.</div>}
-        {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
+    <FormPage maxWidth="narrow">
+      <FormCard
+        icon={<LogIn size={28} />}
+        title="Campus Account Sign In"
+        subtitle="Welcome back! Access your dual-role Teaching & Learning dashboard."
+        footer={
+          <>
+            <Link href="/auth/forgot-password" className={footerLinkClass}>
+              Forgot Password?
+            </Link>
+            <div>
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/tutor-register" className={footerLinkClass}>
+                Register Here
+              </Link>
+            </div>
+          </>
+        }
+      >
+        {registered && <FormAlert tone="success">Registration successful! Please sign in.</FormAlert>}
+        {error && <FormAlert>{error}</FormAlert>}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <Input name="identifier" type="text" label="Email or NSU ID" required />
-          <Input name="password" type="password" label="Password" required />
+        <form onSubmit={handleSubmit} noValidate>
+          <FormSection label="Your Credentials" icon={<LogIn size={14} />} columns={1}>
+            <Input
+              containerClassName={fieldClass}
+              name="identifier"
+              type="text"
+              label="Email or NSU ID"
+              required
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="password"
+              type="password"
+              label="Password"
+              required
+            />
+          </FormSection>
 
-          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-2" disabled={loading}>
-            {loading ? <><Spinner size={18} /> Signing in...</> : 'Sign In'}
-          </button>
+          <FormSubmit loading={loading} loadingText="Signing in..." icon={<LogIn size={18} />}>
+            Sign In
+          </FormSubmit>
         </form>
-
-        <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">
-          <Link href="/auth/forgot-password" className="text-primary hover:text-primary-hover font-semibold transition-colors">Forgot Password?</Link>
-          <div className="text-muted">
-            Don't have an account? <Link href="/auth/tutor-register" className="text-primary hover:text-primary-hover font-semibold transition-colors ml-1">Register Here</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

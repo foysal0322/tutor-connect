@@ -3,22 +3,31 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { requestPasswordReset, verifyAndResetPassword } from '../actions/passwordReset';
-import Spinner from '@/components/Spinner';
 import { Input } from '@/components/ui/Input';
 import { KeyRound, ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
+import {
+  FormPage,
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  footerLinkClass,
+  homeLinkClass,
+} from '@/components/forms';
 
 export default function ForgotPasswordForm() {
   const [step, setStep] = useState<'REQUEST' | 'VERIFY' | 'SUCCESS'>('REQUEST');
   const [identifier, setIdentifier] = useState('');
   const [userId, setUserId] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
-  
+
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
   async function handleRequestCode(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +45,7 @@ export default function ForgotPasswordForm() {
     } else {
       setMessage({ type: 'error', text: res.message });
     }
-    
+
     setLoading(false);
   }
 
@@ -67,126 +76,151 @@ export default function ForgotPasswordForm() {
     } else {
       setMessage({ type: 'error', text: res.message });
     }
-    
+
     setLoading(false);
   }
 
-  return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-gray-50/50 animate-fade-in">
-      <div className="card w-full max-w-md p-8 sm:p-10 shadow-lg border-t-4 border-t-primary transition-all duration-300">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4 shadow-sm">
-            {step === 'REQUEST' && <KeyRound size={24} />}
-            {step === 'VERIFY' && <ShieldCheck size={24} className="text-primary animate-pulse" />}
-            {step === 'SUCCESS' && <CheckCircle2 size={28} className="text-success" />}
-          </div>
-          <h2 className="text-2xl font-bold text-main">
-            {step === 'REQUEST' && 'Forgot Password'}
-            {step === 'VERIFY' && 'Verify & Reset'}
-            {step === 'SUCCESS' && 'Password Reset!'}
-          </h2>
-          <p className="text-muted text-sm mt-2 px-2">
-            {step === 'REQUEST' && 'Enter your registered email address or NSU ID to receive an automated verification code.'}
-            {step === 'VERIFY' && `Enter the 6-digit code sent to ${maskedEmail} along with your new password.`}
-            {step === 'SUCCESS' && 'Your password has been successfully changed. You can now access your account.'}
-          </p>
-        </div>
+  const icon =
+    step === 'REQUEST' ? (
+      <KeyRound size={28} />
+    ) : step === 'VERIFY' ? (
+      <ShieldCheck size={28} />
+    ) : (
+      <CheckCircle2 size={28} />
+    );
 
-        {message && (
-          <div className={`p-4 rounded-lg font-medium mb-6 text-sm text-center transition-all ${
-            message.type === 'error' 
-              ? 'bg-danger-light text-danger-hover border border-danger/20' 
-              : 'bg-success-light text-success-hover border border-success/20'
-          }`}>
-            {message.text}
-          </div>
-        )}
+  const title = step === 'REQUEST' ? 'Forgot Password' : step === 'VERIFY' ? 'Verify & Reset' : 'Password Reset!';
+
+  const subtitle =
+    step === 'REQUEST'
+      ? 'Enter your registered email address or NSU ID to receive an automated verification code.'
+      : step === 'VERIFY'
+        ? `Enter the 6-digit code sent to ${maskedEmail} along with your new password.`
+        : 'Your password has been successfully changed. You can now access your account.';
+
+  return (
+    <FormPage maxWidth="narrow">
+      <FormCard
+        icon={icon}
+        title={title}
+        subtitle={subtitle}
+        footer={
+          step !== 'SUCCESS' ? (
+            <Link href="/auth/student-signin" className={footerLinkClass}>
+              Back to Sign In
+            </Link>
+          ) : undefined
+        }
+      >
+        {message && <FormAlert tone={message.type === 'error' ? 'error' : 'success'}>{message.text}</FormAlert>}
 
         {step === 'REQUEST' && (
-          <form onSubmit={handleRequestCode} className="flex flex-col gap-5">
-            <Input
-              name="identifier"
-              type="text"
-              label="Email or NSU ID"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-              disabled={loading}
-            />
+          <form onSubmit={handleRequestCode} noValidate>
+            <FormSection label="Account" icon={<KeyRound size={14} />} columns={1}>
+              <Input
+                containerClassName={fieldClass}
+                name="identifier"
+                type="text"
+                label="Email or NSU ID"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </FormSection>
 
-            <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-2 shadow-sm" disabled={loading || !identifier}>
-              {loading ? <><Spinner size={18} /> Sending Code...</> : 'Send Verification Code'}
-            </button>
+            <FormSubmit
+              loading={loading}
+              loadingText="Sending Code..."
+              icon={<KeyRound size={18} />}
+              disabled={!identifier}
+            >
+              Send Verification Code
+            </FormSubmit>
           </form>
         )}
 
         {step === 'VERIFY' && (
-          <form onSubmit={handleVerifyAndReset} className="flex flex-col gap-4 animate-fade-in">
-            <Input
-              name="otp"
-              type="text"
-              label="Verification Code"
-              hint="6-digit code"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              required
-              disabled={loading}
-              className="text-center tracking-[0.4em] font-bold text-xl"
-            />
-
-            <Input
-              name="newPassword"
-              type="password"
-              label="New Password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-
-            <Input
-              name="confirmPassword"
-              type="password"
-              label="Confirm New Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-
-            <div className="flex flex-col gap-3 mt-3">
-              <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 shadow-sm" disabled={loading || !otp || !newPassword || !confirmPassword}>
-                {loading ? <><Spinner size={18} /> Resetting Password...</> : 'Reset Password'}
-              </button>
-
-              <button 
-                type="button" 
-                onClick={() => { setStep('REQUEST'); setMessage(null); }}
+          <form onSubmit={handleVerifyAndReset} noValidate>
+            <FormSection label="Verification" icon={<ShieldCheck size={14} />} columns={1}>
+              <Input
+                containerClassName={fieldClass}
+                name="otp"
+                type="text"
+                label="Verification Code"
+                hint="6-digit code"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                required
                 disabled={loading}
-                className="text-muted hover:text-primary text-xs font-semibold py-2 transition-colors flex items-center justify-center gap-1.5"
-              >
-                <ArrowLeft size={14} /> Use a different email or NSU ID
-              </button>
-            </div>
+                style={{ textAlign: 'center', letterSpacing: '0.4em', fontWeight: 700, fontSize: '1.25rem' }}
+              />
+              <Input
+                containerClassName={fieldClass}
+                name="newPassword"
+                type="password"
+                label="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <Input
+                containerClassName={fieldClass}
+                name="confirmPassword"
+                type="password"
+                label="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </FormSection>
+
+            <FormSubmit
+              loading={loading}
+              loadingText="Resetting Password..."
+              icon={<ShieldCheck size={18} />}
+              disabled={!otp || !newPassword || !confirmPassword}
+            >
+              Reset Password
+            </FormSubmit>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep('REQUEST');
+                setMessage(null);
+              }}
+              disabled={loading}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.375rem',
+                margin: '0.75rem auto 0',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <ArrowLeft size={14} /> Use a different email or NSU ID
+            </button>
           </form>
         )}
 
         {step === 'SUCCESS' && (
-          <div className="flex flex-col gap-4 animate-fade-in text-center">
-            <Link 
-              href="/auth/student-signin" 
-              className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 shadow-sm"
-            >
+          <div style={{ textAlign: 'center' }}>
+            <Link href="/auth/student-signin" className={homeLinkClass}>
               Sign In Now
             </Link>
           </div>
         )}
-
-        <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">
-          <Link href="/auth/student-signin" className="text-primary hover:text-primary-hover font-semibold transition-colors">Back to Sign In</Link>
-        </div>
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { rechargeWallet } from './actions';
-import Spinner from '@/components/Spinner';
-import { 
-  Wallet, History, PlusCircle, CheckCircle2, AlertCircle, Lock
+import { Input } from '@/components/ui/Input';
+import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
+import {
+  Wallet, History, PlusCircle, Lock
 } from 'lucide-react';
 
 interface WalletClientProps {
@@ -111,19 +112,9 @@ export default function WalletClient({
             Choose your MFS provider, enter the amount and transaction ID to top up your balance.
           </p>
 
-          {error && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold mb-6 flex items-center gap-2">
-              <AlertCircle size={18} className="text-rose-600 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
-          {successMsg && (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-semibold mb-6 flex items-center gap-2">
-              <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
+          {successMsg && <FormAlert tone="success">{successMsg}</FormAlert>}
 
           <form onSubmit={handleRecharge} className="flex flex-col gap-6">
             
@@ -213,26 +204,22 @@ export default function WalletClient({
             {/* RESIZED VERIFICATION TEXT BOXES FOR MFS */}
             {mfsType !== 'DEMO_INSTANT' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-fade-in">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-muted uppercase tracking-wider">Your MFS Number</label>
-                  <input
-                    name="accountNumber"
-                    type="text"
-                    required
-                    placeholder="e.g. 017XXXXXXXX"
-                    className="w-full px-4 py-3 text-base font-semibold text-main bg-gray-50 border-2 border-color rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-all"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-muted uppercase tracking-wider">Transaction ID (TrxID)</label>
-                  <input
-                    name="transactionId"
-                    type="text"
-                    required
-                    placeholder="e.g. 9J8H7G6F21"
-                    className="w-full px-4 py-3 text-base font-semibold text-main bg-gray-50 border-2 border-color rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-all"
-                  />
-                </div>
+                <Input
+                  containerClassName={fieldClass}
+                  name="accountNumber"
+                  type="text"
+                  required
+                  label="Your MFS Number"
+                  placeholder="e.g. 017XXXXXXXX"
+                />
+                <Input
+                  containerClassName={fieldClass}
+                  name="transactionId"
+                  type="text"
+                  required
+                  label="Transaction ID (TrxID)"
+                  placeholder="e.g. 9J8H7G6F21"
+                />
               </div>
             )}
 
@@ -242,21 +229,9 @@ export default function WalletClient({
               </div>
             )}
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="btn-primary py-3.5 rounded-xl font-bold text-base justify-center shadow-md hover:shadow-lg transition-all mt-1"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Spinner size={18} /> Processing Deposit...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Lock size={18} /> Confirm Deposit
-                </span>
-              )}
-            </button>
+            <FormSubmit loading={loading} loadingText="Processing Deposit..." icon={<Lock size={18} />}>
+              Confirm Deposit
+            </FormSubmit>
           </form>
         </div>
 

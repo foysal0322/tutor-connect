@@ -4,14 +4,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerUser } from '../actions';
-import Spinner from '@/components/Spinner';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Lock, User } from 'lucide-react';
 import { useZodForm } from '@/hooks/useZodForm';
 import { registerUserSchema } from '@/lib/validation';
-
-import styles from '../auth.module.css';
+import {
+  FormPage,
+  FormCard,
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  footerLinkClass,
+} from '@/components/forms';
 
 export default function TutorRegisterForm({ departments }: { departments: any[] }) {
   const router = useRouter();
@@ -37,33 +43,71 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-gray-50/50">
-      <div className="card w-full max-w-xl p-8 sm:p-10 shadow-lg border-t-4 border-t-primary my-8 bg-white rounded-lg">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
-            <GraduationCap size={24} />
+    <FormPage>
+      <FormCard
+        icon={<GraduationCap size={28} />}
+        title="Tutor Registration"
+        subtitle="Join our community and start teaching."
+        footer={
+          <div>
+            Already have an account?{' '}
+            <Link href="/auth/tutor-signin" className={footerLinkClass}>
+              Sign In
+            </Link>
           </div>
-          <h2 className="text-2xl font-bold text-main">Tutor Registration</h2>
-          <p className="text-muted text-sm mt-2">Join our community and start teaching.</p>
-        </div>
+        }
+      >
+        {error && <FormAlert>{error}</FormAlert>}
 
-        {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
-
-        <form action={handleSubmit} className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Input name="name" type="text" label="Full Name" required
-              error={form.errors.name} onChange={form.onChange('name')} onBlur={form.onBlur('name')} />
-            <Input name="nsuId" type="text" label="NSU ID (e.g. 2211458642)" required
-              error={form.errors.nsuId} onChange={form.onChange('nsuId')} onBlur={form.onBlur('nsuId')} />
-          </div>
-
-          <Input name="email" type="email" label="University Email" required
-            error={form.errors.email} onChange={form.onChange('email')} onBlur={form.onBlur('email')} />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Input name="contact" type="text" label="Contact Number" required hint="11-digit BD mobile (017XXXXXXXX)"
-              error={form.errors.contact} onChange={form.onChange('contact')} onBlur={form.onBlur('contact')} />
+        <form action={handleSubmit} noValidate>
+          {/* Section: Personal */}
+          <FormSection label="Personal Details" icon={<User size={14} />}>
+            <Input
+              containerClassName={fieldClass}
+              name="name"
+              type="text"
+              label="Full Name"
+              required
+              error={form.errors.name}
+              onChange={form.onChange('name')}
+              onBlur={form.onBlur('name')}
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="nsuId"
+              type="text"
+              label="NSU ID"
+              placeholder="e.g. 2211458642"
+              required
+              error={form.errors.nsuId}
+              onChange={form.onChange('nsuId')}
+              onBlur={form.onBlur('nsuId')}
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="email"
+              type="email"
+              label="University Email"
+              placeholder="you@nsu.edu"
+              required
+              error={form.errors.email}
+              onChange={form.onChange('email')}
+              onBlur={form.onBlur('email')}
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="contact"
+              type="text"
+              label="Contact Number"
+              placeholder="017XXXXXXXX"
+              hint="11-digit BD mobile"
+              required
+              error={form.errors.contact}
+              onChange={form.onChange('contact')}
+              onBlur={form.onBlur('contact')}
+            />
             <Select
+              containerClassName={fieldClass}
               name="gender"
               label="Gender"
               required
@@ -74,10 +118,12 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
               ]}
               error={form.errors.gender}
             />
-          </div>
+          </FormSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Section: Academic */}
+          <FormSection label="Academic Details" icon={<GraduationCap size={14} />}>
             <Select
+              containerClassName={fieldClass}
               name="departmentId"
               label="Department"
               required
@@ -85,28 +131,53 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
               options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
               error={form.errors.departmentId}
             />
-            <Input name="cgpa" type="number" step="any" min="0" max="4.0" label="CGPA (e.g. 3.50)" required hint="Between 0 and 4"
-              error={form.errors.cgpa} onChange={form.onChange('cgpa')} onBlur={form.onBlur('cgpa')} />
-          </div>
+            <Input
+              containerClassName={fieldClass}
+              name="cgpa"
+              type="number"
+              step="any"
+              min="0"
+              max="4.0"
+              label="CGPA"
+              placeholder="e.g. 3.50"
+              hint="Between 0 and 4"
+              required
+              error={form.errors.cgpa}
+              onChange={form.onChange('cgpa')}
+              onBlur={form.onBlur('cgpa')}
+            />
+          </FormSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Input name="password" type="password" label="Password" required hint="At least 8 characters"
-              error={form.errors.password} onChange={form.onChange('password')} onBlur={form.onBlur('password')} />
-            <Input name="confirmPassword" type="password" label="Confirm Password" required
-              error={form.errors.confirmPassword} onChange={form.onChange('confirmPassword')} onBlur={form.onBlur('confirmPassword')} />
-          </div>
+          {/* Section: Security */}
+          <FormSection label="Security" icon={<Lock size={14} />}>
+            <Input
+              containerClassName={fieldClass}
+              name="password"
+              type="password"
+              label="Password"
+              hint="At least 8 characters"
+              required
+              error={form.errors.password}
+              onChange={form.onChange('password')}
+              onBlur={form.onBlur('password')}
+            />
+            <Input
+              containerClassName={fieldClass}
+              name="confirmPassword"
+              type="password"
+              label="Confirm Password"
+              required
+              error={form.errors.confirmPassword}
+              onChange={form.onChange('confirmPassword')}
+              onBlur={form.onBlur('confirmPassword')}
+            />
+          </FormSection>
 
-          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-4" disabled={loading}>
-            {loading ? <><Spinner size={18} /> Registering...</> : 'Register as Tutor'}
-          </button>
+          <FormSubmit loading={loading} loadingText="Registering..." icon={<GraduationCap size={18} />}>
+            Register as Tutor
+          </FormSubmit>
         </form>
-
-        <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">
-          <div className="text-muted">
-            Already have an account? <Link href="/auth/tutor-signin" className="text-primary hover:text-primary-hover font-semibold transition-colors ml-1">Sign In</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

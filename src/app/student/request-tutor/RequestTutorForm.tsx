@@ -6,12 +6,24 @@ import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import LoadingButton from '@/components/ui/LoadingButton';
-import ErrorAlert from '@/components/ui/ErrorAlert';
+import { ClipboardList, Send } from 'lucide-react';
 import { useZodForm } from '@/hooks/useZodForm';
 import { submitTutorRequestSchema } from '@/lib/validation';
+import {
+  FormSection,
+  FormSubmit,
+  FormAlert,
+  fieldClass,
+  cardEmbeddedClass,
+} from '@/components/forms';
 
-export default function RequestTutorForm({ courses, selectedTutor }: { courses: any[], selectedTutor?: any }) {
+export default function RequestTutorForm({
+  courses,
+  selectedTutor,
+}: {
+  courses: any[];
+  selectedTutor?: any;
+}) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -23,9 +35,8 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
     ? selectedTutor.expertises.find((e: any) => e.courseId === defaultCourseId)
     : null;
   const defaultFee = expertise ? expertise.sessionFee : '';
-  const selectedCourseName = selectedTutor && defaultCourseId
-    ? courses.find(c => c.id === defaultCourseId)?.name
-    : '';
+  const selectedCourseName =
+    selectedTutor && defaultCourseId ? courses.find((c) => c.id === defaultCourseId)?.name : '';
 
   async function handleSubmit(formData: FormData) {
     if (selectedTutor) {
@@ -49,7 +60,8 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
         router.push('/student');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while submitting the request.';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unexpected error occurred while submitting the request.';
       setError(errorMessage);
       console.error('Tutor request submission error:', err);
     } finally {
@@ -58,15 +70,8 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
   }
 
   return (
-    <div className="card w-full">
-      {error && (
-        <ErrorAlert
-          type="error"
-          title="Submission Error"
-          message={error}
-          onDismiss={() => setError('')}
-        />
-      )}
+    <div className={cardEmbeddedClass}>
+      {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
         <div className="mb-6 p-4 bg-primary-light text-primary border border-primary rounded-md">
@@ -83,75 +88,73 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
         </div>
       )}
 
-      <form action={handleSubmit} className="flex flex-col gap-4">
-        {selectedTutor ? (
-          <>
-            <input type="hidden" name="courseId" value={defaultCourseId} />
-            <input type="hidden" name="tutorId" value={selectedTutor.id} />
-            <input type="hidden" name="budget" value={defaultFee} />
-          </>
-        ) : (
-          <div className="form-group mb-0">
-            <label className="form-label">Course</label>
-            <SearchableCourseSelect courses={courses} defaultValue={defaultCourseId} />
-          </div>
-        )}
+      <form action={handleSubmit} noValidate>
+        <FormSection label="Request Details" icon={<ClipboardList size={14} />} columns={1}>
+          {selectedTutor ? (
+            <>
+              <input type="hidden" name="courseId" value={defaultCourseId} />
+              <input type="hidden" name="tutorId" value={selectedTutor.id} />
+              <input type="hidden" name="budget" value={defaultFee} />
+            </>
+          ) : (
+            <div className={fieldClass}>
+              <label className="form-label">Course</label>
+              <SearchableCourseSelect courses={courses} defaultValue={defaultCourseId} />
+            </div>
+          )}
 
-        <Input
-          name="topic"
-          label="Specific Topic/Chapter"
-          required
-          error={form.errors.topic}
-          onChange={form.onChange('topic')}
-          onBlur={form.onBlur('topic')}
-        />
-
-        <Input
-          name="facultyName"
-          label="Faculty Name (Optional)"
-        />
-
-        <Select
-          name="preferredMode"
-          label="Preferred Mode"
-          required
-          placeholderOption="Select Mode"
-          options={[
-            { value: 'Online', label: 'Online' },
-            { value: 'On Campus', label: 'On Campus' },
-          ]}
-          error={form.errors.preferredMode}
-        />
-
-        <Input
-          name="preferredDateTime"
-          type="datetime-local"
-          label="Preferred Date & Time (Optional)"
-        />
-
-        {!selectedTutor && (
           <Input
-            name="budget"
-            type="number"
-            min="100"
-            step="any"
+            containerClassName={fieldClass}
+            name="topic"
+            label="Specific Topic/Chapter"
             required
-            label="Approximate Budget (BDT)"
-            hint="If an admin assigns a tutor whose session fee differs from your budget, the final amount payable will be the assigned tutor's fee. Minimum 100 BDT."
-            error={form.errors.budget}
-            onChange={form.onChange('budget')}
-            onBlur={form.onBlur('budget')}
+            error={form.errors.topic}
+            onChange={form.onChange('topic')}
+            onBlur={form.onBlur('topic')}
           />
-        )}
 
-        <LoadingButton
-          type="submit"
-          loading={loading}
-          loadingText="Submitting..."
-          className="mt-4 w-full md:w-auto self-start"
-        >
+          <Input containerClassName={fieldClass} name="facultyName" label="Faculty Name (Optional)" />
+
+          <Select
+            containerClassName={fieldClass}
+            name="preferredMode"
+            label="Preferred Mode"
+            required
+            placeholderOption="Select Mode"
+            options={[
+              { value: 'Online', label: 'Online' },
+              { value: 'On Campus', label: 'On Campus' },
+            ]}
+            error={form.errors.preferredMode}
+          />
+
+          <Input
+            containerClassName={fieldClass}
+            name="preferredDateTime"
+            type="datetime-local"
+            label="Preferred Date & Time (Optional)"
+          />
+
+          {!selectedTutor && (
+            <Input
+              containerClassName={fieldClass}
+              name="budget"
+              type="number"
+              min="100"
+              step="any"
+              required
+              label="Approximate Budget (BDT)"
+              hint="If an admin assigns a tutor whose session fee differs from your budget, the final amount payable will be the assigned tutor's fee. Minimum 100 BDT."
+              error={form.errors.budget}
+              onChange={form.onChange('budget')}
+              onBlur={form.onBlur('budget')}
+            />
+          )}
+        </FormSection>
+
+        <FormSubmit loading={loading} loadingText="Submitting..." icon={<Send size={18} />}>
           Submit Request
-        </LoadingButton>
+        </FormSubmit>
       </form>
     </div>
   );

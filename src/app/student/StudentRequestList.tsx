@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react';
 import { submitPayment, completeTutorRequest, submitRefundRequest, cancelTutorRequest } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { fieldClass } from '@/components/forms';
 import styles from '../dashboard.module.css';
 
 interface RequestListProps {
@@ -341,13 +344,15 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                             ))}
                           </div>
                           
-                          <textarea 
-                            placeholder="Write a review (optional)..." 
-                            value={completeReview}
-                            onChange={(e) => setCompleteReview(e.target.value)}
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #bbf7d0', resize: 'vertical', fontFamily: 'inherit' }}
-                            rows={2}
-                          />
+                          <div className={fieldClass}>
+                            <textarea
+                              className="form-textarea"
+                              placeholder="Write a review (optional)..."
+                              value={completeReview}
+                              onChange={(e) => setCompleteReview(e.target.value)}
+                              rows={2}
+                            />
+                          </div>
 
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                             <button
@@ -457,42 +462,36 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                         <MfsProviderSelect value={mfsType} onChange={setMfsType} />
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                          <div>
-                            <label htmlFor={`account-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>MFS Account Number</label>
-                            <input
-                              id={`account-${req.id}`}
-                              type="text"
-                              required
-                              placeholder="e.g. 017XXXXXXXX"
-                              value={accountNumber}
-                              maxLength={11}
-                              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor={`amount-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Amount (BDT)</label>
-                            <input
-                              id={`amount-${req.id}`}
-                              type="number"
-                              required
-                              readOnly
-                              value={useWallet ? ((req.budget * 1.05) - Math.min(userBalance, req.budget * 1.05)).toFixed(2) : (req.budget * 1.05).toFixed(2)}
-                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: '#f1f5f9', cursor: 'not-allowed' }}
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor={`txn-${req.id}`} style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-muted)' }}>Transaction ID</label>
-                            <input
-                              id={`txn-${req.id}`}
-                              type="text"
-                              required
-                              placeholder="e.g. TRX847927"
-                              value={transactionId}
-                              onChange={(e) => setTransactionId(e.target.value)}
-                              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}
-                            />
-                          </div>
+                          <Input
+                            containerClassName={fieldClass}
+                            id={`account-${req.id}`}
+                            type="text"
+                            label="MFS Account Number"
+                            required
+                            placeholder="e.g. 017XXXXXXXX"
+                            value={accountNumber}
+                            maxLength={11}
+                            onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                          />
+                          <Input
+                            containerClassName={fieldClass}
+                            id={`amount-${req.id}`}
+                            type="number"
+                            label="Amount (BDT)"
+                            required
+                            readOnly
+                            value={useWallet ? ((req.budget * 1.05) - Math.min(userBalance, req.budget * 1.05)).toFixed(2) : (req.budget * 1.05).toFixed(2)}
+                          />
+                          <Input
+                            containerClassName={fieldClass}
+                            id={`txn-${req.id}`}
+                            type="text"
+                            label="Transaction ID"
+                            required
+                            placeholder="e.g. TRX847927"
+                            value={transactionId}
+                            onChange={(e) => setTransactionId(e.target.value)}
+                          />
                         </div>
                       </>
                     ) : (
@@ -535,18 +534,16 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                       Describe why you are requesting a refund according to our refund policy.
                     </p>
 
-                    <div>
-                      <label htmlFor={`refund-${req.id}`} className="sr-only">Refund reason</label>
-                      <textarea
-                        id={`refund-${req.id}`}
-                        required
-                        rows={3}
-                        placeholder="Reason for refund request..."
-                        value={refundDetails}
-                        onChange={(e) => setRefundDetails(e.target.value)}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit' }}
-                      />
-                    </div>
+                    <Textarea
+                      containerClassName={fieldClass}
+                      id={`refund-${req.id}`}
+                      label="Refund reason"
+                      required
+                      rows={3}
+                      placeholder="Reason for refund request..."
+                      value={refundDetails}
+                      onChange={(e) => setRefundDetails(e.target.value)}
+                    />
 
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       <button
