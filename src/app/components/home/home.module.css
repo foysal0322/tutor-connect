@@ -5,7 +5,7 @@
 }
 
 .sectionAlt {
-  background-color: #f8fafc;
+  background-color: var(--bg-color);
 }
 
 .sectionTitle {
@@ -51,14 +51,14 @@
 
 .heroTag {
   display: inline-block;
-  background: rgba(79, 70, 229, 0.1);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary);
   padding: 0.5rem 1rem;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.85rem;
   margin-bottom: 1.5rem;
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 .heroTitle {
@@ -71,7 +71,7 @@
 }
 
 .heroTitle span {
-  background: linear-gradient(135deg, var(--primary) 0%, #ec4899 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -99,12 +99,12 @@
 
 .floatingCard {
   position: absolute;
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--card-bg) 90%, transparent);
   backdrop-filter: blur(10px);
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid color-mix(in srgb, var(--card-bg) 50%, transparent);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -156,7 +156,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
-  background: white;
+  background: var(--card-bg);
   padding: 3rem;
   border-radius: 24px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
@@ -191,7 +191,7 @@
 }
 
 .featureCard {
-  background: white;
+  background: var(--card-bg);
   padding: 2.5rem;
   border-radius: 20px;
   border: 1px solid var(--border-color);
@@ -203,7 +203,7 @@
 .featureCard:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
-  border-color: rgba(79, 70, 229, 0.3);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .featureIcon {
@@ -213,7 +213,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(79, 70, 229, 0.1);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary);
   margin-bottom: 1.5rem;
 }
@@ -232,7 +232,7 @@
 .comingSoonOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--card-bg) 60%, transparent);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -267,14 +267,14 @@
 .timelineIcon {
   width: 80px;
   height: 80px;
-  background: white;
+  background: var(--card-bg);
   border: 2px solid var(--primary-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem auto;
-  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary);
 }
 

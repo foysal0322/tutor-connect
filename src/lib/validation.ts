@@ -112,7 +112,11 @@ export const submitTutorRequestSchema = z.object({
   courseId: idSchema,
   topic: nonEmpty('Topic', 500),
   facultyName: z.string().trim().max(200, 'Faculty name is too long.').optional().or(z.literal('')),
-  preferredMode: z.enum(['ONLINE', 'OFFLINE', 'HYBRID'], { message: 'Select a preferred mode.' }),
+  // Aligned with the values the form sends and the values stored in the DB
+  // (see prisma/schema.prisma comment: "Online, On Campus"). The previous
+  // enum ('ONLINE' | 'OFFLINE' | 'HYBRID') rejected every submission since
+  // Phase 1 — see plan.md "Decisions required" B.
+  preferredMode: z.enum(['Online', 'On Campus'], { message: 'Select a preferred mode.' }),
   preferredDateTime: z.string().trim().max(200, 'Date/time is too long.').optional().or(z.literal('')),
   budget: bdtAmountSchema.refine((n) => n >= 100, 'Minimum budget is 100 BDT.'),
   tutorId: idSchema.optional().or(z.literal('')),

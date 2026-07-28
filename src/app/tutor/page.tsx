@@ -65,7 +65,7 @@ export default async function TutorDashboard() {
           </div>
         ) : (
           <div className="data-grid-container">
-            <table className="data-grid hidden.md:table">
+            <table className="data-grid hidden md:table">
               <thead>
                 <tr>
                   <th>Student</th>

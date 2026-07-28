@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.z.ai)",
+      "Bash(find \"D:/projects/tutor-connect/src\" -type f -name \"*.tsx\" -exec wc -l {} +)",
+      "Bash(xargs wc:*)",
+      "Bash(npx next:*)",
+      "Skill(update-config)",
+      "Bash(node:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "Bash(rm -r:*)",
+      "Bash(rmdir /s:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git checkout -- .:*)",
+      "Bash(git checkout .:*)",
+      "Bash(git restore .:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git branch -d:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git clean -xf:*)",
+      "Bash(git commit --amend:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git tag -d:*)",
+      "Bash(git remote remove:*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*TRUNCATE TABLE*)",
+      "Bash(*DROP SCHEMA*)",
+      "Bash(*DELETE FROM *)",
+      "Bash(*pg_drop*)",
+      "Bash(* --no-verify*)",
+      "Bash(* --no-gpg-sign*)",
+      "Bash(*format *)",
+      "Bash(*mkfs*)",
+      "Bash(*dd if=*of=/dev/*)",
+      "Bash(*shutdown*)",
+      "Bash(*reboot*)",
+      "Bash(*halt*)"
+    ],
+    "defaultMode": "bypassPermissions"
+  }
+}

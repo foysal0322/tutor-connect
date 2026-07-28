@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import LoadingButton from '@/components/ui/LoadingButton';
 import ErrorAlert from '@/components/ui/ErrorAlert';
 import { LogIn } from 'lucide-react';
@@ -73,8 +73,8 @@ export default function StudentSignInForm() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FloatingInput name="identifier" type="text" label="Email or NSU ID" required />
-          <FloatingInput name="password" type="password" label="Password" required />
+          <Input name="identifier" type="text" label="Email or NSU ID" required />
+          <Input name="password" type="password" label="Password" required />
 
           <LoadingButton
             type="submit"

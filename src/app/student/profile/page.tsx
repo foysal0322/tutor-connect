@@ -25,7 +25,7 @@ export default async function StudentProfilePage() {
 
   if (!user) {
     console.log('StudentProfilePage - User is null, redirecting to force-signout');
-    redirect('/auth/force-signout');
+    redirect('/auth/force-signout?reason=session-expired');
   }
   
   const departments = await getDepartments();

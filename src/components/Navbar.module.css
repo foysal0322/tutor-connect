@@ -1,5 +1,5 @@
 .navbar {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: color-mix(in srgb, var(--card-bg) 90%, transparent);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -34,7 +34,7 @@
 
 .navLink {
   font-weight: 600;
-  color: #334155; /* A deeper, richer slate color instead of muted gray */
+  color: var(--surface-7); /* slate-700 — deeper than --text-muted for nav emphasis */
   font-size: 0.95rem;
   position: relative;
   white-space: nowrap;
@@ -42,7 +42,7 @@
 }
 
 .navLink:hover {
-  color: #4f46e5 !important; /* Vibrant indigo on hover */
+  color: var(--primary) !important;
 }
 
 .navLink::after {
@@ -52,7 +52,7 @@
   height: 2px;
   bottom: -4px;
   left: 0;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6); /* Nice gradient underline on hover */
+  background: linear-gradient(135deg, var(--primary), var(--info-hover));
   transition: width 0.3s ease;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .disabledLink:hover {
-  color: #475569; /* Darker for better contrast on disabled state */
+  color: var(--text-muted);
 }
 .disabledLink:hover::after {
   width: 0;
@@ -87,21 +87,21 @@
 
 .navLinkHot {
   font-weight: 700;
-  color: #D97706; /* Amber-600 */
-  background-color: #FEF3C7; /* Amber-100 */
+  color: var(--accent-hover);
+  background-color: var(--accent-light);
   padding: 0.4rem 0.6rem;
   border-radius: 9999px;
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  border: 1px solid #F59E0B; /* Amber-500 */
+  border: 1px solid var(--accent);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .navLinkHot:hover {
-  background-color: #FDE68A; /* Amber-200 */
+  background-color: color-mix(in srgb, var(--accent) 60%, var(--accent-light));
   transform: translateY(-1px);
 }
 
@@ -130,13 +130,13 @@
 }
 
 .btnConsultancy {
-  background: linear-gradient(135deg, #ff6b6b, #ff4757);
-  color: white;
+  background: linear-gradient(135deg, var(--danger), var(--danger-hover));
+  color: var(--card-bg);
   padding: 0.5rem 1.2rem;
   border-radius: 9999px;
   font-weight: 700;
   font-size: 0.95rem;
-  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--danger-hover) 40%, transparent);
   transition: all 0.3s ease;
   text-decoration: none;
   display: inline-flex;
@@ -148,26 +148,26 @@
 
 .btnConsultancy:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
-  color: white !important;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--danger-hover) 60%, transparent);
+  color: var(--card-bg) !important;
 }
 
 @keyframes pulseConsultancy {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger-hover) 70%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--danger-hover) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger-hover) 0%, transparent);
   }
 }
 
 .btnStudentSignIn {
   background: transparent !important;
-  color: #4f46e5 !important;
-  border: 2px solid #4f46e5 !important;
+  color: var(--primary) !important;
+  border: 2px solid var(--primary) !important;
   padding: 0.5rem 1.2rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -180,19 +180,19 @@
 }
 
 .btnStudentSignIn:hover {
-  background: rgba(79, 70, 229, 0.1) !important;
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 .btnTutorSignIn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-  color: white !important;
+  background: linear-gradient(135deg, var(--primary), var(--info-hover)) !important;
+  color: var(--card-bg) !important;
   padding: 0.5rem 1.2rem;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.95rem;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--primary) 40%, transparent);
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
@@ -203,8 +203,8 @@
 
 .btnTutorSignIn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
-  color: white !important;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--info-hover) 50%, transparent);
+  color: var(--card-bg) !important;
 }
 
 .signInDropdownContainer {
@@ -217,7 +217,7 @@
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color);
@@ -252,8 +252,8 @@
 }
 
 .signInDropdownItem:hover {
-  background: rgba(99, 102, 241, 0.05);
-  color: #4f46e5;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  color: var(--primary);
 }
 
 .signInDropdownItemIcon {

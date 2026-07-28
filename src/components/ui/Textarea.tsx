@@ -33,7 +33,7 @@ export function Textarea({
     [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div className={containerClassName} style={{ marginBottom: 'var(--space-5)' }}>
+    <div className={containerClassName}>
       <label
         htmlFor={id}
         style={{

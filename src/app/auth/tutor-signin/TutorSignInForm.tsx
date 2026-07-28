@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import { LogIn } from 'lucide-react';
 
 export default function TutorSignInForm() {
@@ -56,8 +56,8 @@ export default function TutorSignInForm() {
         {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <FloatingInput name="identifier" type="text" label="Email or NSU ID" required />
-          <FloatingInput name="password" type="password" label="Password" required />
+          <Input name="identifier" type="text" label="Email or NSU ID" required />
+          <Input name="password" type="password" label="Password" required />
 
           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-2" disabled={loading}>
             {loading ? <><Spinner size={18} /> Signing in...</> : 'Sign In'}

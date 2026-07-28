@@ -13,7 +13,7 @@ export default async function WalletPage() {
 
   const data = await getWalletData();
   if ('error' in data || !data) {
-    redirect('/auth/force-signout');
+    redirect('/auth/force-signout?reason=session-expired');
   }
 
   const role = (session.user as any).role || 'STUDENT';

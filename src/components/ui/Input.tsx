@@ -13,9 +13,11 @@ import React, { useId } from 'react';
  *   - Shows a required indicator with aria-label when required (3.3.2)
  *   - Optional icon, hint, prefix/suffix slots
  *
- * Use this for new forms. Existing FloatingInput remains for the visual
- * floating-label aesthetic on auth screens, but it should be migrated over
- * time. See FRONTEND_AUDIT.md C3 / D1 / D2 / G2.
+ * Spacing: this component does NOT impose vertical margins. The parent is
+ * responsible for spacing (e.g. Tailwind `space-y-*` or `flex flex-col gap-*`
+ * on the form, or `gap-*` on a grid).
+ *
+ * See FRONTEND_AUDIT.md C3 / D1 / D2 / G2.
  */
 
 export interface InputProps
@@ -27,8 +29,10 @@ export interface InputProps
   visuallyHideLabel?: boolean;
   /** Render an icon inside the input, left-aligned. */
   leadingIcon?: React.ReactNode;
-  /** Optional suffix (e.g. "BDT", "%"). */
+  /** Optional decorative suffix (e.g. "BDT", "%"). Not interactive. */
   suffix?: React.ReactNode;
+  /** Optional interactive trailing element (e.g. password visibility toggle). */
+  trailingIcon?: React.ReactNode;
   containerClassName?: string;
 }
 
@@ -39,6 +43,7 @@ export function Input({
   visuallyHideLabel,
   leadingIcon,
   suffix,
+  trailingIcon,
   id: idProp,
   required,
   className,
@@ -53,9 +58,10 @@ export function Input({
     [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined;
 
   const hasLeading = !!leadingIcon;
+  const hasTrailing = !!trailingIcon;
 
   return (
-    <div className={containerClassName} style={{ marginBottom: 'var(--space-5)', position: 'relative' }}>
+    <div className={containerClassName} style={{ position: 'relative' }}>
       <label
         htmlFor={id}
         style={
@@ -97,7 +103,10 @@ export function Input({
         <input
           id={id}
           className={['form-input', className ?? ''].filter(Boolean).join(' ')}
-          style={hasLeading ? { paddingLeft: '2.5rem' } : undefined}
+          style={{
+            ...(hasLeading ? { paddingLeft: '2.5rem' } : null),
+            ...(hasTrailing ? { paddingRight: '2.5rem' } : null),
+          }}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           required={required}
@@ -115,6 +124,18 @@ export function Input({
             }}
           >
             {suffix}
+          </span>
+        )}
+        {trailingIcon && (
+          <span
+            style={{
+              position: 'absolute',
+              right: 'var(--space-2)',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            {trailingIcon}
           </span>
         )}
       </div>

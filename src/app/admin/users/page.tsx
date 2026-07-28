@@ -30,7 +30,7 @@ export default async function AdminUsersPage() {
       
       <div className="card p-0 overflow-hidden">
         <div className="data-grid-container">
-          <table className="data-grid hidden.md:table">
+          <table className="data-grid hidden md:table">
             <thead>
               <tr>
                 <th>Name</th>

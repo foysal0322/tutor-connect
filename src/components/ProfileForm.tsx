@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { updateUserProfile } from '@/app/actions/user';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 export default function ProfileForm({ 
   user, 
@@ -44,74 +45,76 @@ export default function ProfileForm({
       {success && <div className="mb-6 p-4 bg-success-light text-success-hover rounded-md font-medium border border-success-hover">Profile updated successfully!</div>}
 
       <form action={handleSubmit} className="flex flex-col gap-4">
-        
+
         {isAdmin && (
-          <div className="form-group mb-0">
-            <label className="form-label">Role</label>
-            <select name="role" defaultValue={user.role} className="form-select">
-              <option value="STUDENT">Student</option>
-              <option value="TUTOR">Tutor</option>
-              <option value="ADMIN">Admin</option>
-            </select>
-          </div>
+          <Select
+            name="role"
+            label="Role"
+            defaultValue={user.role}
+            options={[
+              { value: 'STUDENT', label: 'Student' },
+              { value: 'TUTOR', label: 'Tutor' },
+              { value: 'ADMIN', label: 'Admin' },
+            ]}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FloatingInput name="name" label="Full Name" defaultValue={user.name} required />
-          <FloatingInput name="nsuId" label="NSU ID" defaultValue={user.nsuId} required />
+          <Input name="name" label="Full Name" defaultValue={user.name} required />
+          <Input name="nsuId" label="NSU ID" defaultValue={user.nsuId} required />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FloatingInput name="email" type="email" label="Email Address" defaultValue={user.email} required />
-          <FloatingInput name="contact" label="Contact Number" defaultValue={user.contact} required />
+          <Input name="email" type="email" label="Email Address" defaultValue={user.email} required />
+          <Input name="contact" label="Contact Number" defaultValue={user.contact} required />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="form-group mb-0">
-            <label className="form-label text-muted">Gender</label>
-            <select name="gender" defaultValue={user.gender || ''} className="form-select">
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+          <Select
+            name="gender"
+            label="Gender"
+            defaultValue={user.gender || ''}
+            placeholderOption="Select Gender"
+            options={[
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' },
+              { value: 'Other', label: 'Other' },
+            ]}
+          />
 
-          <div className="form-group mb-0">
-            <label className="form-label text-muted">Department</label>
-            <select name="departmentId" defaultValue={user.departmentId || ''} className="form-select">
-              <option value="">Select Department</option>
-              {departments.map(dept => (
-                <option key={dept.id} value={dept.id}>{dept.name}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            name="departmentId"
+            label="Department"
+            defaultValue={user.departmentId || ''}
+            placeholderOption="Select Department"
+            options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
+          />
         </div>
 
         {(user.role !== 'ADMIN' || (isAdmin && user.role !== 'ADMIN')) && (
-          <div className="form-group mb-0">
-            <FloatingInput 
-              name="cgpa" 
-              type="number" 
-              step="any" 
-              min="0" 
-              max="4.0" 
-              label="CGPA" 
-              defaultValue={user.cgpa || ''} 
+          <>
+            <Input
+              name="cgpa"
+              type="number"
+              step="any"
+              min="0"
+              max="4.0"
+              label="CGPA"
+              defaultValue={user.cgpa || ''}
             />
-            <label className="flex items-center gap-2 mt-2 cursor-pointer text-sm text-muted hover:text-main transition-colors">
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-muted hover:text-main transition-colors">
               <input type="checkbox" name="hideCgpa" defaultChecked={user.hideCgpa} className="w-4 h-4 rounded border-color text-primary focus:ring-primary" />
               Hide my CGPA from students
             </label>
-          </div>
+          </>
         )}
 
         <div className="my-2 border-t border-color"></div>
         <h4 className="text-lg mb-2">Change Password <span className="text-muted text-sm font-normal">(Optional)</span></h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FloatingInput name="password" type="password" label="New Password" />
-          <FloatingInput name="confirmPassword" type="password" label="Confirm New Password" />
+          <Input name="password" type="password" label="New Password" />
+          <Input name="confirmPassword" type="password" label="Confirm New Password" />
         </div>
 
         <button type="submit" className="btn-primary mt-4 w-full md:w-auto self-start" disabled={loading}>

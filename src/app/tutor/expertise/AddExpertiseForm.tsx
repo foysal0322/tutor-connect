@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { addTutorExpertise, updateTutorExpertise } from '../actions';
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter } from 'next/navigation';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 
 export default function AddExpertiseForm({ courses, initialData, onSuccess, onCancel }: { courses: any[], initialData?: any, onSuccess?: () => void, onCancel?: () => void }) {
   const [error, setError] = useState('');
@@ -143,7 +143,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
         </div>
 
         {!initialData && (
-          <FloatingInput
+          <Input
             name="cgpa"
             type="number"
             step="any"
@@ -154,7 +154,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           />
         )}
 
-        <FloatingInput
+        <Input
           name="semesterCompleted"
           type="text"
           required
@@ -164,7 +164,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           onChange={(e) => setSemesterCompleted(e.target.value)}
         />
 
-        <FloatingInput
+        <Input
           name="facultyName"
           type="text"
           required
@@ -258,7 +258,7 @@ export default function AddExpertiseForm({ courses, initialData, onSuccess, onCa
           )}
         </div>
 
-        <FloatingInput
+        <Input
           name="sessionFee"
           type="number"
           min="100"

@@ -12,7 +12,7 @@ export default function OneShopPreview() {
     <section className={styles.sectionAlt} style={{ padding: '6rem 1.5rem' }}>
       <div className="container">
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', padding: '0.5rem 1rem', borderRadius: '9999px', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent-hover)', padding: '0.5rem 1rem', borderRadius: '9999px', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
             <ShoppingBag size={18} />
             Coming Soon
           </div>
@@ -34,7 +34,7 @@ export default function OneShopPreview() {
           <div style={{
             position: 'absolute',
             inset: '-1rem',
-            background: 'rgba(248, 250, 252, 0.3)',
+            background: 'color-mix(in srgb, var(--bg-color) 30%, transparent)',
             backdropFilter: 'blur(3px)',
             zIndex: 10,
             display: 'flex',
@@ -43,7 +43,7 @@ export default function OneShopPreview() {
             borderRadius: '24px'
           }}>
             <div style={{
-              background: 'white',
+              background: 'var(--card-bg)',
               padding: '1rem 2rem',
               borderRadius: '9999px',
               fontWeight: 700,
@@ -57,7 +57,7 @@ export default function OneShopPreview() {
 
           {items.map((item, index) => (
             <div key={index} style={{
-              background: 'white',
+              background: 'var(--card-bg)',
               borderRadius: '16px',
               overflow: 'hidden',
               border: '1px solid var(--border-color)',

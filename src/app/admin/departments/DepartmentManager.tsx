@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import { addDepartment, updateDepartment, deleteDepartment } from '@/app/actions/admin';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
+
+// NOTE: This table is not migrated to <DataGrid> because it uses inline-edit
+// (clicking Edit turns the row itself into a form). DataGrid's cell renderer
+// is presentation-only and cannot host row-level form state. Revisit if
+// DataGrid grows an `inlineEdit` opt-in. See plan.md Step 2.
 
 export default function DepartmentManager({ departments }: { departments: any[] }) {
   const [loading, setLoading] = useState(false);
@@ -44,7 +49,7 @@ export default function DepartmentManager({ departments }: { departments: any[] 
         <h2 className="text-lg font-bold text-main mb-4">Add New Department</h2>
         <form id="add-dept-form" action={handleAdd} className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="flex-1 w-full">
-            <FloatingInput name="name" type="text" label="Department Name" required />
+            <Input name="name" type="text" label="Department Name" required />
           </div>
           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-6 py-3 font-semibold rounded-lg transition-colors w-full sm:w-auto mt-1" disabled={loading}>
             Add Department
@@ -69,7 +74,7 @@ export default function DepartmentManager({ departments }: { departments: any[] 
                       <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
                         <input type="hidden" name="id" value={dept.id} />
                         <div className="flex-1">
-                          <FloatingInput name="name" type="text" defaultValue={dept.name} label="Department Name" required />
+                          <Input name="name" type="text" defaultValue={dept.name} label="Department Name" required />
                         </div>
                         <div className="flex gap-2 items-center mt-1">
                           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>

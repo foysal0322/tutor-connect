@@ -15,20 +15,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text);
+  color: var(--text-main);
   transition: background-color 0.2s ease;
 }
 
 .bellButton:hover {
-  background-color: var(--surface);
+  background-color: var(--surface-1);
 }
 
 .badge {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--error, #ef4444);
-  color: white;
+  background-color: var(--danger);
+  color: var(--card-bg);
   font-size: 0.7rem;
   font-weight: bold;
   padding: 2px 6px;
@@ -43,23 +43,15 @@
   margin-top: 0.5rem;
   width: 350px;
   max-height: 400px;
-  background-color: var(--background, #ffffff);
-  border: 1px solid var(--border, #e5e7eb);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   z-index: 50;
   overflow: hidden;
-  color: var(--text-main, #111827);
-}
-
-/* Dark mode support if applicable */
-@media (prefers-color-scheme: dark) {
-  .dropdown {
-    background-color: #1f2937;
-    border-color: #374151;
-  }
+  color: var(--text-main);
 }
 
 .header {
@@ -67,7 +59,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header h3 {
@@ -79,7 +71,7 @@
 .markAllRead {
   background: none;
   border: none;
-  color: var(--primary, #3b82f6);
+  color: var(--primary);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -96,37 +88,25 @@
 .empty {
   padding: 2rem;
   text-align: center;
-  color: #4b5563; /* Darker for WCAG AA compliance */
+  color: var(--surface-7); /* gray-600 — passes WCAG AA on --card-bg */
   font-size: 0.9rem;
 }
 
 .item {
   display: flex;
   padding: 1rem;
-  border-bottom: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: background-color 0.2s;
   align-items: flex-start;
 }
 
 .item:hover {
-  background-color: var(--surface, #f9fafb);
-}
-
-@media (prefers-color-scheme: dark) {
-  .item:hover {
-    background-color: #374151;
-  }
+  background-color: var(--surface-1);
 }
 
 .unread {
-  background-color: var(--primary-light, #eff6ff);
-}
-
-@media (prefers-color-scheme: dark) {
-  .unread {
-    background-color: rgba(59, 130, 246, 0.1);
-  }
+  background-color: var(--primary-light);
 }
 
 .itemContent {
@@ -142,25 +122,19 @@
 .item p {
   margin: 0 0 0.5rem 0;
   font-size: 0.85rem;
-  color: #374151; /* Darker for WCAG AA compliance */
+  color: var(--surface-8); /* gray-700 — passes WCAG AA on --card-bg */
   line-height: 1.4;
-}
-
-@media (prefers-color-scheme: dark) {
-  .item p {
-    color: #9ca3af;
-  }
 }
 
 .time {
   font-size: 0.75rem;
-  color: #6b7280; /* Darker for better readability */
+  color: var(--text-muted);
 }
 
 .unreadDot {
   width: 8px;
   height: 8px;
-  background-color: var(--primary, #3b82f6);
+  background-color: var(--primary);
   border-radius: 50%;
   margin-left: 0.5rem;
   margin-top: 0.3rem;

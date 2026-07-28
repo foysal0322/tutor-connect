@@ -5,9 +5,17 @@ import AssignTutorForm from './AssignTutorForm';
 import { verifyPaymentAction, verifyRefundAction } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import { useDebounce } from '@/hooks/useDebounce';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import LoadingButton from '@/components/ui/LoadingButton';
 import ErrorAlert from '@/components/ui/ErrorAlert';
+
+// NOTE: This component is a 558-line monolith (FRONTEND_AUDIT.md E1) and its
+// table is tightly coupled to in-component state (search, status filter,
+// inline assign-tutor dialog, payment/refund verification, per-row toasts).
+// Migrating the table to <DataGrid> in isolation would either duplicate state
+// or require lifting it out — cleaner to do as part of the E1 decomposition
+// (split into RequestTable + RequestFilters + RequestActions). See plan.md
+// Step 2 and FRONTEND_AUDIT.md E1.
 
 export default function RequestManager({ initialRequests, tutors }: { initialRequests: any[], tutors: any[] }) {
   const [requests, setRequests] = useState(initialRequests);
@@ -193,7 +201,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 p-4 border-b border-color bg-gray-50/50">
         <div className="flex-1">
-          <FloatingInput
+          <Input
             name="search"
             type="text"
             label="Search by course, student, or topic..."
@@ -220,7 +228,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
       </div>
 
       <div className="data-grid-container">
-        <table className="data-grid hidden.md:table">
+        <table className="data-grid hidden md:table">
           <thead>
             <tr>
               <th>Student</th>
