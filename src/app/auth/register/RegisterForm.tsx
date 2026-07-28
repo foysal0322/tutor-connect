@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { registerUser } from '../actions';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { GraduationCap, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, GraduationCap, User, UserPlus } from 'lucide-react';
 import { useZodForm } from '@/hooks/useZodForm';
 import { registerUserSchema } from '@/lib/validation';
 import {
@@ -16,27 +16,37 @@ import {
   FormSubmit,
   FormAlert,
   fieldClass,
+  toggleClass,
   footerLinkClass,
 } from '@/components/forms';
 
-export default function TutorRegisterForm({ departments }: { departments: any[] }) {
+export default function RegisterForm({ departments }: { departments: any[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const form = useZodForm(registerUserSchema);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     if (!form.validateAll(formData)) return;
     setLoading(true);
     setError('');
     try {
-      const res = await registerUser(formData, 'TUTOR');
+      // New accounts are always created as STUDENT. The member can start
+      // teaching at any time by adding an expertise — no second registration.
+      const res = await registerUser(formData, 'STUDENT');
       if (res?.error) {
         setError(res.error);
       } else {
-        router.push('/auth/tutor-signin?registered=true');
+        const target = `/auth/signin?registered=true${callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`;
+        router.push(target);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred.');
     }
     setLoading(false);
@@ -45,21 +55,24 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
   return (
     <FormPage>
       <FormCard
-        icon={<GraduationCap size={28} />}
-        title="Tutor Registration"
-        subtitle="Join our community and start teaching."
+        icon={<UserPlus size={28} />}
+        title="Create your campus account"
+        subtitle="One account to find tutors and teach courses."
         footer={
-          <div>
-            Already have an account?{' '}
-            <Link href="/auth/tutor-signin" className={footerLinkClass}>
+          <>
+            <span>Already have an account?</span>
+            <Link
+              href={`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
+              className={footerLinkClass}
+            >
               Sign In
             </Link>
-          </div>
+          </>
         }
       >
         {error && <FormAlert>{error}</FormAlert>}
 
-        <form action={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} noValidate>
           {/* Section: Personal */}
           <FormSection label="Personal Details" icon={<User size={14} />}>
             <Input
@@ -67,6 +80,7 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
               name="name"
               type="text"
               label="Full Name"
+              placeholder="John Doe"
               required
               error={form.errors.name}
               onChange={form.onChange('name')}
@@ -77,7 +91,7 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
               name="nsuId"
               type="text"
               label="NSU ID"
-              placeholder="e.g. 2211458642"
+              placeholder="2211458642"
               required
               error={form.errors.nsuId}
               onChange={form.onChange('nsuId')}
@@ -121,7 +135,7 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
           </FormSection>
 
           {/* Section: Academic */}
-          <FormSection label="Academic Details" icon={<GraduationCap size={14} />}>
+          <FormSection label="Academic Details" icon={<GraduationCap size={14} />} columns={1}>
             <Select
               containerClassName={fieldClass}
               name="departmentId"
@@ -131,21 +145,6 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
               options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
               error={form.errors.departmentId}
             />
-            <Input
-              containerClassName={fieldClass}
-              name="cgpa"
-              type="number"
-              step="any"
-              min="0"
-              max="4.0"
-              label="CGPA"
-              placeholder="e.g. 3.50"
-              hint="Between 0 and 4"
-              required
-              error={form.errors.cgpa}
-              onChange={form.onChange('cgpa')}
-              onBlur={form.onBlur('cgpa')}
-            />
           </FormSection>
 
           {/* Section: Security */}
@@ -153,28 +152,52 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
             <Input
               containerClassName={fieldClass}
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               label="Password"
+              placeholder="........"
               hint="At least 8 characters"
               required
               error={form.errors.password}
               onChange={form.onChange('password')}
               onBlur={form.onBlur('password')}
+              trailingIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className={toggleClass}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              }
             />
             <Input
               containerClassName={fieldClass}
               name="confirmPassword"
-              type="password"
+              type={showConfirm ? 'text' : 'password'}
               label="Confirm Password"
+              placeholder="........"
               required
               error={form.errors.confirmPassword}
               onChange={form.onChange('confirmPassword')}
               onBlur={form.onBlur('confirmPassword')}
+              trailingIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((s) => !s)}
+                  className={toggleClass}
+                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              }
             />
           </FormSection>
 
           <FormSubmit loading={loading} loadingText="Registering..." icon={<GraduationCap size={18} />}>
-            Register as Tutor
+            Create Campus Account
           </FormSubmit>
         </form>
       </FormCard>

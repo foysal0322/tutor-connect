@@ -9,7 +9,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/auth/student-signin", // default sign-in page, but we have multiple
+    signIn: "/auth/signin",
   },
   providers: [
     CredentialsProvider({

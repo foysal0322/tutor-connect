@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from './NotificationBell';
+import UserMenu from './UserMenu';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import styles from './Navbar.module.css';
 
@@ -26,7 +27,7 @@ export default function NavbarClient({ session }: { session: any }) {
 
   // Resolve the session-dependent href once so both the link and its active
   // state stay in sync.
-  const teachHref = session ? '/tutor/expertise' : '/auth/student-register';
+  const teachHref = session ? '/tutor/expertise' : '/auth/register';
 
   // A nav item is active when we are on its exact route or a child of it.
   // "/" is exact-only so it never matches every page.
@@ -64,12 +65,16 @@ export default function NavbarClient({ session }: { session: any }) {
           <div className={`${styles.authButtonsMobile}`}>
             <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>
             {!session ? (
-              <Link href="/auth/student-signin" className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+              <Link href="/auth/signin" className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
             ) : (
-              <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+              <>
                 <NotificationBell />
-                <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
-              </div>
+                <UserMenu
+                  user={session.user}
+                  variant="inline"
+                  onNavigate={() => setIsMobileMenuOpen(false)}
+                />
+              </>
             )}
           </div>
         </div>
@@ -77,12 +82,12 @@ export default function NavbarClient({ session }: { session: any }) {
         <div className={styles.authButtonsDesktop}>
           <Link href="/consultancy" className={styles.btnConsultancy}>Free Consultancy</Link>
           {!session ? (
-            <Link href="/auth/student-signin" className={styles.btnTutorSignIn}>Sign In</Link>
+            <Link href="/auth/signin" className={styles.btnTutorSignIn}>Sign In</Link>
           ) : (
-            <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+            <>
               <NotificationBell />
-              <Link href={`/${(session.user as any).role.toLowerCase()}${((session.user as any).role === 'ADMIN' ? '/dashboard' : '')}`} className={styles.btnTutorSignIn}>Dashboard</Link>
-            </div>
+              <UserMenu user={session.user} />
+            </>
           )}
         </div>
 

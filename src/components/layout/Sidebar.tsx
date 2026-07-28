@@ -3,15 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  User, 
-  BookOpen, 
-  GraduationCap, 
-  Calendar, 
-  MessageSquare, 
-  Bell, 
-  Settings, 
+import {
+  LayoutDashboard,
+  User,
+  BookOpen,
+  GraduationCap,
+  Calendar,
+  MessageSquare,
   LogOut,
   CreditCard,
   Briefcase,
@@ -19,7 +17,6 @@ import {
   Users,
   Eye,
   LifeBuoy,
-  ShieldAlert
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -106,41 +103,62 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
     return null;
   };
 
-  const getLinks = () => {
-    switch (role) {
-      case 'STUDENT':
-      case 'TUTOR':
-        return [
-          { name: 'My Learning', href: '/student', icon: LayoutDashboard },
+  const getGroups = () => {
+    if (role === 'ADMIN') {
+      return [
+        {
+          heading: null,
+          links: [
+            { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+            { name: 'Tutor Requests', href: '/admin/requests', icon: BookOpen, badgeKey: 'requests' },
+            { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
+            { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
+            { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
+            { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
+            { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },
+            { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },
+            { name: 'Visitors', href: '/admin/visitors', icon: Eye },
+            { name: 'Profile', href: '/admin/profile', icon: User },
+          ],
+        },
+      ];
+    }
+    // STUDENT and TUTOR share the same nav — every member can both learn and teach.
+    // Dashboard is unified (covers both roles) so it sits outside Learning/Teaching.
+    return [
+      {
+        heading: null,
+        links: [
+          { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+        ],
+      },
+      {
+        heading: 'Learning',
+        links: [
           { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
           { name: 'Tuition Requests', href: '/student/request-tutor', icon: Calendar },
           { name: 'Payments', href: '/student/payments', icon: CreditCard },
-          { name: 'My Teaching', href: '/tutor', icon: Briefcase },
+        ],
+      },
+      {
+        heading: 'Teaching',
+        links: [
           { name: 'Offer Course', href: '/tutor/expertise', icon: GraduationCap },
           { name: 'Earnings & Withdrawals', href: '/tutor/earnings', icon: DollarSign },
+        ],
+      },
+      {
+        heading: 'Account',
+        links: [
           { name: 'My Wallet', href: '/wallet', icon: CreditCard },
           { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
-          { name: 'My Profile', href: '/student/profile', icon: User },
-        ];
-      case 'ADMIN':
-        return [
-          { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-          { name: 'Tutor Requests', href: '/admin/requests', icon: BookOpen, badgeKey: 'requests' },
-          { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
-          { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
-          { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
-          { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
-          { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },
-          { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },
-          { name: 'Visitors', href: '/admin/visitors', icon: Eye },
-          { name: 'Profile', href: '/admin/profile', icon: User },
-        ];
-      default:
-        return [];
-    }
+          { name: 'My Profile', href: '/profile', icon: User },
+        ],
+      },
+    ];
   };
 
-  const links = getLinks();
+  const groups = getGroups();
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
@@ -152,29 +170,34 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       </div>
       
       <nav className={styles.sidebarNav}>
-        {links.map((link) => {
-          const Icon = link.icon;
-          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
-          const isExactActive = pathname === link.href;
-          
-          const isCurrent = link.href.split('/').length > 2 ? isActive : isExactActive;
+        {groups.map((group, gi) => (
+          <div key={group.heading ?? `group-${gi}`} className={styles.navGroup}>
+            {group.heading && <div className={styles.navHeading}>{group.heading}</div>}
+            {group.links.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+              const isExactActive = pathname === link.href;
 
-          return (
-            <Link 
-              key={link.name} 
-              href={link.href}
-              onClick={() => {
-                if (window.innerWidth <= 1024) onClose();
-              }}
-              className={`${styles.navItem} ${isCurrent ? styles.active : ''}`}
-              suppressHydrationWarning
-            >
-              <Icon size={20} className={styles.navItemIcon} />
-              {link.name}
-              {(link as any).badgeKey && getBadge((link as any).badgeKey)}
-            </Link>
-          );
-        })}
+              const isCurrent = link.href.split('/').length > 2 ? isActive : isExactActive;
+
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => {
+                    if (window.innerWidth <= 1024) onClose();
+                  }}
+                  className={`${styles.navItem} ${isCurrent ? styles.active : ''}`}
+                  suppressHydrationWarning
+                >
+                  <Icon size={20} className={styles.navItemIcon} />
+                  {link.name}
+                  {(link as any).badgeKey && getBadge((link as any).badgeKey)}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className={styles.sidebarFooter}>

@@ -1,10 +1,11 @@
-import { Suspense } from 'react';
-import StudentSignInForm from './StudentSignInForm';
+import { redirect } from 'next/navigation';
 
-export default function StudentSignInPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <StudentSignInForm />
-    </Suspense>
-  );
+// Unified sign-in now lives at /auth/signin. Preserves incoming callbackUrl.
+export default async function StudentSignInRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  redirect(`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
 }

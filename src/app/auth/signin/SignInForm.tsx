@@ -16,11 +16,11 @@ import {
   footerLinkClass,
 } from '@/components/forms';
 
-export default function StudentSignInForm() {
+export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
-  const callbackUrl = searchParams.get('callbackUrl') || '/student';
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,11 +35,12 @@ export default function StudentSignInForm() {
     const password = formData.get('password') as string;
 
     try {
+      // No role is sent — auth.ts lets any non-admin sign in here. Admins must
+      // use /auth/admin-signin. A single member can both learn and teach.
       const res = await signIn('credentials', {
         redirect: false,
         identifier,
         password,
-        role: 'STUDENT',
       });
 
       if (res?.error) {
@@ -62,8 +63,8 @@ export default function StudentSignInForm() {
     <FormPage maxWidth="narrow">
       <FormCard
         icon={<LogIn size={28} />}
-        title="Campus Account Sign In"
-        subtitle="Welcome back! Access your dual-role Learning & Teaching dashboard."
+        title="Welcome back"
+        subtitle="Sign in to access your campus dashboard."
         footer={
           <>
             <Link href="/auth/forgot-password" className={footerLinkClass}>
@@ -72,7 +73,7 @@ export default function StudentSignInForm() {
             <div>
               Don&apos;t have an account?{' '}
               <Link
-                href={`/auth/student-register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
+                href={`/auth/register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
                 className={footerLinkClass}
               >
                 Register Here

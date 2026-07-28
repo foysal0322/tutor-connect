@@ -7,7 +7,7 @@ export default async function StudentPaymentsPage() {
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as any).role === 'ADMIN') {
-    redirect('/auth/student-signin?callbackUrl=/student/payments');
+    redirect('/auth/signin?callbackUrl=/student/payments');
   }
 
   const studentId = (session.user as any).id;

@@ -16,7 +16,7 @@ export default async function RequestTutorPage({ searchParams }: { searchParams:
     const callbackUrl = courseId
       ? `/student/request-tutor?courseId=${courseId}${tutorId ? `&tutorId=${tutorId}` : ''}`
       : '/student/request-tutor';
-    redirect(`/auth/student-signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
   const courses = await getCourses();

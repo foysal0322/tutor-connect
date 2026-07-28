@@ -8,7 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 export default async function WalletPage() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
-    redirect('/auth/student-signin?callbackUrl=/wallet');
+    redirect('/auth/signin?callbackUrl=/wallet');
   }
 
   const data = await getWalletData();

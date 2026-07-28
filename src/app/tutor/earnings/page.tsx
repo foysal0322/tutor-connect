@@ -10,7 +10,7 @@ export default async function TutorEarningsPage() {
   const session = await getServerSession(authOptions);
 
   if (!session || (session.user as any).role === 'ADMIN') {
-    redirect('/auth/tutor-signin?callbackUrl=/tutor/earnings');
+    redirect('/auth/signin?callbackUrl=/tutor/earnings');
   }
 
   const tutorId = (session.user as any).id;

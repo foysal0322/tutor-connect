@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation';
 
-export default async function TutorRegisterPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
-  const resolvedParams = await searchParams;
-  const callbackUrl = resolvedParams?.callbackUrl || '';
-  redirect(`/auth/student-register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
+// Unified registration now lives at /auth/register. Preserves incoming callbackUrl.
+export default async function TutorRegisterRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  redirect(`/auth/register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
 }

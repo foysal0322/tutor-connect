@@ -1,14 +1,11 @@
-import { prisma } from '@/lib/prisma';
-import { getDepartments } from '@/lib/cache';
-import StudentRegisterForm from './StudentRegisterForm';
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 
-export default async function StudentRegisterPage() {
-  const departments = await getDepartments();
-
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <StudentRegisterForm departments={departments} />
-    </Suspense>
-  );
+// Unified registration now lives at /auth/register. Preserves incoming callbackUrl.
+export default async function StudentRegisterRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  redirect(`/auth/register${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`);
 }
