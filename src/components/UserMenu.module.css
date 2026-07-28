@@ -1,0 +1,262 @@
+/* UserMenu — authenticated profile trigger + dropdown for the navbar.
+   Reuses design tokens from globals.css. Mirrors the glass/gradient
+   treatment of .btnTutorSignIn so the avatar sits naturally beside it. */
+
+.container {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ---------- Trigger ---------- */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem 0.3rem 0.3rem;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-main);
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trigger:hover {
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.trigger:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.triggerName {
+  font-weight: 600;
+  font-size: 0.92rem;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron,
+.chevronOpen {
+  color: var(--text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+/* ---------- Avatar ---------- */
+
+.avatar,
+.avatarLg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary), var(--info-hover));
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  user-select: none;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.8rem;
+}
+
+.avatarLg {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1rem;
+}
+
+/* ---------- Dropdown ---------- */
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 260px;
+  max-width: min(90vw, 320px);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  padding: 0.5rem;
+  z-index: 200;
+  /* Subtle entrance */
+  animation: menuEnter 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.75rem;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.headerName {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.headerEmail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.roleChip {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.25rem 0;
+}
+
+/* ---------- Menu items ---------- */
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--primary);
+  outline: none;
+}
+
+.item:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.dangerItem {
+  color: var(--danger);
+}
+
+.dangerItem:hover,
+.dangerItem:focus-visible {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
+/* ---------- Inline (mobile drawer) ---------- */
+
+.inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.inline .header {
+  padding: 0.5rem 0.25rem 0.75rem;
+}
+
+.inlineLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inlineItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-height: 44px; /* touch target */
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.inlineItem:hover,
+.inlineItem:focus-visible {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--primary);
+  outline: none;
+}
+
+.inlineItem:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.inline .dangerItem {
+  color: var(--danger);
+}
+
+.inline .dangerItem:hover,
+.inline .dangerItem:focus-visible {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
+/* Hide the name label on very tight widths to avoid overflow; avatar still
+   communicates the trigger. */
+@media (max-width: 380px) {
+  .triggerName {
+    display: none;
+  }
+}

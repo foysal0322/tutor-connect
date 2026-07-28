@@ -106,7 +106,7 @@ export default function ForgotPasswordForm() {
         subtitle={subtitle}
         footer={
           step !== 'SUCCESS' ? (
-            <Link href="/auth/student-signin" className={footerLinkClass}>
+            <Link href="/auth/signin" className={footerLinkClass}>
               Back to Sign In
             </Link>
           ) : undefined
@@ -215,7 +215,7 @@ export default function ForgotPasswordForm() {
 
         {step === 'SUCCESS' && (
           <div style={{ textAlign: 'center' }}>
-            <Link href="/auth/student-signin" className={homeLinkClass}>
+            <Link href="/auth/signin" className={homeLinkClass}>
               Sign In Now
             </Link>
           </div>

@@ -13,16 +13,14 @@ export async function addTutorExpertise(formData: FormData) {
 
   const tutorId = (session.user as any).id;
   const cgpaParam = formData.get('cgpa') as string;
+  // Teaching capability is derived from the existence of TutorExpertise rows,
+  // NOT from the `role` enum. We intentionally do NOT flip role to 'TUTOR'
+  // here — a user is a single Member who can both learn and teach, and mutating
+  // role was causing the user's whole URL space to flip (see /dashboard unification).
   if (cgpaParam && !isNaN(parseFloat(cgpaParam))) {
     await prisma.user.update({
       where: { id: tutorId },
-      data: { cgpa: parseFloat(cgpaParam), role: 'TUTOR' }
-    });
-  } else {
-    // Ensure role is set to TUTOR for legacy admin filters when they start teaching
-    await prisma.user.update({
-      where: { id: tutorId },
-      data: { role: 'TUTOR' }
+      data: { cgpa: parseFloat(cgpaParam) },
     });
   }
   const courseId = formData.get('courseId') as string;
@@ -171,6 +169,7 @@ export async function updatePrivacySettings(hideCgpa: boolean) {
     
     revalidatePath('/tutor/profile');
     revalidatePath('/student/profile');
+    revalidatePath('/profile');
     return { success: true };
   } catch {
     return { error: 'Failed to update privacy settings' };

@@ -19,8 +19,8 @@ import { authOptions } from '@/lib/auth';
 
 const SIGN_IN_URL: Record<'ADMIN' | 'STUDENT' | 'TUTOR', string> = {
   ADMIN: '/auth/admin-signin',
-  STUDENT: '/auth/student-signin',
-  TUTOR: '/auth/tutor-signin',
+  STUDENT: '/auth/signin',
+  TUTOR: '/auth/signin',
 };
 
 export type Role = 'ADMIN' | 'STUDENT' | 'TUTOR';

@@ -5,7 +5,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   // nsuOne is a unified campus marketplace — both STUDENT and TUTOR can use
   // the student dashboard. Admins are bounced to their own sign-in.
   const session = await requireRole(['STUDENT', 'TUTOR'], 'STUDENT', {
-    redirectTo: '/auth/student-signin',
+    redirectTo: '/auth/signin?callbackUrl=/student',
   });
 
   return (

@@ -46,7 +46,11 @@ export default async function AdminRequestsPage() {
       orderBy: { createdAt: 'desc' }
     }),
     prisma.user.findMany({
-      where: { role: 'TUTOR', isBlocked: false },
+      // A "tutor" is any non-blocked user who currently offers at least one
+      // active expertise. This used to filter by role === 'TUTOR', but the
+      // role enum is no longer mutated when a user starts teaching (see
+      // src/app/tutor/actions.ts), so we derive tutor status from data.
+      where: { isBlocked: false, expertises: { some: { isActive: true } } },
       select: {
         id: true,
         name: true,

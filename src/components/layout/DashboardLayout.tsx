@@ -8,8 +8,6 @@ import styles from './layout.module.css';
 export default function DashboardLayout({
   children,
   role,
-  userName,
-  userEmail,
   currentCounts
 }: {
   children: React.ReactNode;
@@ -36,10 +34,8 @@ export default function DashboardLayout({
       />
       
       <div className={styles.mainWrapper}>
-        <TopNav 
-          onMenuClick={() => setIsSidebarOpen(true)} 
-          userName={userName}
-          role={role}
+        <TopNav
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
         <main className={styles.content}>
           <div className="container animate-fade-in">
