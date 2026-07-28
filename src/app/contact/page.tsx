@@ -68,8 +68,8 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)' }}>
         {isSuccess ? (
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-            <div style={{ width: '60px', height: '60px', background: '#dcfce7', color: '#16a34a', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.75rem' }}>✓</div>
-            <h2 style={{ color: '#16a34a', marginBottom: '0.5rem' }}>Message Sent!</h2>
+            <div style={{ width: '60px', height: '60px', background: 'var(--success-light)', color: 'var(--success-hover)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.75rem' }}>✓</div>
+            <h2 style={{ color: 'var(--success-hover)', marginBottom: '0.5rem' }}>Message Sent!</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Thank you for reaching out. We have sent a confirmation email to your inbox and our support team will get in touch with you shortly.</p>
             <a href="/" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>Return to Home</a>
           </div>

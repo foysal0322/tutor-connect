@@ -20,17 +20,17 @@
   font-size: 3.5rem;
   letter-spacing: -1px;
   margin-bottom: 1.5rem;
-  color: #ffffff;
+  color: var(--card-bg);
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
 .heroTitle span {
-  color: #a5b4fc; /* light primary */
+  color: var(--primary-light);
 }
 
 .heroSubtitle {
   font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: color-mix(in srgb, var(--card-bg) 90%, transparent);
   margin-bottom: 2.5rem;
   text-shadow: 0 1px 5px rgba(0,0,0,0.5);
 }

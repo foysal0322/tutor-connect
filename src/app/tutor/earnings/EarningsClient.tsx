@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { submitWithdrawalRequest } from './actions';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 
 interface EarningsClientProps {
@@ -138,7 +138,7 @@ export default function EarningsClient({
           </p>
 
           <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
-            <FloatingInput
+            <Input
               name="amount"
               type="number"
               min="100"
@@ -156,7 +156,7 @@ export default function EarningsClient({
               </div>
             </div>
 
-            <FloatingInput
+            <Input
               name="accountNumber"
               type="text"
               required
@@ -222,7 +222,7 @@ export default function EarningsClient({
               <p className="text-muted text-sm text-center py-4">No withdrawal requests found.</p>
             ) : (
               <div className="data-grid-container max-h-[350px] overflow-y-auto">
-                <table className="data-grid hidden.md:table">
+                <table className="data-grid hidden md:table">
                   <thead className="sticky top-0 bg-white">
                     <tr>
                       <th>Amount</th>
@@ -309,7 +309,7 @@ export default function EarningsClient({
               <p className="text-muted text-sm text-center py-4">No completed sessions found.</p>
             ) : (
               <div className="data-grid-container max-h-[350px] overflow-y-auto">
-                <table className="data-grid hidden.md:table">
+                <table className="data-grid hidden md:table">
                   <thead className="sticky top-0 bg-white">
                     <tr>
                       <th>Student</th>

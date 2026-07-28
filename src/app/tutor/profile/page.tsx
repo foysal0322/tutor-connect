@@ -20,7 +20,7 @@ export default async function TutorProfilePage() {
 
   if (!user) {
     console.log('TutorProfilePage - User is null, redirecting to force-signout');
-    redirect('/auth/force-signout');
+    redirect('/auth/force-signout?reason=session-expired');
   }
   
   const departments = await getDepartments();

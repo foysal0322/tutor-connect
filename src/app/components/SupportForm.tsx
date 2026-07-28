@@ -31,7 +31,7 @@ export default function SupportForm() {
     <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', maxWidth: '600px', margin: '0 auto' }}>
       {success ? (
         <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-          <h3 style={{ color: '#059669', marginBottom: '1rem', fontSize: '1.5rem' }}>Thank you!</h3>
+          <h3 style={{ color: 'var(--success-hover)', marginBottom: '1rem', fontSize: '1.5rem' }}>Thank you!</h3>
           <p style={{ color: 'var(--text-muted)' }}>We have received your message and will review it shortly.</p>
           <button 
             onClick={() => setSuccess(false)}
@@ -42,7 +42,7 @@ export default function SupportForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '1rem', borderRadius: '8px' }}>{error}</div>}
+          {error && <div style={{ background: 'var(--danger-light)', color: 'var(--danger-hover)', padding: '1rem', borderRadius: '8px' }}>{error}</div>}
           
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

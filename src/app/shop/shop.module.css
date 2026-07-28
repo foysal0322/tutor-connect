@@ -5,13 +5,13 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(240,244,248,0.8), rgba(255,255,255,0.9));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bg-color) 80%, transparent), color-mix(in srgb, var(--card-bg) 90%, transparent));
   position: relative;
   overflow: hidden;
 }
 
 .card {
-  background: white;
+  background: var(--card-bg);
   padding: 3rem 4rem;
   border-radius: 24px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
@@ -20,7 +20,7 @@
   width: 100%;
   position: relative;
   z-index: 10;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid color-mix(in srgb, var(--card-bg) 50%, transparent);
   backdrop-filter: blur(10px);
   animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -28,18 +28,18 @@
 .iconWrapper {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--primary), var(--info-hover));
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0 auto 2rem;
-  box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--info-hover) 30%, transparent);
   animation: bounce 2s infinite;
 }
 
 .icon {
-  color: white;
+  color: var(--card-bg);
   width: 40px;
   height: 40px;
 }
@@ -47,7 +47,7 @@
 .title {
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #2d3748, #1a202c);
+  background: linear-gradient(135deg, var(--surface-9), var(--text-main));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -56,25 +56,25 @@
 
 .description {
   font-size: 1.1rem;
-  color: #718096;
+  color: var(--text-muted);
   line-height: 1.6;
   margin-bottom: 2rem;
 }
 
 .backBtn {
   display: inline-block;
-  background: #f7fafc;
-  color: #4a5568;
+  background: var(--surface-1);
+  color: var(--text-muted);
   padding: 0.8rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
 }
 
 .backBtn:hover {
-  background: #edf2f7;
+  background: var(--surface-2);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
@@ -100,7 +100,7 @@
 .blob1 {
   width: 300px;
   height: 300px;
-  background: #667eea;
+  background: var(--primary);
   top: -100px;
   left: -100px;
 }
@@ -108,7 +108,7 @@
 .blob2 {
   width: 400px;
   height: 400px;
-  background: #f687b3;
+  background: var(--accent);
   bottom: -150px;
   right: -100px;
   animation-delay: -5s;

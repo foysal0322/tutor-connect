@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import { registerUser } from '../actions';
-import FloatingInput from '@/components/ui/FloatingInput';
-import { UserPlus } from 'lucide-react';
-
-import styles from '../auth.module.css';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Eye, EyeOff, Lock, GraduationCap, User, UserPlus } from 'lucide-react';
+import { useZodForm } from '@/hooks/useZodForm';
+import { registerUserSchema } from '@/lib/validation';
+import styles from './student-register.module.css';
 
 export default function StudentRegisterForm({ departments }: { departments: any[] }) {
   const router = useRouter();
@@ -16,8 +18,14 @@ export default function StudentRegisterForm({ departments }: { departments: any[
   const callbackUrl = searchParams.get('callbackUrl') || '';
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const form = useZodForm(registerUserSchema);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    if (!form.validateAll(formData)) return;
     setLoading(true);
     setError('');
     try {
@@ -34,62 +42,194 @@ export default function StudentRegisterForm({ departments }: { departments: any[
     setLoading(false);
   }
 
+  const fieldClass = styles.field;
+
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-gray-50/50">
-      <div className="card w-full max-w-xl p-8 sm:p-10 shadow-lg border-t-4 border-t-primary my-8 bg-white rounded-lg">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-light/50 text-primary mb-4">
-            <UserPlus size={24} />
-          </div>
-          <h2 className="text-2xl font-bold text-main">Campus Member Registration</h2>
-          <p className="text-muted text-sm mt-2">Create a dual-role campus account to start finding tutors and teaching courses.</p>
-        </div>
-        
-        {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
-
-        <form action={handleSubmit} className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="name" type="text" label="Full Name" required />
-            <FloatingInput name="nsuId" type="text" label="NSU ID (e.g. 2211458642)" required />
-          </div>
-
-          <FloatingInput name="email" type="email" label="University Email" required />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="contact" type="text" label="Contact Number" required />
-            <div className="form-group mb-0">
-              <label className="form-label text-sm font-semibold mb-1">Gender</label>
-              <select name="gender" required className="form-select">
-                <option value=""></option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
+    <div className={styles.page}>
+      <div className={styles.inner}>
+        <div className={styles.card}>
+          {/* Header */}
+          <div className={styles.header}>
+            <div className={styles.iconBadge}>
+              <UserPlus size={28} />
+            </div>
+            <div>
+              <h1 className={styles.headerTitle}>Campus Member Registration</h1>
+              <p className={styles.headerSub}>
+                Create a dual-role account to find tutors and teach courses.
+              </p>
             </div>
           </div>
 
-          <div className="form-group mb-0">
-            <label className="form-label text-sm font-semibold mb-1">Department</label>
-            <select name="departmentId" required className="form-select">
-              <option value=""></option>
-              {departments.map(dept => (
-                <option key={dept.id} value={dept.id}>{dept.name}</option>
-              ))}
-            </select>
-          </div>
+          {error && <div className={styles.alert} role="alert">{error}</div>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="password" type="password" label="Password" required />
-            <FloatingInput name="confirmPassword" type="password" label="Confirm Password" required />
-          </div>
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Section: Personal */}
+            <section className={styles.section}>
+              <div className={styles.sectionLabel}>
+                <span className={styles.sectionIcon}><User size={14} /></span>
+                <span className={styles.sectionText}>Personal Details</span>
+                <span className={styles.sectionRule} />
+              </div>
 
-          <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-4" disabled={loading}>
-            {loading ? <><Spinner size={18} /> Registering...</> : 'Create Campus Account'}
-          </button>
-        </form>
+              <div className={styles.grid}>
+                <Input
+                  containerClassName={fieldClass}
+                  name="name"
+                  type="text"
+                  label="Full Name"
+                  placeholder="John Doe"
+                  required
+                  error={form.errors.name}
+                  onChange={form.onChange('name')}
+                  onBlur={form.onBlur('name')}
+                />
+                <Input
+                  containerClassName={fieldClass}
+                  name="nsuId"
+                  type="text"
+                  label="NSU ID"
+                  placeholder="2211458642"
+                  required
+                  error={form.errors.nsuId}
+                  onChange={form.onChange('nsuId')}
+                  onBlur={form.onBlur('nsuId')}
+                />
+                <Input
+                  containerClassName={fieldClass}
+                  name="email"
+                  type="email"
+                  label="University Email"
+                  placeholder="you@nsu.edu"
+                  required
+                  error={form.errors.email}
+                  onChange={form.onChange('email')}
+                  onBlur={form.onBlur('email')}
+                />
+                <Input
+                  containerClassName={fieldClass}
+                  name="contact"
+                  type="text"
+                  label="Contact Number"
+                  placeholder="017XXXXXXXX"
+                  hint="11-digit BD mobile"
+                  required
+                  error={form.errors.contact}
+                  onChange={form.onChange('contact')}
+                  onBlur={form.onBlur('contact')}
+                />
+                <Select
+                  containerClassName={fieldClass}
+                  name="gender"
+                  label="Gender"
+                  required
+                  placeholderOption="Select gender"
+                  options={[
+                    { value: 'MALE', label: 'Male' },
+                    { value: 'FEMALE', label: 'Female' },
+                  ]}
+                  error={form.errors.gender}
+                />
+              </div>
+            </section>
 
-        <div className="mt-8 pt-6 border-t border-color text-center flex flex-col gap-3 text-sm">
-          <div className="text-muted">
-            Already have an account? <Link href={`/auth/student-signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`} className="text-primary hover:text-primary-hover font-semibold transition-colors ml-1">Sign In</Link>
+            {/* Section: Academic */}
+            <section className={styles.section}>
+              <div className={styles.sectionLabel}>
+                <span className={styles.sectionIcon}><GraduationCap size={14} /></span>
+                <span className={styles.sectionText}>Academic Details</span>
+                <span className={styles.sectionRule} />
+              </div>
+
+              <Select
+                containerClassName={fieldClass}
+                name="departmentId"
+                label="Department"
+                required
+                placeholderOption="Select department"
+                options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
+                error={form.errors.departmentId}
+              />
+            </section>
+
+            {/* Section: Security */}
+            <section className={styles.section}>
+              <div className={styles.sectionLabel}>
+                <span className={styles.sectionIcon}><Lock size={14} /></span>
+                <span className={styles.sectionText}>Security</span>
+                <span className={styles.sectionRule} />
+              </div>
+
+              <div className={styles.grid}>
+                <Input
+                  containerClassName={fieldClass}
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  label="Password"
+                  placeholder="••••••••"
+                  hint="At least 8 characters"
+                  required
+                  error={form.errors.password}
+                  onChange={form.onChange('password')}
+                  onBlur={form.onBlur('password')}
+                  trailingIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className={styles.toggle}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  }
+                />
+                <Input
+                  containerClassName={fieldClass}
+                  name="confirmPassword"
+                  type={showConfirm ? 'text' : 'password'}
+                  label="Confirm Password"
+                  placeholder="••••••••"
+                  required
+                  error={form.errors.confirmPassword}
+                  onChange={form.onChange('confirmPassword')}
+                  onBlur={form.onBlur('confirmPassword')}
+                  trailingIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((s) => !s)}
+                      className={styles.toggle}
+                      aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  }
+                />
+              </div>
+            </section>
+
+            <button type="submit" className={styles.submit} disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner size={18} /> Registering...
+                </>
+              ) : (
+                <>
+                  <GraduationCap size={18} /> Create Campus Account
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className={styles.footer}>
+            <span>Already have an account?</span>
+            <Link
+              href={`/auth/student-signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
+              className={styles.footerLink}
+            >
+              Sign In
+            </Link>
           </div>
         </div>
       </div>

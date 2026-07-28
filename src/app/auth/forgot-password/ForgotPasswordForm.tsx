@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { requestPasswordReset, verifyAndResetPassword } from '../actions/passwordReset';
 import Spinner from '@/components/Spinner';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import { KeyRound, ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordForm() {
@@ -104,13 +104,13 @@ export default function ForgotPasswordForm() {
 
         {step === 'REQUEST' && (
           <form onSubmit={handleRequestCode} className="flex flex-col gap-5">
-            <FloatingInput 
-              name="identifier" 
-              type="text" 
-              label="Email or NSU ID" 
+            <Input
+              name="identifier"
+              type="text"
+              label="Email or NSU ID"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              required 
+              required
               disabled={loading}
             />
 
@@ -122,37 +122,36 @@ export default function ForgotPasswordForm() {
 
         {step === 'VERIFY' && (
           <form onSubmit={handleVerifyAndReset} className="flex flex-col gap-4 animate-fade-in">
-            <div>
-              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Verification Code</label>
-              <input 
-                type="text" 
-                placeholder="6-digit code" 
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                required
-                disabled={loading}
-                className="w-full text-center tracking-[0.4em] font-bold text-xl py-3 px-4 rounded-lg border border-color focus:border-primary focus:outline-none bg-gray-50/50"
-              />
-            </div>
+            <Input
+              name="otp"
+              type="text"
+              label="Verification Code"
+              hint="6-digit code"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+              required
+              disabled={loading}
+              className="text-center tracking-[0.4em] font-bold text-xl"
+            />
 
-            <FloatingInput 
-              name="newPassword" 
-              type="password" 
-              label="New Password" 
+            <Input
+              name="newPassword"
+              type="password"
+              label="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              required 
+              required
               disabled={loading}
             />
 
-            <FloatingInput 
-              name="confirmPassword" 
-              type="password" 
-              label="Confirm New Password" 
+            <Input
+              name="confirmPassword"
+              type="password"
+              label="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required 
+              required
               disabled={loading}
             />
 

@@ -178,7 +178,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       </nav>
 
       <div className={styles.sidebarFooter}>
-        <Link href="/auth/force-signout" className={styles.navItem}>
+        <Link href="/auth/force-signout?reason=manual" className={styles.navItem}>
           <LogOut size={20} className={styles.navItemIcon} />
           Logout
         </Link>

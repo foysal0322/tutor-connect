@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Menu, Moon, Sun } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
 import styles from './layout.module.css';
 
@@ -27,10 +27,6 @@ export default function TopNav({ onMenuClick, userName, role }: TopNavProps) {
       </div>
 
       <div className={styles.topNavRight}>
-        <button className="btn-icon" title="Toggle Theme (Coming Soon)">
-          <Moon size={20} />
-        </button>
-        
         <NotificationBell />
 
         <div className="flex items-center gap-3 ml-2 pl-4" style={{ borderLeft: '1px solid var(--border-color)' }}>

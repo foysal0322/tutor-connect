@@ -26,7 +26,7 @@ export default function HeroSection() {
         
         <div className={styles.heroIllustration}>
           <div className={`${styles.floatingCard} ${styles.floatingCard1}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5' }}>
+            <div className={styles.floatingCardIcon} style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
               <BookOpen size={24} />
             </div>
             <div>
@@ -36,7 +36,7 @@ export default function HeroSection() {
           </div>
           
           <div className={`${styles.floatingCard} ${styles.floatingCard2}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+            <div className={styles.floatingCardIcon} style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
               <GraduationCap size={24} />
             </div>
             <div>
@@ -46,7 +46,7 @@ export default function HeroSection() {
           </div>
           
           <div className={`${styles.floatingCard} ${styles.floatingCard3}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+            <div className={styles.floatingCardIcon} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
               <Star size={24} />
             </div>
             <div>
@@ -56,7 +56,7 @@ export default function HeroSection() {
           </div>
           
           <div className={`${styles.floatingCard} ${styles.floatingCard4}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>
+            <div className={styles.floatingCardIcon} style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent-hover)' }}>
               <ShoppingBag size={24} />
             </div>
             <div>

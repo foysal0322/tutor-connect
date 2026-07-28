@@ -2,8 +2,14 @@
 
 import { useState, useRef, useMemo } from 'react';
 import { addCourse, updateCourse, deleteCourse, importCourses, deleteBulkCourses } from '@/app/actions/admin';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
 import { Upload, Trash2, Search, CheckSquare } from 'lucide-react';
+
+// NOTE: This table is not migrated to <DataGrid>. It needs (a) row-level
+// multi-select with a "select all on page" affordance, (b) inline row editing,
+// and (c) bulk-delete on the selection. None of these are expressible through
+// DataGrid's current column/cell API without substantial new features.
+// Revisit when DataGrid gains row-selection + inline-edit. See plan.md Step 2.
 
 export default function CourseManager({ courses }: { courses: any[] }) {
   const [loading, setLoading] = useState(false);
@@ -157,7 +163,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
         <div className="card">
           <h2 className="text-lg font-bold text-main mb-4">Manually Add Course</h2>
           <form id="add-course-form" action={handleAdd} className="flex flex-col gap-4">
-            <FloatingInput name="name" type="text" label="Course Name (e.g. ACT201: Intro...)" required />
+            <Input name="name" type="text" label="Course Name (e.g. ACT201: Intro...)" required />
             <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 font-semibold rounded-lg transition-colors w-full" disabled={loading}>
               Add Course
             </button>
@@ -215,7 +221,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
         </div>
 
         <div className="data-grid-container">
-          <table className="data-grid hidden.md:table">
+          <table className="data-grid hidden md:table">
             <thead>
               <tr>
                 <th className="w-[50px] text-center">
@@ -247,7 +253,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                       <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
                         <input type="hidden" name="id" value={course.id} />
                         <div className="flex-1">
-                          <FloatingInput name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                          <Input name="name" type="text" defaultValue={course.name} label="Course Name" required />
                         </div>
                         <div className="flex gap-2 items-center mt-1">
                           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
@@ -303,7 +309,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                   {editingId === course.id ? (
                       <form action={handleEdit} className="flex flex-col gap-3 w-full">
                         <input type="hidden" name="id" value={course.id} />
-                        <FloatingInput name="name" type="text" defaultValue={course.name} label="Course Name" required />
+                        <Input name="name" type="text" defaultValue={course.name} label="Course Name" required />
                         <div className="flex gap-2">
                           <button type="submit" className="btn flex-1 bg-primary text-white hover:bg-primary-hover px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Save</button>
                           <button type="button" onClick={() => setEditingId(null)} className="btn flex-1 bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors" disabled={loading}>Cancel</button>

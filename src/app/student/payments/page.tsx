@@ -39,7 +39,7 @@ export default async function StudentPaymentsPage() {
         </div>
       ) : (
         <div className="data-grid-container">
-          <table className="data-grid hidden.md:table">
+          <table className="data-grid hidden md:table">
             <thead>
               <tr>
                 <th>Course</th>

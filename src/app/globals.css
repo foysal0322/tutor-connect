@@ -32,6 +32,22 @@
   --border-color: #E2E8F0;
   --input-bg: #F8FAFC;
 
+  /* Neutral surface scale (the Tailwind gray palette used inline across the app).
+     Used by .bg-gray-*, hover variants, borders, skeletons, and any neutral surface.
+     Defined here so dark mode can flip them in one place. See plan.md Step 5. */
+  --surface-1: #F9FAFB;      /* gray-50  — subtle alt background */
+  --surface-1-translucent: rgba(248, 250, 252, 0.5);
+  --surface-2: #F3F4F6;      /* gray-100 — muted panels */
+  --surface-3: #E5E7EB;      /* gray-200 — disabled fills */
+  --surface-4: #D1D5DB;      /* gray-300 — strong fills */
+  --surface-5: #9CA3AF;      /* gray-400 — hover fills */
+  --surface-6: #6B7280;      /* gray-500 — secondary text on dark */
+  --surface-7: #4B5563;      /* gray-600 */
+  --surface-8: #374151;      /* gray-700 — dark hover fills */
+  --surface-9: #1F2937;      /* gray-800 — dark surfaces */
+  --border-strong: #CBD5E1;  /* slate-300 — used on hover borders */
+  --skeleton-base: #E8ECF0;  /* shimmer track */
+
   /* --- Spacing scale (FRONTEND_AUDIT.md C1) -----------------------------
      4px base unit. Prefer these over ad-hoc rem/px in component CSS. */
   --space-0: 0;
@@ -110,7 +126,7 @@
   z-index: 10000;
   padding: var(--space-2) var(--space-4);
   background: var(--primary);
-  color: #fff;
+  color: var(--card-bg);
   border-radius: var(--radius-md);
   font-weight: 600;
   text-decoration: none;
@@ -214,7 +230,7 @@ button:disabled, .btn:disabled {
 }
 
 /* Background & Text Colors */
-.bg-white { background-color: #FFFFFF; }
+.bg-white { background-color: var(--card-bg); }
 .bg-primary-light { background-color: var(--primary-light); }
 .bg-success-light { background-color: var(--success-light); }
 .bg-accent-light { background-color: var(--accent-light); }
@@ -347,18 +363,18 @@ h4 { font-size: 1.25rem; }
 .text-white { color: white; }
 
 /* Colors & Backgrounds */
-.bg-gray-50 { background-color: #F9FAFB; }
-.bg-gray-50\/50 { background-color: rgba(248, 250, 252, 0.5); }
-.bg-gray-300 { background-color: #D1D5DB; }
-.hover\:bg-gray-400:hover { background-color: #9CA3AF; }
-.bg-gray-400 { background-color: #9CA3AF; }
-.hover\:bg-gray-500:hover { background-color: #6B7280; }
+.bg-gray-50 { background-color: var(--surface-1); }
+.bg-gray-50\/50 { background-color: var(--surface-1-translucent); }
+.bg-gray-300 { background-color: var(--surface-4); }
+.hover\:bg-gray-400:hover { background-color: var(--surface-5); }
+.bg-gray-400 { background-color: var(--surface-5); }
+.hover\:bg-gray-500:hover { background-color: var(--surface-6); }
 .bg-black\/60 { background-color: rgba(0, 0, 0, 0.6); }
 .bg-primary { background-color: var(--primary); }
 .bg-success { background-color: var(--success); color: white; }
 .bg-warning { background-color: var(--warning); color: white; }
 .bg-danger { background-color: var(--danger); color: white; }
-.bg-primary-light\/50 { background-color: rgba(238, 242, 255, 0.5); }
+.bg-primary-light\/50 { background-color: color-mix(in srgb, var(--primary-light) 50%, transparent); }
 .bg-danger-light { background-color: var(--danger-light); }
 .bg-success-light { background-color: var(--success-light); }
 .text-danger-hover { color: var(--danger-hover); }
@@ -383,12 +399,12 @@ h4 { font-size: 1.25rem; }
 .translate-x-1 { transform: translateX(0.25rem); }
 .flex-shrink-0 { flex-shrink: 0; }
 
-.hover\:bg-gray-50:hover { background-color: #F9FAFB; }
+.hover\:bg-gray-50:hover { background-color: var(--surface-1); }
 .hover\:bg-primary-hover:hover { background-color: var(--primary-hover); }
 .hover\:text-primary-hover:hover { color: var(--primary-hover); }
 .hover\:text-primary:hover { color: var(--primary); }
 .hover\:text-main:hover { color: var(--text-main); }
-.hover\:border-primary\/50:hover { border-color: rgba(79, 70, 229, 0.5); }
+.hover\:border-primary\/50:hover { border-color: color-mix(in srgb, var(--primary) 50%, transparent); }
 
 .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
 .focus\:ring-2:focus { box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--primary); }
@@ -449,7 +465,7 @@ h4 { font-size: 1.25rem; }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-color);
-  border-color: #cbd5e1;
+  border-color: var(--border-strong);
 }
 
 .btn-outline {
@@ -670,7 +686,7 @@ h4 { font-size: 1.25rem; }
   background: linear-gradient(
     90deg,
     var(--border-color) 25%,
-    #e8ecf0 50%,
+    var(--skeleton-base) 50%,
     var(--border-color) 75%
   );
   background-size: 200% 100%;
@@ -809,7 +825,7 @@ h4 { font-size: 1.25rem; }
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--surface-4);
   -webkit-transition: .4s;
   transition: .4s;
 }

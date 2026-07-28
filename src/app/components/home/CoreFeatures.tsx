@@ -26,7 +26,7 @@ export default function CoreFeatures() {
           
           <Link href="/auth/tutor-register" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+              <div className={styles.featureIcon} style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
                 <GraduationCap size={28} />
               </div>
               <h3 className={styles.featureTitle}>Become a Tutor</h3>
@@ -38,7 +38,7 @@ export default function CoreFeatures() {
           
           <Link href="/consultancy" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+              <div className={styles.featureIcon} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
                 <Users size={28} />
               </div>
               <h3 className={styles.featureTitle}>Free Consultancy</h3>
@@ -52,7 +52,8 @@ export default function CoreFeatures() {
             <div className={styles.comingSoonOverlay}>
               <span className={styles.heroTag} style={{ marginBottom: 0 }}>Coming Soon</span>
             </div>
-            <div className={styles.featureIcon} style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>
+            {/* "Coming Soon" decoration — pink is unique to this slot, no semantic token */}
+            <div className={styles.featureIcon} style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent-hover)' }}>
               <ShoppingBag size={28} />
             </div>
             <h3 className={styles.featureTitle}>One Shop</h3>

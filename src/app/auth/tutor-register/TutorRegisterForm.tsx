@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerUser } from '../actions';
 import Spinner from '@/components/Spinner';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { GraduationCap } from 'lucide-react';
+import { useZodForm } from '@/hooks/useZodForm';
+import { registerUserSchema } from '@/lib/validation';
 
 import styles from '../auth.module.css';
 
@@ -14,8 +17,10 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const form = useZodForm(registerUserSchema);
 
   async function handleSubmit(formData: FormData) {
+    if (!form.validateAll(formData)) return;
     setLoading(true);
     setError('');
     try {
@@ -41,45 +46,54 @@ export default function TutorRegisterForm({ departments }: { departments: any[] 
           <h2 className="text-2xl font-bold text-main">Tutor Registration</h2>
           <p className="text-muted text-sm mt-2">Join our community and start teaching.</p>
         </div>
-        
+
         {error && <div className="bg-danger-light text-danger-hover p-4 rounded-lg font-medium mb-6 text-sm text-center">{error}</div>}
 
         <form action={handleSubmit} className="flex flex-col gap-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="name" type="text" label="Full Name" required />
-            <FloatingInput name="nsuId" type="text" label="NSU ID (e.g. 2211458642)" required />
+            <Input name="name" type="text" label="Full Name" required
+              error={form.errors.name} onChange={form.onChange('name')} onBlur={form.onBlur('name')} />
+            <Input name="nsuId" type="text" label="NSU ID (e.g. 2211458642)" required
+              error={form.errors.nsuId} onChange={form.onChange('nsuId')} onBlur={form.onBlur('nsuId')} />
           </div>
 
-          <FloatingInput name="email" type="email" label="University Email" required />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="contact" type="text" label="Contact Number" required />
-            <div className="form-group mb-0">
-              <label className="form-label text-sm font-semibold mb-1">Gender</label>
-              <select name="gender" required className="form-select">
-                <option value=""></option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
-          </div>
+          <Input name="email" type="email" label="University Email" required
+            error={form.errors.email} onChange={form.onChange('email')} onBlur={form.onBlur('email')} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="form-group mb-0">
-              <label className="form-label text-sm font-semibold mb-1">Department</label>
-              <select name="departmentId" required className="form-select">
-                <option value=""></option>
-                {departments.map(dept => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
-                ))}
-              </select>
-            </div>
-            <FloatingInput name="cgpa" type="number" step="any" min="0" max="4.0" label="CGPA (e.g. 3.50)" required />
+            <Input name="contact" type="text" label="Contact Number" required hint="11-digit BD mobile (017XXXXXXXX)"
+              error={form.errors.contact} onChange={form.onChange('contact')} onBlur={form.onBlur('contact')} />
+            <Select
+              name="gender"
+              label="Gender"
+              required
+              placeholderOption="Select gender"
+              options={[
+                { value: 'MALE', label: 'Male' },
+                { value: 'FEMALE', label: 'Female' },
+              ]}
+              error={form.errors.gender}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <FloatingInput name="password" type="password" label="Password" required />
-            <FloatingInput name="confirmPassword" type="password" label="Confirm Password" required />
+            <Select
+              name="departmentId"
+              label="Department"
+              required
+              placeholderOption="Select department"
+              options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
+              error={form.errors.departmentId}
+            />
+            <Input name="cgpa" type="number" step="any" min="0" max="4.0" label="CGPA (e.g. 3.50)" required hint="Between 0 and 4"
+              error={form.errors.cgpa} onChange={form.onChange('cgpa')} onBlur={form.onBlur('cgpa')} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Input name="password" type="password" label="Password" required hint="At least 8 characters"
+              error={form.errors.password} onChange={form.onChange('password')} onBlur={form.onBlur('password')} />
+            <Input name="confirmPassword" type="password" label="Confirm Password" required
+              error={form.errors.confirmPassword} onChange={form.onChange('confirmPassword')} onBlur={form.onBlur('confirmPassword')} />
           </div>
 
           <button type="submit" className="btn bg-primary text-white hover:bg-primary-hover px-4 py-3 font-semibold rounded-lg transition-colors w-full flex items-center justify-center gap-2 mt-4" disabled={loading}>

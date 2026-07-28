@@ -319,7 +319,7 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
         <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Unique Visitors</h3>
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '8px', color: '#10b981' }}><Users size={18} /></div>
+            <div style={{ background: 'var(--success-light)', padding: '0.5rem', borderRadius: '8px', color: 'var(--success)' }}><Users size={18} /></div>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>{metrics.uniqueVisitors}</p>
         </div>
@@ -327,7 +327,7 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
         <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Avg Session</h3>
-            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '8px', color: '#f59e0b' }}><Clock size={18} /></div>
+            <div style={{ background: 'var(--accent-light)', padding: '0.5rem', borderRadius: '8px', color: 'var(--accent)' }}><Clock size={18} /></div>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>{metrics.avgSession}</p>
         </div>
@@ -335,7 +335,7 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
         <div style={{ background: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Bounce Rate</h3>
-            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem', borderRadius: '8px', color: '#ef4444' }}><BarChart3 size={18} /></div>
+            <div style={{ background: 'var(--danger-light)', padding: '0.5rem', borderRadius: '8px', color: 'var(--danger)' }}><BarChart3 size={18} /></div>
           </div>
           <p style={{ margin: 0, fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>{metrics.bounceRate}</p>
         </div>

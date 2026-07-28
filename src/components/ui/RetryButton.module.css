@@ -39,14 +39,14 @@
 }
 
 .secondary {
-  background: white;
+  background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 
 .secondary:hover:not(:disabled) {
   background: var(--bg-color);
-  border-color: #cbd5e1;
+  border-color: var(--border-strong);
 }
 
 .outline {

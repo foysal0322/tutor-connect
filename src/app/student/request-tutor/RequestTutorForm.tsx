@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { submitTutorRequest } from '../actions';
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter, useSearchParams } from 'next/navigation';
-import FloatingInput from '@/components/ui/FloatingInput';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import LoadingButton from '@/components/ui/LoadingButton';
 import ErrorAlert from '@/components/ui/ErrorAlert';
+import { useZodForm } from '@/hooks/useZodForm';
+import { submitTutorRequestSchema } from '@/lib/validation';
 
 export default function RequestTutorForm({ courses, selectedTutor }: { courses: any[], selectedTutor?: any }) {
   const [error, setError] = useState('');
@@ -14,6 +17,7 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultCourseId = searchParams.get('courseId') || '';
+  const form = useZodForm(submitTutorRequestSchema);
 
   const expertise = selectedTutor
     ? selectedTutor.expertises.find((e: any) => e.courseId === defaultCourseId)
@@ -34,6 +38,7 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
       setError('Please select a valid course from the list.');
       return;
     }
+    if (!form.validateAll(formData)) return;
     setLoading(true);
     setError('');
     try {
@@ -92,46 +97,51 @@ export default function RequestTutorForm({ courses, selectedTutor }: { courses: 
           </div>
         )}
 
-        <FloatingInput
+        <Input
           name="topic"
           label="Specific Topic/Chapter"
           required
+          error={form.errors.topic}
+          onChange={form.onChange('topic')}
+          onBlur={form.onBlur('topic')}
         />
 
-        <FloatingInput
+        <Input
           name="facultyName"
           label="Faculty Name (Optional)"
         />
 
-        <div className="form-group mb-0">
-          <label className="form-label">Preferred Mode</label>
-          <select name="preferredMode" required className="form-select">
-            <option value="">Select Mode</option>
-            <option value="Online">Online</option>
-            <option value="On Campus">On Campus</option>
-          </select>
-        </div>
+        <Select
+          name="preferredMode"
+          label="Preferred Mode"
+          required
+          placeholderOption="Select Mode"
+          options={[
+            { value: 'Online', label: 'Online' },
+            { value: 'On Campus', label: 'On Campus' },
+          ]}
+          error={form.errors.preferredMode}
+        />
 
-        <FloatingInput
+        <Input
           name="preferredDateTime"
           type="datetime-local"
           label="Preferred Date & Time (Optional)"
         />
 
         {!selectedTutor && (
-          <div className="form-group mb-0">
-            <FloatingInput
-              name="budget"
-              type="number"
-              min="0"
-              step="any"
-              required
-              label="Approximate Budget (BDT)"
-            />
-            <span className="text-xs text-muted mt-1 block">
-              Note: If an admin assigns a tutor whose session fee differs from your budget, the final amount payable will be the assigned tutor's fee.
-            </span>
-          </div>
+          <Input
+            name="budget"
+            type="number"
+            min="100"
+            step="any"
+            required
+            label="Approximate Budget (BDT)"
+            hint="If an admin assigns a tutor whose session fee differs from your budget, the final amount payable will be the assigned tutor's fee. Minimum 100 BDT."
+            error={form.errors.budget}
+            onChange={form.onChange('budget')}
+            onBlur={form.onBlur('budget')}
+          />
         )}
 
         <LoadingButton
