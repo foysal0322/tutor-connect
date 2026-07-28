@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './home.module.css';
 
 export default function TrustStats() {
-  const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -15,7 +15,7 @@ export default function TrustStats() {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sectionRef.current) {
@@ -26,42 +26,35 @@ export default function TrustStats() {
   }, []);
 
   return (
-    <div className="container" ref={sectionRef}>
-      <div className={styles.statsGrid}>
-        <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {isVisible ? <AnimatedCounter end={1200} /> : '0'}+
-          </div>
-          <div className={styles.statLabel}>Registered Students</div>
-        </div>
-        <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {isVisible ? <AnimatedCounter end={350} /> : '0'}+
-          </div>
-          <div className={styles.statLabel}>Available Tutors</div>
-        </div>
-        <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {isVisible ? <AnimatedCounter end={5000} /> : '0'}+
-          </div>
-          <div className={styles.statLabel}>Completed Sessions</div>
-        </div>
-        <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {isVisible ? <AnimatedCounter end={99} /> : '0'}%
-          </div>
-          <div className={styles.statLabel}>Student Satisfaction</div>
-        </div>
+    <div className={styles.stats} ref={sectionRef}>
+      <div className={styles.statsInner}>
+        <Stat value={isVisible ? <AnimatedCounter end={1200} /> : '0'} suffix="+" label="Registered students" />
+        <Stat value={isVisible ? <AnimatedCounter end={350} /> : '0'} suffix="+" label="Verified tutors" />
+        <Stat value={isVisible ? <AnimatedCounter end={5000} /> : '0'} suffix="+" label="Sessions booked" />
+        <Stat value={isVisible ? <AnimatedCounter end={99} /> : '0'} suffix="%" label="Satisfaction rate" />
       </div>
     </div>
   );
 }
 
-function AnimatedCounter({ end, duration = 2000 }: { end: number; duration?: number }) {
+function Stat({ value, suffix, label }: { value: React.ReactNode; suffix: string; label: string }) {
+  return (
+    <div className={styles.statItem}>
+      <div className={styles.statValue}>
+        {value}
+        {suffix}
+      </div>
+      <div className={styles.statLabel}>{label}</div>
+    </div>
+  );
+}
+
+function AnimatedCounter({ end, duration = 1800 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     let startTimestamp: number | null = null;
+    let frame: number;
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
@@ -69,10 +62,11 @@ function AnimatedCounter({ end, duration = 2000 }: { end: number; duration?: num
       const ease = 1 - Math.pow(1 - progress, 4);
       setCount(Math.floor(ease * end));
       if (progress < 1) {
-        window.requestAnimationFrame(step);
+        frame = window.requestAnimationFrame(step);
       }
     };
-    window.requestAnimationFrame(step);
+    frame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(frame);
   }, [end, duration]);
 
   return <span>{count.toLocaleString()}</span>;

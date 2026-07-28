@@ -1,68 +1,121 @@
 import Link from 'next/link';
-import { BookOpen, GraduationCap, ShoppingBag, Star } from 'lucide-react';
+import { ArrowRight, GraduationCap, Check, Wallet, Clock } from 'lucide-react';
 import styles from './home.module.css';
 
 export default function HeroSection() {
   return (
     <section className={styles.hero}>
-      <div className={`container ${styles.heroGrid}`}>
+      <div className={styles.heroGrid}>
         <div className={styles.heroContent}>
-          <div className={styles.heroTag}>✨ The #1 Platform for NSUers</div>
+          <span className={styles.heroEyebrow}>
+            <span className={styles.heroEyebrowDot} aria-hidden="true" />
+            Built for the NSU community
+          </span>
+
           <h1 className={styles.heroTitle}>
-            Everything an NSUer Needs, <span>All in One Place.</span>
+            Find a tutor, become one, and{' '}
+            <span className={styles.heroTitleAccent}>own your semester.</span>
           </h1>
+
           <p className={styles.heroSubtitle}>
-            Find tutors, become a tutor, get academic guidance from seniors, and soon access exclusive student services—all from a single platform built for the NSU community.
+            nsuOne connects NSUers with verified peer tutors, free academic
+            consultancy from seniors, and a campus marketplace &mdash; all in
+            one place. Pay with bKash, Nagad, or Rocket. Learn from people who
+            already aced the course.
           </p>
-          <div className={styles.heroButtons}>
-            <Link href="/find-tutor" className="btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}>
+
+          <div className={styles.heroActions}>
+            <Link href="/find-tutor" className="btn-primary">
               Find a Tutor
+              <ArrowRight size={18} aria-hidden="true" />
             </Link>
-            <Link href="/auth/tutor-register" className="btn-outline" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}>
+            <Link href="/auth/tutor-register" className="btn-outline">
+              <GraduationCap size={18} aria-hidden="true" />
               Become a Tutor
             </Link>
           </div>
+
+          <ul className={styles.heroMicrocopy} aria-label="Why nsuOne">
+            <li className={styles.heroMicrocopyItem}>
+              <Check size={16} className={styles.heroMicrocopyCheck} aria-hidden="true" />
+              Verified NSU tutors
+            </li>
+            <li className={styles.heroMicrocopyItem}>
+              <Check size={16} className={styles.heroMicrocopyCheck} aria-hidden="true" />
+              Free first consultancy
+            </li>
+            <li className={styles.heroMicrocopyItem}>
+              <Check size={16} className={styles.heroMicrocopyCheck} aria-hidden="true" />
+              Pay how you already pay
+            </li>
+          </ul>
         </div>
-        
-        <div className={styles.heroIllustration}>
-          <div className={`${styles.floatingCard} ${styles.floatingCard1}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
-              <BookOpen size={24} />
+
+        {/* Composed product mock — pure CSS, no external image. */}
+        <div className={styles.heroVisual} aria-hidden="true">
+          <div className={styles.mockCard}>
+            <div className={styles.mockHeader}>
+              <span className={styles.mockTag}>Tutor Request</span>
+              <span className={styles.mockStatus}>
+                <span className={styles.mockStatusDot} />
+                Match pending
+              </span>
             </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>Expert Tutors</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>100+ Courses</div>
+
+            <div className={styles.mockCourseRow}>
+              <div>
+                <div className={styles.mockCourseCode}>CSE 115 &middot; ECE Dept</div>
+                <div className={styles.mockCourseName}>Programming Fundamentals</div>
+              </div>
+              <div className={styles.mockAvatar}>R</div>
+            </div>
+
+            <p className={styles.mockTopic}>
+              Need help understanding pointers and dynamic memory before midterms.
+            </p>
+
+            <div className={styles.mockMetaRow}>
+              <div className={styles.mockMeta}>
+                <span className={styles.mockMetaLabel}>Budget</span>
+                <span className={styles.mockMetaValue}>
+                  <Wallet size={14} /> 600 BDT
+                </span>
+              </div>
+              <div className={styles.mockMeta}>
+                <span className={styles.mockMetaLabel}>When</span>
+                <span className={styles.mockMetaValue}>
+                  <Clock size={14} /> Sun, 4:00 PM
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.mockFooter}>
+              <div>
+                <span className={styles.mockPrice}>600</span>
+                <span className={styles.mockPriceUnit}>BDT / session</span>
+              </div>
+              <span className={styles.mockPayChip}>bKash &middot; locked</span>
             </div>
           </div>
-          
-          <div className={`${styles.floatingCard} ${styles.floatingCard2}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
-              <GraduationCap size={24} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>Consultancy</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Free Guidance</div>
-            </div>
+
+          <div className={`${styles.mockBubble} ${styles.mockBubbleTop}`}>
+            <span
+              className={styles.mockBubbleIcon}
+              style={{ background: 'var(--success)' }}
+            >
+              <Check size={14} />
+            </span>
+            Payment secured
           </div>
-          
-          <div className={`${styles.floatingCard} ${styles.floatingCard3}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
-              <Star size={24} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>4.9/5 Rating</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Student Reviews</div>
-            </div>
-          </div>
-          
-          <div className={`${styles.floatingCard} ${styles.floatingCard4}`}>
-            <div className={styles.floatingCardIcon} style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent-hover)' }}>
-              <ShoppingBag size={24} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>One Shop</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Coming Soon</div>
-            </div>
+
+          <div className={`${styles.mockBubble} ${styles.mockBubbleBottom}`}>
+            <span
+              className={styles.mockBubbleIcon}
+              style={{ background: 'var(--primary)' }}
+            >
+              <GraduationCap size={14} />
+            </span>
+            350+ tutors
           </div>
         </div>
       </div>

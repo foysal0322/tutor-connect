@@ -1,66 +1,103 @@
-import { Search, GraduationCap, Users, ShoppingBag } from 'lucide-react';
-import styles from './home.module.css';
 import Link from 'next/link';
+import { Search, GraduationCap, Users, TrendingUp, ArrowRight } from 'lucide-react';
+import styles from './home.module.css';
+
+type Feature = {
+  href?: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  text: string;
+  comingSoon?: boolean;
+};
+
+const features: Feature[] = [
+  {
+    href: '/find-tutor',
+    icon: <Search size={22} />,
+    iconBg: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+    iconColor: 'var(--primary)',
+    title: 'Find a Tutor',
+    text: 'Struggling with a course? Browse verified NSU tutors who already aced it. Filter by department, course, or preferred session mode.',
+  },
+  {
+    href: '/auth/tutor-register',
+    icon: <GraduationCap size={22} />,
+    iconBg: 'color-mix(in srgb, var(--success) 12%, transparent)',
+    iconColor: 'var(--success)',
+    title: 'Become a Tutor',
+    text: 'Share your knowledge and earn. Set your own schedule and rates, help fellow NSUers, and build a teaching reputation on campus.',
+  },
+  {
+    href: '/consultancy',
+    icon: <Users size={22} />,
+    iconBg: 'color-mix(in srgb, var(--info) 12%, transparent)',
+    iconColor: 'var(--info-hover)',
+    title: 'Free Consultancy',
+    text: 'Not sure which courses to take? Worried about probation? Connect with experienced seniors for free, one-on-one academic guidance.',
+  },
+  {
+    href: '/consultancy',
+    icon: <TrendingUp size={22} />,
+    iconBg: 'color-mix(in srgb, var(--accent) 14%, transparent)',
+    iconColor: 'var(--accent-hover)',
+    title: 'Beat the Probation Curse',
+    text: 'Get targeted advice on the safest course mix to pull up your CGPA, plan your semester strategically, and balance labs with lighter loads.',
+  },
+];
 
 export default function CoreFeatures() {
   return (
-    <section className={styles.sectionAlt}>
-      <div className="container">
-        <h2 className={styles.sectionTitle}>Everything You Need to Succeed</h2>
-        <p className={styles.sectionSubtitle}>
-          Whether you need help with a tough course, want to earn by teaching, or just need some general academic advice from seniors.
-        </p>
-        
+    <section className={styles.sectionAlt + ' ' + styles.section}>
+      <div className={styles.sectionInner}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.eyebrow}>What you can do</span>
+          <h2 className={styles.title}>Everything you need to succeed this semester</h2>
+          <p className={styles.lede + ' ' + styles.ledeCenter}>
+            One platform, four ways to use it. Get help with a tough course,
+            earn by teaching, or map out your degree with seniors who&apos;ve
+            been there.
+          </p>
+        </div>
+
         <div className={styles.featuresGrid}>
-          <Link href="/find-tutor" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <Search size={28} />
+          {features.map((f) => {
+            const content = (
+              <>
+                <div
+                  className={styles.featureIcon}
+                  style={{ background: f.iconBg, color: f.iconColor }}
+                >
+                  {f.icon}
+                </div>
+                <h3 className={styles.featureTitle}>{f.title}</h3>
+                <p className={styles.featureText}>{f.text}</p>
+                {f.href && (
+                  <span className={styles.featureArrow}>
+                    Learn more <ArrowRight size={14} aria-hidden="true" />
+                  </span>
+                )}
+              </>
+            );
+
+            if (f.href) {
+              return (
+                <Link
+                  key={f.title}
+                  href={f.href}
+                  className={styles.featureCard}
+                >
+                  {content}
+                </Link>
+              );
+            }
+            return (
+              <div key={f.title} className={`${styles.featureCard} ${styles.featureCardStatic}`}>
+                {content}
               </div>
-              <h3 className={styles.featureTitle}>Find a Tutor</h3>
-              <p className={styles.featureText}>
-                Struggling with a course? Find experienced tutors who have already aced it. Filter by department, course, or gender to find your perfect match.
-              </p>
-            </div>
-          </Link>
-          
-          <Link href="/auth/tutor-register" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon} style={{ background: 'var(--success-light)', color: 'var(--success)' }}>
-                <GraduationCap size={28} />
-              </div>
-              <h3 className={styles.featureTitle}>Become a Tutor</h3>
-              <p className={styles.featureText}>
-                Share your knowledge and earn money. Set your own schedule, choose your rates, and help fellow NSUers succeed in their academics.
-              </p>
-            </div>
-          </Link>
-          
-          <Link href="/consultancy" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
-                <Users size={28} />
-              </div>
-              <h3 className={styles.featureTitle}>Free Consultancy</h3>
-              <p className={styles.featureText}>
-                Not sure which courses to take? Need advice on beating probation? Connect with experienced seniors for free 1-on-1 academic guidance.
-              </p>
-            </div>
-          </Link>
-          
-          <div className={styles.featureCard} style={{ cursor: 'default' }}>
-            <div className={styles.comingSoonOverlay}>
-              <span className={styles.heroTag} style={{ marginBottom: 0 }}>Coming Soon</span>
-            </div>
-            {/* "Coming Soon" decoration — pink is unique to this slot, no semantic token */}
-            <div className={styles.featureIcon} style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent-hover)' }}>
-              <ShoppingBag size={28} />
-            </div>
-            <h3 className={styles.featureTitle}>One Shop</h3>
-            <p className={styles.featureText}>
-              A dedicated student marketplace. Discover useful products, lab equipment, books, and campus services designed specifically for NSUers.
-            </p>
-          </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -17,7 +17,7 @@ export default function SupportForm() {
 
     const formData = new FormData(form);
     const res = await submitSupportTicket(formData);
-    
+
     if (res?.error) {
       setError(res.error);
     } else if (res?.success) {
@@ -27,60 +27,105 @@ export default function SupportForm() {
     setLoading(false);
   }
 
+  if (success) {
+    return (
+      <div className="card" style={{ textAlign: 'center' }}>
+        <h3 style={{ color: 'var(--success-hover)', marginBottom: 'var(--space-2)', fontSize: 'var(--text-xl)' }}>
+          Thank you!
+        </h3>
+        <p className="text-muted">We&apos;ve received your message and will review it shortly.</p>
+        <button
+          type="button"
+          onClick={() => setSuccess(false)}
+          className="btn-secondary btn-sm"
+          style={{ marginTop: 'var(--space-4)' }}
+        >
+          Submit another
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ background: 'var(--card-bg)', padding: '2rem', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', maxWidth: '600px', margin: '0 auto' }}>
-      {success ? (
-        <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-          <h3 style={{ color: 'var(--success-hover)', marginBottom: '1rem', fontSize: '1.5rem' }}>Thank you!</h3>
-          <p style={{ color: 'var(--text-muted)' }}>We have received your message and will review it shortly.</p>
-          <button 
-            onClick={() => setSuccess(false)}
-            style={{ marginTop: '1.5rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Submit Another
-          </button>
+    <form className="card" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {error && (
+        <div
+          role="alert"
+          style={{
+            background: 'var(--danger-light)',
+            color: 'var(--danger-hover)',
+            padding: 'var(--space-3)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--text-sm)',
+          }}
+        >
+          {error}
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {error && <div style={{ background: 'var(--danger-light)', color: 'var(--danger-hover)', padding: '1rem', borderRadius: '8px' }}>{error}</div>}
-          
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Name</label>
-              <input type="text" name="name" required style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} placeholder="Your Name" />
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Email</label>
-              <input type="email" name="email" required style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} placeholder="Your Email" />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Contact Number</label>
-              <input type="tel" name="contact" required style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }} placeholder="Your Phone Number" />
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>What can we help you with?</label>
-              <select name="type" required style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}>
-                <option value="">Select an option</option>
-                <option value="REFUND">Request a Refund</option>
-                <option value="COMPLAINT">Submit a Complaint</option>
-                <option value="SUGGESTION">Give a Suggestion</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Message</label>
-            <textarea name="message" required rows={4} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', resize: 'vertical' }} placeholder="Please provide details..."></textarea>
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-primary" style={{ padding: '1rem', fontSize: '1rem', marginTop: '0.5rem' }}>
-            {loading ? 'Submitting...' : 'Submit Message'}
-          </button>
-        </form>
       )}
-    </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" htmlFor="support-name">Name</label>
+          <input
+            id="support-name"
+            name="name"
+            type="text"
+            required
+            className="form-input"
+            placeholder="Your name"
+          />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" htmlFor="support-email">Email</label>
+          <input
+            id="support-email"
+            name="email"
+            type="email"
+            required
+            className="form-input"
+            placeholder="you@example.com"
+          />
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-4)' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" htmlFor="support-contact">Contact number</label>
+          <input
+            id="support-contact"
+            name="contact"
+            type="tel"
+            required
+            className="form-input"
+            placeholder="Your phone number"
+          />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" htmlFor="support-type">What can we help with?</label>
+          <select id="support-type" name="type" required className="form-select" defaultValue="">
+            <option value="" disabled>Select an option</option>
+            <option value="REFUND">Request a refund</option>
+            <option value="COMPLAINT">Submit a complaint</option>
+            <option value="SUGGESTION">Give a suggestion</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="form-group" style={{ margin: 0 }}>
+        <label className="form-label" htmlFor="support-message">Message</label>
+        <textarea
+          id="support-message"
+          name="message"
+          required
+          rows={4}
+          className="form-textarea"
+          placeholder="Please provide details…"
+        />
+      </div>
+
+      <button type="submit" disabled={loading} className="btn-primary" style={{ padding: 'var(--space-3)' }}>
+        {loading ? 'Submitting…' : 'Submit message'}
+      </button>
+    </form>
   );
 }
