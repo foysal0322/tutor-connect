@@ -26,6 +26,13 @@ export default function RequestTutorForm({
 }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Disable selection of past dates/times in the preferred datetime picker.
+  // Computed once on mount in the user's local timezone; format: YYYY-MM-DDTHH:mm
+  const [minDateTime] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  });
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultCourseId = searchParams.get('courseId') || '';
@@ -132,6 +139,7 @@ export default function RequestTutorForm({
             name="preferredDateTime"
             type="datetime-local"
             label="Preferred Date & Time (Optional)"
+            min={minDateTime}
           />
 
           {!selectedTutor && (

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { requestPasswordReset, verifyAndResetPassword } from '../actions/passwordReset';
 import { Input } from '@/components/ui/Input';
-import { KeyRound, ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, ShieldCheck, CheckCircle2, ArrowLeft } from 'lucide-react';
 import {
   FormPage,
   FormCard,
@@ -12,6 +12,7 @@ import {
   FormSubmit,
   FormAlert,
   fieldClass,
+  toggleClass,
   footerLinkClass,
   homeLinkClass,
 } from '@/components/forms';
@@ -28,6 +29,8 @@ export default function ForgotPasswordForm() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   async function handleRequestCode(e: React.FormEvent) {
     e.preventDefault();
@@ -159,22 +162,44 @@ export default function ForgotPasswordForm() {
               <Input
                 containerClassName={fieldClass}
                 name="newPassword"
-                type="password"
+                type={showNewPassword ? 'text' : 'password'}
                 label="New Password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 disabled={loading}
+                trailingIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((s) => !s)}
+                    className={toggleClass}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                  </button>
+                }
               />
               <Input
                 containerClassName={fieldClass}
                 name="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 label="Confirm New Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                trailingIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((s) => !s)}
+                    className={toggleClass}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                  </button>
+                }
               />
             </FormSection>
 

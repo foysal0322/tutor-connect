@@ -48,6 +48,8 @@ export function Input({
   required,
   className,
   containerClassName,
+  type,
+  onWheel,
   ...rest
 }: InputProps) {
   const generatedId = useId();
@@ -102,6 +104,7 @@ export function Input({
         )}
         <input
           id={id}
+          type={type}
           className={['form-input', className ?? ''].filter(Boolean).join(' ')}
           style={{
             ...(hasLeading ? { paddingLeft: '2.5rem' } : null),
@@ -110,6 +113,15 @@ export function Input({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           required={required}
+          onWheel={(e) => {
+            // Number inputs otherwise mutate their value when the user scrolls
+            // inside the field — silently bumping budget/amount/CGPA. Blur so
+            // the wheel scrolls the page instead. Callers can still handle onWheel.
+            if (type === 'number') {
+              (e.target as HTMLInputElement).blur();
+            }
+            onWheel?.(e);
+          }}
           {...rest}
         />
         {suffix && (

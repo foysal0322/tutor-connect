@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { BookOpen, Clock, GraduationCap, Save } from "lucide-react";
+import { BookOpen, Clock, GraduationCap, Save, ArrowRight } from "lucide-react";
 import {
   FormSection,
   FormSubmit,
@@ -33,7 +33,7 @@ export default function AddExpertiseForm({
   const { toast } = useToast();
 
   const [selectedGrade, setSelectedGrade] = useState(
-    initialData?.courseGrade || "",
+    initialData?.courseGrade || ""
   );
   const grades = [
     "A",
@@ -52,13 +52,13 @@ export default function AddExpertiseForm({
   ];
 
   const [semesterCompleted, setSemesterCompleted] = useState(
-    initialData?.semesterCompleted || "",
+    initialData?.semesterCompleted || ""
   );
   const [facultyName, setFacultyName] = useState(
-    initialData?.facultyName || "",
+    initialData?.facultyName || ""
   );
   const [sessionFee, setSessionFee] = useState(
-    initialData?.sessionFee?.toString() || "",
+    initialData?.sessionFee?.toString() || ""
   );
 
   function parseDays(str: string) {
@@ -108,7 +108,7 @@ export default function AddExpertiseForm({
   const toggleDay = (day: string) => {
     if (isAllDay) return;
     setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
@@ -176,11 +176,11 @@ export default function AddExpertiseForm({
   }
 
   return (
-    <div className='w-full'>
+    <div className="w-full">
       {error && <FormAlert>{error}</FormAlert>}
 
       <form action={handleSubmit} noValidate>
-        <FormSection label='Course Details' icon={<BookOpen size={14} />}>
+        <FormSection label="Course Details" icon={<BookOpen size={14} />}>
           <div className={`${fieldClass} ${gridFullClass}`}>
             <SearchableCourseSelect
               courses={courses}
@@ -188,78 +188,65 @@ export default function AddExpertiseForm({
             />
           </div>
 
-          {!initialData && (
-            <Input
-              containerClassName={`${fieldClass} ${gridFullClass}`}
-              name='cgpa'
-              type='number'
-              step='any'
-              min='0'
-              max='4.0'
-              label='Your Overall CGPA (Optional)'
-              placeholder='e.g. 3.75'
-            />
-          )}
-
           <Input
             containerClassName={`${fieldClass} ${gridFullClass}`}
-            name='semesterCompleted'
-            type='text'
+            name="semesterCompleted"
+            type="text"
             required
-            label='When did you take this course?'
-            hint='The semester you completed this course, shown to students so they can see how recent your knowledge is.'
-            placeholder='e.g. Spring 2023'
+            label="When did you take this course?"
+            hint="The semester you completed this course, shown to students so they can see how recent your knowledge is."
+            placeholder="e.g. Spring 2023"
             value={semesterCompleted}
             onChange={(e) => setSemesterCompleted(e.target.value)}
           />
 
           <Input
             containerClassName={fieldClass}
-            name='facultyName'
-            type='text'
+            name="facultyName"
+            type="text"
             required
-            label='Faculty Name'
-            placeholder='Who taught you?'
+            label="Faculty Name"
+            placeholder="Who taught you?"
             value={facultyName}
             onChange={(e) => setFacultyName(e.target.value)}
           />
 
           <Input
             containerClassName={fieldClass}
-            name='sessionFee'
-            type='number'
-            min='100'
-            step='any'
+            name="sessionFee"
+            type="number"
+            min="100"
+            step="any"
             required
-            label='Session Fee (BDT)'
-            placeholder='e.g. 500.50'
+            label="Session Fee (BDT)"
+            placeholder="e.g. 500.50"
             value={sessionFee}
             onChange={(e) => setSessionFee(e.target.value)}
           />
         </FormSection>
 
-        <FormSection label='Grade' icon={<GraduationCap size={14} />}>
+        <FormSection label="Grade" icon={<GraduationCap size={14} />}>
           <Select
             containerClassName={fieldClass}
-            name='courseGrade'
-            label='Course Grade'
+            name="courseGrade"
+            label="Course Grade"
             required
-            placeholderOption='Select Grade'
+            placeholderOption="Select Grade"
             value={selectedGrade}
             onChange={(v) => setSelectedGrade(v)}
             options={grades.map((g) => ({ value: g, label: g }))}
           />
           <div className={gridFullClass}>
             <label
-              className='flex items-start gap-2 cursor-pointer text-sm hover:text-main transition-colors w-fit'
+              className="flex items-start gap-2 cursor-pointer text-sm hover:text-main transition-colors w-fit"
               style={{ color: "var(--text-muted)" }}
             >
               <input
-                type='checkbox'
-                name='hideGrade'
+                type="checkbox"
+                name="hideGrade"
                 defaultChecked={initialData?.hideGrade}
-                value='true'
-                className='mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer'
+                value="true"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer"
               />
               <span>Hide my acquired grade for this course from students</span>
             </label>
@@ -267,31 +254,39 @@ export default function AddExpertiseForm({
         </FormSection>
 
         <FormSection
-          label='Availability'
+          label="Availability"
           icon={<Clock size={14} />}
           columns={1}
         >
+          <p
+            className="text-sm text-muted"
+            style={{ marginTop: "-0.25rem", marginBottom: "0.75rem" }}
+          >
+            Pick the days you can teach, then set the time range students can
+            book you within.
+          </p>
+
           <label
-            className='flex items-start gap-2 cursor-pointer text-sm font-semibold text-main w-fit hover:text-primary transition-colors'
+            className="flex items-start gap-2 cursor-pointer text-sm font-semibold text-main w-fit hover:text-primary transition-colors"
             style={{ marginBottom: "0.75rem" }}
           >
             <input
-              type='checkbox'
+              type="checkbox"
               checked={isAllDay}
               onChange={(e) => handleAllDayChange(e.target.checked)}
-              className='mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer'
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer"
             />
             <span>Everyday</span>
           </label>
 
           <div
-            className='flex gap-2 flex-wrap'
+            className="flex gap-2 flex-wrap"
             style={{ marginBottom: "1rem" }}
           >
             {daysOfWeek.map((day) => (
               <button
                 key={day}
-                type='button'
+                type="button"
                 onClick={() => toggleDay(day)}
                 disabled={isAllDay}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
@@ -307,41 +302,58 @@ export default function AddExpertiseForm({
 
           {!isAllDay && (
             <div
-              className={`flex gap-4 items-center bg-gray-50 p-4 rounded-md border border-color ${fieldClass}`}
+              className={`bg-gray-50 p-4 rounded-md border border-color ${fieldClass}`}
             >
-              <input
-                type='time'
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className='form-input'
-              />
-              <span className='text-muted font-medium'>to</span>
-              <input
-                type='time'
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className='form-input'
-              />
+              <div
+                className="flex items-center gap-2"
+                style={{ marginBottom: "0.375rem" }}
+              >
+                <span className="flex-1 text-xs font-semibold text-muted">
+                  From
+                </span>
+                <span style={{ width: 16 }} />
+                <span className="flex-1 text-xs font-semibold text-muted">
+                  To
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="form-input flex-1"
+                  style={{ minWidth: 0 }}
+                />
+                <ArrowRight size={16} className="text-muted shrink-0" />
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="form-input flex-1"
+                  style={{ minWidth: 0 }}
+                />
+              </div>
             </div>
           )}
         </FormSection>
 
-        <div className='flex gap-4' style={{ marginTop: "0.5rem" }}>
+        <div className="flex gap-4">
           <FormSubmit
             fullWidth={false}
-            className='flex-1 justify-center'
+            className="flex-1 justify-center"
             loading={loading}
-            loadingText='Saving...'
+            loadingText="Saving..."
             icon={<Save size={18} />}
           >
             {initialData ? "Save Changes" : "Add Expertise"}
           </FormSubmit>
           {onCancel && (
             <button
-              type='button'
+              type="button"
               onClick={onCancel}
-              className='btn-outline flex-1 justify-center'
+              className="btn-outline flex-1 justify-center"
               disabled={loading}
+              style={{ padding: "16px", fontSize: "16px", fontWeight: 600 }}
             >
               Cancel
             </button>

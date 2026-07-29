@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
-import { ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import {
   FormPage,
   FormCard,
@@ -12,6 +12,7 @@ import {
   FormSubmit,
   FormAlert,
   fieldClass,
+  toggleClass,
 } from '@/components/forms';
 
 export default function AdminSignInForm() {
@@ -19,6 +20,7 @@ export default function AdminSignInForm() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,9 +64,20 @@ export default function AdminSignInForm() {
             <Input
               containerClassName={fieldClass}
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               label="Password"
               required
+              trailingIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className={toggleClass}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              }
             />
           </FormSection>
 

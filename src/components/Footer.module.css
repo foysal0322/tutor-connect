@@ -8,6 +8,119 @@
   padding: var(--space-12) 0 var(--space-6);
 }
 
+/* Collapsed state — only the thin show-bar ribbon shows, so strip all
+   footer padding and let the ribbon fill edge-to-edge. */
+.footerCollapsed {
+  padding: 0;
+  border-top: none;
+}
+
+/* ---------- Thin "Show footer" ribbon (collapsed state) ---------- */
+
+.showBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: linear-gradient(
+    90deg,
+    var(--primary-light),
+    color-mix(in srgb, var(--info-light) 70%, transparent)
+  );
+  border: none;
+  border-top: 1px solid var(--border-color);
+  color: var(--primary-hover);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.showBar:hover {
+  background: linear-gradient(90deg, var(--primary-light), var(--info-light));
+  color: var(--primary);
+}
+
+.showBar:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: -3px;
+}
+
+.showBarChevron {
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+/* Collapsed ribbon: points UP — "click to expand the footer upward". */
+.showBarChevronUp {
+  transform: rotate(180deg);
+}
+
+.showBarPrimary {
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.showBarHint {
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- "Hide footer" pill (expanded state) ---------- */
+/* Subtle outline pill — visible enough to find, quiet enough to ignore. */
+
+.hideBarWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-8);
+}
+
+.hideBar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.hideBar:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.hideBar:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.hideBarChevron {
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.hideBarPrimary {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.hideBarHint {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 /* ---------- Top grid ---------- */
 
 .grid {

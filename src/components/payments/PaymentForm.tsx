@@ -6,6 +6,7 @@ import { useToast } from '@/components/ToastProvider';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 import { Input } from '@/components/ui/Input';
 import { fieldClass } from '@/components/forms';
+import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 
 // Shape of the optimistic payment record handed back to the parent so it can
 // update its own list without waiting for revalidation.
@@ -289,13 +290,11 @@ export default function PaymentForm({
             <Input
               containerClassName={fieldClass}
               id={`account-${requestId}`}
-              type="text"
+              {...bdPhoneFieldProps}
               label="MFS Account Number"
               required
-              placeholder="e.g. 017XXXXXXXX"
               value={accountNumber}
-              maxLength={11}
-              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+              onChange={onBdPhoneChange((e) => setAccountNumber(e.target.value))}
             />
             <Input
               containerClassName={fieldClass}

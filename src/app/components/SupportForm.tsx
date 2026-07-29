@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { LifeBuoy, MessageSquare, Phone, Send, User } from 'lucide-react';
+import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 import {
   FormCard,
   FormSection,
@@ -86,10 +87,10 @@ export default function SupportForm() {
             <Input
               containerClassName={fieldClass}
               name="contact"
-              type="tel"
+              {...bdPhoneFieldProps}
               label="Contact number"
-              placeholder="Your phone number"
               required
+              onChange={onBdPhoneChange()}
             />
             <Select
               containerClassName={fieldClass}

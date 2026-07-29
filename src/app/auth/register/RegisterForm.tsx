@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/Select';
 import { Eye, EyeOff, Lock, GraduationCap, User, UserPlus } from 'lucide-react';
 import { useZodForm } from '@/hooks/useZodForm';
 import { registerUserSchema } from '@/lib/validation';
+import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 import {
   FormPage,
   FormCard,
@@ -111,13 +112,12 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             <Input
               containerClassName={fieldClass}
               name="contact"
-              type="text"
+              {...bdPhoneFieldProps}
               label="Contact Number"
-              placeholder="017XXXXXXXX"
               hint="11-digit BD mobile"
               required
               error={form.errors.contact}
-              onChange={form.onChange('contact')}
+              onChange={onBdPhoneChange(form.onChange('contact'))}
               onBlur={form.onBlur('contact')}
             />
             <Select

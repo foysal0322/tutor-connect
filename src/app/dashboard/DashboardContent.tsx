@@ -211,8 +211,12 @@ export default function DashboardContent({
             <p className={styles.subtext}>{todayLong}</p>
           </div>
           <div className={styles.headerActions}>
-            <span className={styles.pill}>
-              <Wallet size={12} />৳{userBalance.toLocaleString()} balance
+            <span className={styles.balancePill}>
+              <span className={styles.balanceIcon}>
+                <Wallet size={12} />
+              </span>
+              <span className={styles.balanceAmount}>৳{userBalance.toLocaleString()}</span>
+              <span className={styles.balanceLabel}>balance</span>
             </span>
             <Link
               href="/profile"

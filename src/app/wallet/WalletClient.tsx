@@ -7,12 +7,12 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Clock,
-  Info,
   Wallet,
   Zap,
 } from 'lucide-react';
 
 import { rechargeWallet } from './actions';
+import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 import { useToast } from '@/components/ToastProvider';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -113,7 +113,6 @@ export default function WalletClient({
   // Form state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [demoMode, setDemoMode] = useState(false);
   const [mfsType, setMfsType] = useState<MfsProvider>('BKASH');
   const [amountVal, setAmountVal] = useState('');
 
@@ -139,13 +138,7 @@ export default function WalletClient({
     setError('');
 
     const formData = new FormData(form);
-    if (demoMode) {
-      formData.set('mfsType', 'DEMO');
-      formData.delete('accountNumber');
-      formData.delete('transactionId');
-    } else {
-      formData.set('mfsType', mfsType);
-    }
+    formData.set('mfsType', mfsType);
 
     const res = await rechargeWallet(formData);
     if (res?.error) {
@@ -159,9 +152,7 @@ export default function WalletClient({
         id: `temp-${Date.now()}`,
         amount: addedAmount,
         type: 'RECHARGE',
-        description: demoMode
-          ? 'Wallet recharge (Demo — instant test credit)'
-          : `Wallet recharge via ${mfsType}`,
+        description: `Wallet recharge via ${mfsType}`,
         referenceId: (formData.get('transactionId') as string) || null,
         createdAt: new Date().toISOString(),
       };
@@ -288,29 +279,11 @@ export default function WalletClient({
           {error && <FormAlert>{error}</FormAlert>}
 
           <form onSubmit={handleRecharge} className="flex flex-col" style={{ gap: 'var(--space-5)' }}>
-            {/* Demo / Test mode toggle */}
-            <label className={s.demoToggle}>
-              <input
-                type="checkbox"
-                checked={demoMode}
-                onChange={(e) => setDemoMode(e.target.checked)}
-              />
-              <span className={s.demoCopy}>
-                <Zap size={14} aria-hidden="true" />
-                <span>
-                  <strong>Test mode</strong>
-                  <small>Instant demo credit — no MFS details required.</small>
-                </span>
-              </span>
-            </label>
-
-            {/* MFS provider (hidden in demo mode) */}
-            {!demoMode && (
-              <div>
-                <label className={s.fieldLabel}>Select MFS Provider</label>
-                <MfsProviderSelect value={mfsType} onChange={setMfsType} idPrefix="wallet-mfs" />
-              </div>
-            )}
+            {/* MFS provider */}
+            <div>
+              <label className={s.fieldLabel}>Select MFS Provider</label>
+              <MfsProviderSelect value={mfsType} onChange={setMfsType} idPrefix="wallet-mfs" />
+            </div>
 
             {/* Amount */}
             <div className="flex flex-col" style={{ gap: 'var(--space-2)' }}>
@@ -335,37 +308,24 @@ export default function WalletClient({
             </div>
 
             {/* MFS verification fields */}
-            {!demoMode && (
-              <div className={s.verifyGrid}>
-                <Input
-                  containerClassName={fieldClass}
-                  name="accountNumber"
-                  type="tel"
-                  required
-                  label="Your MFS Number"
-                  placeholder="e.g. 017XXXXXXXX"
-                  inputMode="numeric"
-                />
-                <Input
-                  containerClassName={fieldClass}
-                  name="transactionId"
-                  type="text"
-                  required
-                  label="Transaction ID (TrxID)"
-                  placeholder="e.g. 9J8H7G6F21"
-                />
-              </div>
-            )}
-
-            {demoMode && (
-              <div className={s.demoNote}>
-                <Info size={14} aria-hidden="true" />
-                <span>
-                  <strong>Test mode:</strong> No account number or TrxID is required. Funds will be credited
-                  instantly for testing purposes.
-                </span>
-              </div>
-            )}
+            <div className={s.verifyGrid}>
+              <Input
+                containerClassName={fieldClass}
+                name="accountNumber"
+                {...bdPhoneFieldProps}
+                required
+                label="Your MFS Number"
+                onChange={onBdPhoneChange()}
+              />
+              <Input
+                containerClassName={fieldClass}
+                name="transactionId"
+                type="text"
+                required
+                label="Transaction ID (TrxID)"
+                placeholder="e.g. 9J8H7G6F21"
+              />
+            </div>
 
             <FormSubmit loading={loading} loadingText="Processing Deposit…" icon={<CheckCircle2 size={18} />}>
               Confirm Deposit
