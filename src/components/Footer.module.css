@@ -1,0 +1,222 @@
+/* Global site footer. Uses design tokens (see globals.css :root). No new
+   color values — only layout, hover/focus states, and responsive rules. */
+
+.footer {
+  margin-top: auto;
+  background-color: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  padding: var(--space-12) 0 var(--space-6);
+}
+
+/* ---------- Top grid ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  /* Margin replaced by the bottom bar's top border for a cleaner rule. */
+  padding-bottom: var(--space-8);
+}
+
+/* Brand column is wider on multi-column layouts. */
+.brand {
+  display: flex;
+  flex-direction: column;
+  max-width: 24rem;
+}
+
+.logo {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+}
+
+.logoAccent {
+  color: var(--primary);
+}
+
+.tagline {
+  font-size: var(--text-sm);
+  color: var(--text-main);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.description {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-5);
+}
+
+/* ---------- Socials ---------- */
+
+.socials {
+  list-style: none;
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+  transition: color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.social:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.social:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Link columns ---------- */
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.colHeading {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+.link {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+  /* Comfortable tap target on mobile without inflating layout. */
+  display: inline-block;
+  padding: 2px 0;
+}
+
+.link:hover {
+  color: var(--primary);
+}
+
+.link:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* "Coming soon" affordance — muted, non-interactive. */
+.soon {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  opacity: 0.75;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 0;
+}
+
+.soonPill {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  padding: 0.05rem 0.4rem;
+}
+
+/* ---------- Bottom bar ---------- */
+
+.bottom {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-5);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.copy {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.designed {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.version {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Tablet: brand spans full width on its own row, link columns pair up. */
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8) var(--space-6);
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+    max-width: 30rem;
+  }
+}
+
+/* Desktop: 4 columns with the brand taking the first wide slot. */
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: var(--space-8);
+  }
+
+  .brand {
+    grid-column: auto;
+  }
+}
+
+/* On the smallest screens the bottom bar centers nicely. */
+@media (max-width: 480px) {
+  .bottom {
+    justify-content: center;
+    text-align: center;
+  }
+}

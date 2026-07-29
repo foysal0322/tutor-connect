@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { addTutorExpertise, updateTutorExpertise } from '../actions';
 import SearchableCourseSelect from '@/components/SearchableCourseSelect';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ToastProvider';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { BookOpen, Clock, GraduationCap, Save } from 'lucide-react';
@@ -29,6 +30,7 @@ export default function AddExpertiseForm({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const [selectedGrade, setSelectedGrade] = useState(initialData?.courseGrade || '');
   const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F', 'I', 'W'];
@@ -138,6 +140,7 @@ export default function AddExpertiseForm({
       if (res?.error) {
         setError(res.error);
       } else if (res?.success) {
+        toast.success(initialData ? 'Expertise updated.' : 'Expertise added.');
         if (onSuccess) {
           onSuccess();
         } else {
@@ -146,6 +149,7 @@ export default function AddExpertiseForm({
       }
     } catch (err) {
       setError('An error occurred while saving expertise.');
+      toast.error('An error occurred while saving expertise.');
     }
     setLoading(false);
   }

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { submitWithdrawalRequest } from './actions';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { MfsProviderSelect } from '@/components/MfsProviderSelect';
-import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
+import { useState, useTransition } from "react";
+import { submitWithdrawalRequest } from "./actions";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { MfsProviderSelect } from "@/components/MfsProviderSelect";
+import { FormSubmit, FormAlert, fieldClass } from "@/components/forms";
 
 interface EarningsClientProps {
   completedRequests: any[];
@@ -20,17 +20,19 @@ export default function EarningsClient({
   withdrawalRequests,
   totalEarned,
   totalWithdrawn,
-  availableBalance: initialAvailableBalance
+  availableBalance: initialAvailableBalance,
 }: EarningsClientProps) {
   const [balance, setBalance] = useState(initialAvailableBalance);
   const [withdrawn, setWithdrawn] = useState(totalWithdrawn);
   const [payouts, setPayouts] = useState(withdrawalRequests);
-  
-  const [mfsType, setMfsType] = useState<'BKASH' | 'NAGAD' | 'ROCKET'>('BKASH');
-  const [transferType, setTransferType] = useState<'SEND_MONEY' | 'PAYMENT'>('SEND_MONEY');
-  const [amount, setAmount] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  
+
+  const [mfsType, setMfsType] = useState<"BKASH" | "NAGAD" | "ROCKET">("BKASH");
+  const [transferType, setTransferType] = useState<"SEND_MONEY" | "PAYMENT">(
+    "SEND_MONEY"
+  );
+  const [amount, setAmount] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -38,39 +40,41 @@ export default function EarningsClient({
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount.');
+      setError("Please enter a valid amount.");
       return;
     }
     if (parseFloat(amount) < 100) {
-      setError('Minimum withdrawal amount is 100 BDT.');
+      setError("Minimum withdrawal amount is 100 BDT.");
       return;
     }
     if (!accountNumber || accountNumber.length !== 11) {
-      setError('MFS Account Number must be exactly 11 digits.');
+      setError("MFS Account Number must be exactly 11 digits.");
       return;
     }
 
     if (parseFloat(amount) > balance) {
-      setError('Requested amount exceeds available balance.');
+      setError("Requested amount exceeds available balance.");
       return;
     }
 
     const formData = new FormData();
-    formData.append('amount', amount);
-    formData.append('mfsType', mfsType);
-    formData.append('accountNumber', accountNumber);
-    formData.append('transferType', transferType);
+    formData.append("amount", amount);
+    formData.append("mfsType", mfsType);
+    formData.append("accountNumber", accountNumber);
+    formData.append("transferType", transferType);
 
     startTransition(async () => {
       const res = await submitWithdrawalRequest(formData);
       if (res?.error) {
         setError(res.error);
       } else {
-        setSuccess('Withdrawal request submitted successfully! Admin verification pending.');
+        setSuccess(
+          "Withdrawal request submitted successfully! Admin verification pending."
+        );
         const val = parseFloat(amount);
         const fee = val * 0.05;
         const net = val * 0.95;
-        
+
         const newRequest = {
           id: `temp-${Date.now()}`,
           amount: val,
@@ -79,16 +83,16 @@ export default function EarningsClient({
           mfsType,
           accountNumber,
           transferType,
-          status: 'PENDING',
-          createdAt: new Date()
+          status: "PENDING",
+          createdAt: new Date(),
         };
 
-        setPayouts(prev => [newRequest, ...prev]);
-        setBalance(prev => prev - val);
-        setWithdrawn(prev => prev + val);
-        
-        setAmount('');
-        setAccountNumber('');
+        setPayouts((prev) => [newRequest, ...prev]);
+        setBalance((prev) => prev - val);
+        setWithdrawn((prev) => prev + val);
+
+        setAmount("");
+        setAccountNumber("");
       }
     });
   };
@@ -98,23 +102,40 @@ export default function EarningsClient({
 
   return (
     <div className="flex flex-col gap-6">
-      
       {/* Dynamic Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card border-t-4 border-primary">
-          <span className="text-sm text-muted font-semibold">Total Completed Earnings</span>
-          <h2 className="text-3xl mt-1 text-primary">{totalEarned.toFixed(2)} BDT</h2>
-          <p className="mt-2 text-xs text-muted">Accumulated from completed sessions</p>
+          <span className="text-sm text-muted font-semibold">
+            Total Completed Earnings
+          </span>
+          <h2 className="text-3xl mt-1 text-primary">
+            {totalEarned.toFixed(2)} BDT
+          </h2>
+          <p className="mt-2 text-xs text-muted">
+            Accumulated from completed sessions
+          </p>
         </div>
         <div className="card border-t-4 border-accent">
-          <span className="text-sm text-muted font-semibold">Total Withdrawn / Pending</span>
-          <h2 className="text-3xl mt-1 text-accent">{withdrawn.toFixed(2)} BDT</h2>
-          <p className="mt-2 text-xs text-muted">Includes pending request amounts</p>
+          <span className="text-sm text-muted font-semibold">
+            Total Withdrawn / Pending
+          </span>
+          <h2 className="text-3xl mt-1 text-accent">
+            {withdrawn.toFixed(2)} BDT
+          </h2>
+          <p className="mt-2 text-xs text-muted">
+            Includes pending request amounts
+          </p>
         </div>
         <div className="card border-t-4 border-success bg-success-light">
-          <span className="text-sm text-success-hover font-semibold">Available Balance</span>
-          <h2 className="text-3xl mt-1 text-success-hover">{balance.toFixed(2)} BDT</h2>
-          <p className="mt-2 text-xs text-success-hover">Amount eligible for instant withdrawal</p>
+          <span className="text-sm text-success-hover font-semibold">
+            Available Balance
+          </span>
+          <h2 className="text-3xl mt-1 text-success-hover">
+            {balance.toFixed(2)} BDT
+          </h2>
+          <p className="mt-2 text-xs text-success-hover">
+            Amount eligible for instant withdrawal
+          </p>
         </div>
       </div>
 
@@ -123,12 +144,12 @@ export default function EarningsClient({
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Withdrawal Request Form Card */}
         <div className="card h-fit lg:col-span-1">
           <h3 className="text-xl mb-2">Request Withdrawal</h3>
           <p className="text-sm text-muted mb-6">
-            Submit a withdrawal request to transfer available earnings to your MFS account.
+            Submit a withdrawal request to transfer available earnings to your
+            MFS account.
           </p>
 
           <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
@@ -160,7 +181,9 @@ export default function EarningsClient({
               placeholder="e.g. 017XXXXXXXX"
               value={accountNumber}
               maxLength={11}
-              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) =>
+                setAccountNumber(e.target.value.replace(/\D/g, ""))
+              }
             />
 
             <Select
@@ -170,8 +193,8 @@ export default function EarningsClient({
               value={transferType}
               onChange={(e) => setTransferType(e.target.value as any)}
               options={[
-                { value: 'SEND_MONEY', label: 'Send Money' },
-                { value: 'PAYMENT', label: 'Payment' },
+                { value: "SEND_MONEY", label: "Send Money" },
+                { value: "PAYMENT", label: "Payment" },
               ]}
             />
 
@@ -198,20 +221,26 @@ export default function EarningsClient({
               </div>
             )}
 
-            <FormSubmit loading={isPending} loadingText="Submitting..." disabled={balance <= 0}>
-              {balance <= 0 ? 'No balance available' : 'Request Withdrawal'}
+            <FormSubmit
+              loading={isPending}
+              loadingText="Submitting..."
+              disabled={balance <= 0}
+              style={{ color: "#000" }}
+            >
+              {balance <= 0 ? "No balance available" : "Request Withdrawal"}
             </FormSubmit>
           </form>
         </div>
 
         {/* Tables Column */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          
           <div className="card">
             <h3 className="text-xl mb-4">Withdrawal Payout History</h3>
-            
+
             {payouts.length === 0 ? (
-              <p className="text-muted text-sm text-center py-4">No withdrawal requests found.</p>
+              <p className="text-muted text-sm text-center py-4">
+                No withdrawal requests found.
+              </p>
             ) : (
               <div className="data-grid-container max-h-[350px] overflow-y-auto">
                 <table className="data-grid hidden md:table">
@@ -229,24 +258,41 @@ export default function EarningsClient({
                       <tr key={w.id}>
                         <td>{w.amount} BDT</td>
                         <td>
-                          <span 
-                            style={{ 
-                              color: w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f',
-                              backgroundColor: w.mfsType === 'BKASH' ? '#fdf2f7' : w.mfsType === 'NAGAD' ? '#fff7ed' : '#f9f5fa',
-                              border: `1px solid ${w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f'}` 
-                            }} 
+                          <span
+                            style={{
+                              color:
+                                w.mfsType === "BKASH"
+                                  ? "#e2136e"
+                                  : w.mfsType === "NAGAD"
+                                    ? "#F58220"
+                                    : "#89288f",
+                              backgroundColor:
+                                w.mfsType === "BKASH"
+                                  ? "#fdf2f7"
+                                  : w.mfsType === "NAGAD"
+                                    ? "#fff7ed"
+                                    : "#f9f5fa",
+                              border: `1px solid ${w.mfsType === "BKASH" ? "#e2136e" : w.mfsType === "NAGAD" ? "#F58220" : "#89288f"}`,
+                            }}
                             className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
                           >
                             {w.mfsType}
                           </span>
                         </td>
                         <td>
-                          {w.accountNumber}<br/>
-                          <span className="text-xs text-muted">{w.transferType}</span>
+                          {w.accountNumber}
+                          <br />
+                          <span className="text-xs text-muted">
+                            {w.transferType}
+                          </span>
                         </td>
-                        <td><strong>{w.netAmount.toFixed(2)} BDT</strong></td>
                         <td>
-                          <span className={`badge ${w.status === 'PENDING' ? 'badge-info' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
+                          <strong>{w.netAmount.toFixed(2)} BDT</strong>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${w.status === "PENDING" ? "badge-info" : w.status === "APPROVED" ? "badge-success" : "badge-danger"}`}
+                          >
                             {w.status}
                           </span>
                         </td>
@@ -257,11 +303,13 @@ export default function EarningsClient({
 
                 {/* Mobile View */}
                 <div className="md:hidden flex flex-col gap-4 p-4">
-                  {payouts.map(w => (
+                  {payouts.map((w) => (
                     <div key={w.id} className="card p-3 flex flex-col gap-2">
                       <div className="flex justify-between items-center border-b border-color pb-2">
                         <span className="font-semibold">{w.amount} BDT</span>
-                        <span className={`badge ${w.status === 'PENDING' ? 'badge-info' : (w.status === 'APPROVED' ? 'badge-success' : 'badge-danger')}`}>
+                        <span
+                          className={`badge ${w.status === "PENDING" ? "badge-info" : w.status === "APPROVED" ? "badge-success" : "badge-danger"}`}
+                        >
                           {w.status}
                         </span>
                       </div>
@@ -271,12 +319,22 @@ export default function EarningsClient({
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted">Provider</span>
-                        <span 
-                          style={{ 
-                            color: w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f',
-                            backgroundColor: w.mfsType === 'BKASH' ? '#fdf2f7' : w.mfsType === 'NAGAD' ? '#fff7ed' : '#f9f5fa',
-                            border: `1px solid ${w.mfsType === 'BKASH' ? '#e2136e' : w.mfsType === 'NAGAD' ? '#F58220' : '#89288f'}` 
-                          }} 
+                        <span
+                          style={{
+                            color:
+                              w.mfsType === "BKASH"
+                                ? "#e2136e"
+                                : w.mfsType === "NAGAD"
+                                  ? "#F58220"
+                                  : "#89288f",
+                            backgroundColor:
+                              w.mfsType === "BKASH"
+                                ? "#fdf2f7"
+                                : w.mfsType === "NAGAD"
+                                  ? "#fff7ed"
+                                  : "#f9f5fa",
+                            border: `1px solid ${w.mfsType === "BKASH" ? "#e2136e" : w.mfsType === "NAGAD" ? "#F58220" : "#89288f"}`,
+                          }}
                           className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
                         >
                           {w.mfsType}
@@ -296,9 +354,11 @@ export default function EarningsClient({
           {/* Earnings / Completed Tuition Sessions */}
           <div className="card">
             <h3 className="text-xl mb-4">Tuition Earnings Log</h3>
-            
+
             {completedRequests.length === 0 ? (
-              <p className="text-muted text-sm text-center py-4">No completed sessions found.</p>
+              <p className="text-muted text-sm text-center py-4">
+                No completed sessions found.
+              </p>
             ) : (
               <div className="data-grid-container max-h-[350px] overflow-y-auto">
                 <table className="data-grid hidden md:table">
@@ -313,22 +373,30 @@ export default function EarningsClient({
                   <tbody>
                     {completedRequests.map((r) => (
                       <tr key={r.id}>
-                        <td><strong>{r.student.name}</strong></td>
+                        <td>
+                          <strong>{r.student.name}</strong>
+                        </td>
                         <td>{r.course.name}</td>
                         <td>{r.topic}</td>
-                        <td><strong className="text-success-hover">+{r.budget} BDT</strong></td>
+                        <td>
+                          <strong className="text-success-hover">
+                            +{r.budget} BDT
+                          </strong>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                
+
                 {/* Mobile View */}
                 <div className="md:hidden flex flex-col gap-4 p-4">
-                  {completedRequests.map(r => (
+                  {completedRequests.map((r) => (
                     <div key={r.id} className="card p-3 flex flex-col gap-2">
                       <div className="flex justify-between items-center border-b border-color pb-2">
                         <span className="font-semibold">{r.course.name}</span>
-                        <strong className="text-success-hover">+{r.budget} BDT</strong>
+                        <strong className="text-success-hover">
+                          +{r.budget} BDT
+                        </strong>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted">Student</span>
@@ -344,7 +412,6 @@ export default function EarningsClient({
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>

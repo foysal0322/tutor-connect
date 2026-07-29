@@ -25,7 +25,14 @@ export default async function WalletPage() {
       userEmail={session.user?.email}
     >
       <div className="w-full max-w-5xl mx-auto py-2">
-        <WalletClient initialBalance={data.balance || 0} initialTransactions={data.transactions || []} userName={session.user?.name || 'Student'} />
+        <WalletClient
+          initialBalance={data.balance || 0}
+          initialTransactions={data.transactions || []}
+          totalDeposited={data.totalDeposited || 0}
+          totalSpent={data.totalSpent || 0}
+          recentWithdrawals={data.recentWithdrawals || []}
+          userName={session.user?.name || 'Student'}
+        />
       </div>
     </DashboardLayout>
   );

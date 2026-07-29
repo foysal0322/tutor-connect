@@ -32,13 +32,16 @@ export async function rechargeWallet(formData: FormData) {
     });
 
     // Create wallet transaction record
+    const isDemo = mfsType === 'DEMO';
     await prisma.walletTransaction.create({
       data: {
         userId,
         amount,
         type: 'RECHARGE',
-        description: `Wallet recharge via ${mfsType} (${accountNumber})`,
-        referenceId: transactionId
+        description: isDemo
+          ? 'Wallet recharge (Demo — instant test credit)'
+          : `Wallet recharge via ${mfsType} (${accountNumber})`,
+        referenceId: transactionId || null
       }
     });
 
@@ -70,8 +73,43 @@ export async function getWalletData() {
     take: 50
   });
 
+  // Derive financial KPIs from the existing WalletTransaction rows.
+  // Only RECHARGE (+) and TUITION_PAYMENT (−) types are written today, so we
+  // aggregate those. Earning/withdrawal totals are intentionally NOT computed
+  // here — they live on /tutor/earnings (sourced from TutorRequest +
+  // WithdrawalRequest) and duplicating them would mislead students and
+  // diverge from the earnings page's own calc.
+  let totalDeposited = 0;
+  let totalSpent = 0;
+  for (const t of transactions) {
+    if (t.type === 'RECHARGE') totalDeposited += t.amount;
+    else if (t.type === 'TUITION_PAYMENT') totalSpent += Math.abs(t.amount);
+  }
+
+  // Surface the member's recent withdrawal requests so tutors can see
+  // processing status without leaving the wallet. Empty for non-tutors.
+  const recentWithdrawals = await prisma.withdrawalRequest.findMany({
+    where: { tutorId: userId },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      amount: true,
+      platformFee: true,
+      netAmount: true,
+      mfsType: true,
+      accountNumber: true,
+      transferType: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+
   return {
     balance: user?.balance || 0,
-    transactions
+    transactions,
+    totalDeposited,
+    totalSpent,
+    recentWithdrawals,
   };
 }

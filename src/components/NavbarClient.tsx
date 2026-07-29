@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LayoutDashboard } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
@@ -28,6 +29,8 @@ export default function NavbarClient({ session }: { session: any }) {
   // Resolve the session-dependent href once so both the link and its active
   // state stay in sync.
   const teachHref = session ? '/tutor/expertise' : '/auth/register';
+  const dashboardHref =
+    session?.user?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
 
   // A nav item is active when we are on its exact route or a child of it.
   // "/" is exact-only so it never matches every page.
@@ -38,6 +41,11 @@ export default function NavbarClient({ session }: { session: any }) {
 
   const activeClass = (href: string) =>
     isActive(href) ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink;
+
+  const dashboardClass = () =>
+    isActive(dashboardHref)
+      ? `${styles.navLinkDashboard} ${styles.navLinkDashboardActive}`
+      : styles.navLinkDashboard;
 
   return (
     <nav className={styles.navbar}>
@@ -61,6 +69,17 @@ export default function NavbarClient({ session }: { session: any }) {
           <Link href="/shop" className={activeClass("/shop")} aria-current={isActive("/shop") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
           <Link href="/tutorial" className={activeClass("/tutorial")} aria-current={isActive("/tutorial") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
           <Link href="/contact" className={activeClass("/contact")} aria-current={isActive("/contact") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+          {session && (
+            <Link
+              href={dashboardHref}
+              className={dashboardClass()}
+              aria-current={isActive(dashboardHref) ? "page" : undefined}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <LayoutDashboard size={16} aria-hidden="true" />
+              Dashboard
+            </Link>
+          )}
         
           <div className={`${styles.authButtonsMobile}`}>
             <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>
