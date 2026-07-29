@@ -26,9 +26,10 @@ export default function NavbarClient({ session }: { session: any }) {
 
   const pathname = usePathname();
 
-  // Resolve the session-dependent href once so both the link and its active
-  // state stay in sync.
-  const teachHref = session ? '/tutor/expertise' : '/auth/register';
+  // Resolve the dashboard href once so the link and its active state stay
+  // in sync. Teaching entry point intentionally has no separate navbar slot
+  // for signed-in users — the unified Dashboard's Teaching tab covers it
+  // (dual-role model: one member can both learn and teach).
   const dashboardHref =
     session?.user?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
 
@@ -63,10 +64,11 @@ export default function NavbarClient({ session }: { session: any }) {
         >
           <Link href="/" className={activeClass("/")} aria-current={isActive("/") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link href="/find-tutor" className={activeClass("/find-tutor")} aria-current={isActive("/find-tutor") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
-          <Link href={teachHref} className={activeClass(teachHref)} aria-current={isActive(teachHref) ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>
-            {session ? "Teach a Course" : "Register"}
-          </Link>
-          <Link href="/shop" className={activeClass("/shop")} aria-current={isActive("/shop") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>One Shop</Link>
+          {!session && (
+            <Link href="/auth/tutor-register" className={activeClass("/auth/tutor-register")} aria-current={isActive("/auth/tutor-register") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>
+              Become a Tutor
+            </Link>
+          )}
           <Link href="/tutorial" className={activeClass("/tutorial")} aria-current={isActive("/tutorial") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
           <Link href="/contact" className={activeClass("/contact")} aria-current={isActive("/contact") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
           {session && (
