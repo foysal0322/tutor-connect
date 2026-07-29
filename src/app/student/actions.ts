@@ -240,6 +240,8 @@ export async function submitPayment(formData: FormData) {
 
     revalidatePath('/student');
     revalidatePath('/wallet');
+    revalidatePath('/dashboard');        // refresh the sidebar Payments badge
+    revalidatePath('/student/payments'); // refresh Pending Payments + History sections
     return { success: true };
   } catch (err) {
     console.error('Submit payment error:', err);

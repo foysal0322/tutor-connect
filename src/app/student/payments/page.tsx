@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import PendingPaymentsSection from './PendingPaymentsSection';
 
 export default async function StudentPaymentsPage() {
   const session = await getServerSession(authOptions);
@@ -21,18 +22,43 @@ export default async function StudentPaymentsPage() {
       course: true, 
       payment: true 
     },
-    orderBy: { 
-      createdAt: 'desc' 
+    orderBy: {
+      createdAt: 'desc'
     }
   });
 
+  // Requests awaiting payment (tutor matched, not yet paid) shown in the
+  // Pending Payments section above the history table.
+  const pendingRequests = await prisma.tutorRequest.findMany({
+    where: {
+      studentId,
+      status: 'MATCHED',
+    },
+    include: {
+      course: true,
+      assignedTutor: { include: { department: { select: { name: true } } } },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const user = await prisma.user.findUnique({
+    where: { id: studentId },
+    select: { balance: true },
+  });
+  const userBalance = user?.balance ?? 0;
+
   return (
     <div className="max-w-full">
-      <h1 className="mb-2">Payment History</h1>
+      <h1 className="mb-2">Payments</h1>
       <p className="text-muted mb-6">
-        Track your submitted payments for tutor match requests and check their manual verification status.
+        Complete pending payments for your matched tutors and track your submitted payment history.
       </p>
 
+      <PendingPaymentsSection initialPending={pendingRequests} userBalance={userBalance} />
+
+      <h2 className="mb-3">Payment History</h2>
       {requests.length === 0 ? (
         <div className="card text-center p-8 text-muted">
           No payment history found.
