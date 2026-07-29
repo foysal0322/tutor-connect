@@ -52,7 +52,7 @@ export default function DataGrid<T extends Record<string, any>>({
 
   // Sort
   const sortedData = useMemo(() => {
-    let sortableItems = [...filteredData];
+    const sortableItems = [...filteredData];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         const aVal = a[sortConfig.key];

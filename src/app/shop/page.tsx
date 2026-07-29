@@ -25,7 +25,7 @@ export default function ShopComingSoon() {
         </div>
         <h1 className={styles.title}>One Shop is Coming Soon</h1>
         <p className={styles.description}>
-          We're working hard to bring you the best shopping experience for educational materials. 
+          We&apos;re working hard to bring you the best shopping experience for educational materials. 
           Stay tuned for exclusive books, study guides, and stationeries tailored for you!
         </p>
         <Link href="/" className={styles.backBtn}>

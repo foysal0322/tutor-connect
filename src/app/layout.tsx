@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -7,12 +6,6 @@ import NextTopLoader from 'nextjs-toploader';
 import { ToastProvider } from '@/components/ToastProvider';
 import VisitorTracker from '@/components/VisitorTracker';
 import ErrorBoundary from '@/components/ErrorBoundary';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap', // Prevent FOIT (flash of invisible text)
-  preload: true,
-});
 
 export const metadata: Metadata = {
   title: 'nsuOne',
@@ -32,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <a href="#main" className="skip-link">Skip to content</a>
         <ErrorBoundary context="Root Layout">
           <ToastProvider>

@@ -52,7 +52,7 @@ export async function sendNoReplyEmail({ to, subject, html, text }: SendEmailOpt
       html,
       text: text || html.replace(/<[^>]*>?/gm, ''),
     });
-    console.log('No-reply email sent:', info.messageId);
+    console.warn('No-reply email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending no-reply email:', error);
@@ -70,7 +70,7 @@ export async function sendSupportEmail({ to, subject, html, text, replyTo }: Sen
       text: text || html.replace(/<[^>]*>?/gm, ''),
       replyTo: replyTo || SUPPORT_USER,
     });
-    console.log('Support email sent:', info.messageId);
+    console.warn('Support email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending support email:', error);

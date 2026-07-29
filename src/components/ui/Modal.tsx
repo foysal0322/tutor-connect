@@ -151,9 +151,6 @@ export function Modal({
 
 // Tiny id hook so SSR and CSR match (no useId mismatches).
 function useStableId(prefix: string): string {
-  const ref = useRef<string | null>(null);
-  if (ref.current === null) {
-    ref.current = `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-  }
-  return ref.current;
+  const [id] = React.useState(() => `${prefix}-${Math.random().toString(36).slice(2, 9)}`);
+  return id;
 }

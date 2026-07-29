@@ -7,24 +7,18 @@ import { redirect } from 'next/navigation';
 
 export default async function AdminProfilePage() {
   const session = await getServerSession(authOptions);
-  console.log('AdminProfilePage - Session:', JSON.stringify(session, null, 2));
 
-  if (!session || (session.user as any).role !== 'ADMIN') {
-    console.log('AdminProfilePage - No session or wrong role, redirecting to sign-in');
+  if (!session || session.user.role !== 'ADMIN') {
     redirect('/auth/admin-signin');
   }
 
-  const userId = (session.user as any).id;
-  console.log('AdminProfilePage - Looking up user with ID:', userId);
+  const userId = session.user.id;
 
   const user = await prisma.user.findUnique({
     where: { id: userId }
   });
 
-  console.log('AdminProfilePage - User found:', user ? user.email : 'null');
-
   if (!user) {
-    console.log('AdminProfilePage - User is null, redirecting to force-signout');
     redirect('/auth/force-signout?reason=session-expired');
   }
   

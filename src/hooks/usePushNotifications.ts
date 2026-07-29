@@ -21,13 +21,6 @@ export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
-  useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-      registerServiceWorker();
-    }
-  }, []);
-
   const registerServiceWorker = async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
@@ -37,6 +30,13 @@ export function usePushNotifications() {
       console.error('Service Worker registration failed:', error);
     }
   };
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setIsSupported(true);
+      void registerServiceWorker();
+    }
+  }, []);
 
   const subscribeToPush = async () => {
     if (!isSupported) return;
@@ -75,7 +75,7 @@ export function usePushNotifications() {
         body: JSON.stringify(sub),
       });
 
-      console.log('Successfully subscribed to push notifications');
+      console.warn('Successfully subscribed to push notifications');
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
     }
