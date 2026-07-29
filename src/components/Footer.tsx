@@ -1,17 +1,28 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { SVGProps } from 'react';
 import s from './Footer.module.css';
 
 /**
  * Global site footer.
  *
- * Server component — no client interactivity needed (hover/focus are pure CSS
- * via Footer.module.css, which also respects prefers-reduced-motion).
+ * Client component so the link grid can collapse on app routes where vertical
+ * space is at a premium (dashboard, admin, tutor, wallet, student). The full
+ * footer stays expanded by default on marketing pages (home, find-tutor,
+ * contact). Users can toggle it open/closed anywhere via the footer toggle.
  *
  * Navigation note: /privacy-policy and /terms routes are not implemented yet,
  * so those Legal entries are rendered as muted "Coming soon" affordances
  * (same treatment as One Shop) instead of dead 404 links.
  */
+
+// Routes that get the collapsed footer by default. Everything else (home,
+// find-tutor, contact, consultancy, auth) renders the full footer.
+const COLLAPSED_ROUTES = ['/dashboard', '/admin', '/tutor', '/wallet', '/student'];
 
 // Kept in sync with package.json. Surface as a quiet build stamp in the bar.
 const APP_VERSION = 'v0.1.0';
@@ -149,53 +160,107 @@ function Column({ heading, items }: { heading: string; items: LinkItem[] }) {
 }
 
 export default function Footer() {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(() =>
+    COLLAPSED_ROUTES.some((route) => pathname.startsWith(route)),
+  );
+  const footerRef = useRef<HTMLElement>(null);
+
+  function revealFooter() {
+    setCollapsed(false);
+    // Two rAFs so the expanded footer paints before we scroll it into view.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        footerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }),
+    );
+  }
+
   return (
-    <footer className={s.footer}>
-      <div className="container">
-        <div className={s.grid}>
-          {/* Brand */}
-          <div className={s.brand}>
-            <Link href="/" className={s.logo} aria-label="nsuOne — home">
-              <span className={s.logoAccent}>nsu</span>One
-            </Link>
-            <p className={s.tagline}>Everything an NSUer Needs.</p>
-            <p className={s.description}>
-              A peer-to-peer campus marketplace where NSUers find tutors, get academic
-              support, and soon access more campus services — all in one place.
-            </p>
-            <ul className={s.socials} aria-label="Social links">
-              {SOCIALS.map(({ label, href, Icon }) => (
-                <li key={label}>
-                  <a
-                    href={href}
-                    target={href.startsWith('http') ? '_blank' : undefined}
-                    rel={href.startsWith('http') ? 'noreferrer' : undefined}
-                    className={s.social}
-                    aria-label={label}
-                  >
-                    <Icon />
-                  </a>
-                </li>
-              ))}
-            </ul>
+    <footer ref={footerRef} className={`${s.footer} ${collapsed ? s.footerCollapsed : ''}`}>
+      {collapsed ? (
+        /* Thin, eye-catching ribbon — the only thing visible when collapsed.
+           One click reveals the full footer (grid + bottom bar). */
+        <button
+          type="button"
+          className={s.showBar}
+          onClick={revealFooter}
+          aria-expanded={false}
+          aria-controls="footer-content"
+        >
+          <ChevronDown
+            size={15}
+            aria-hidden="true"
+            className={`${s.showBarChevron} ${s.showBarChevronUp}`}
+          />
+          <span className={s.showBarPrimary}>Show footer</span>
+          <span className={s.showBarHint}>·  Links, support &amp; legal</span>
+        </button>
+      ) : (
+        <div className="container" id="footer-content">
+          <div className={s.hideBarWrap}>
+            <button
+              type="button"
+              className={s.hideBar}
+              onClick={() => setCollapsed(true)}
+              aria-expanded={true}
+              aria-controls="footer-content"
+            >
+              <ChevronDown
+                size={15}
+                aria-hidden="true"
+                className={s.hideBarChevron}
+              />
+              <span className={s.hideBarPrimary}>Hide footer</span>
+              <span className={s.hideBarHint}>·  Collapse this section</span>
+            </button>
           </div>
 
-          <Column heading="Platform" items={PLATFORM_LINKS} />
-          <Column heading="Support" items={SUPPORT_LINKS} />
-          <Column heading="Legal" items={LEGAL_LINKS} />
-        </div>
+          <div className={s.grid}>
+            {/* Brand */}
+            <div className={s.brand}>
+              <Link href="/" className={s.logo} aria-label="nsuOne — home">
+                <span className={s.logoAccent}>nsu</span>One
+              </Link>
+              <p className={s.tagline}>Everything an NSUer Needs.</p>
+              <p className={s.description}>
+                A peer-to-peer campus marketplace where NSUers find tutors, get academic
+                support, and soon access more campus services — all in one place.
+              </p>
+              <ul className={s.socials} aria-label="Social links">
+                {SOCIALS.map(({ label, href, Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target={href.startsWith('http') ? '_blank' : undefined}
+                      rel={href.startsWith('http') ? 'noreferrer' : undefined}
+                      className={s.social}
+                      aria-label={label}
+                    >
+                      <Icon />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        {/* Bottom bar */}
-        <div className={s.bottom}>
-          <p className={s.copy}>
-            &copy; {YEAR} nsuOne. All rights reserved.
-          </p>
-          <p className={s.designed}>Designed for the NSU Community.</p>
-          <p className={s.version} aria-label={`Version ${APP_VERSION}`}>
-            {APP_VERSION}
-          </p>
+            <Column heading="Platform" items={PLATFORM_LINKS} />
+            <Column heading="Support" items={SUPPORT_LINKS} />
+            <Column heading="Legal" items={LEGAL_LINKS} />
+          </div>
+
+          {/* Bottom bar */}
+          <div className={s.bottom}>
+            <p className={s.copy}>
+              &copy; {YEAR} nsuOne. All rights reserved.
+            </p>
+            <p className={s.designed}>Designed for the NSU Community.</p>
+            <p className={s.version} aria-label={`Version ${APP_VERSION}`}>
+              {APP_VERSION}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </footer>
   );
 }

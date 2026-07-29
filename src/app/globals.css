@@ -1109,6 +1109,19 @@ h4 {
   background-color: white;
 }
 
+/* Hide the +/- spinner on every numeric input app-wide. The native stepper
+   silently changes the value when the user scrolls inside the field, which is
+   misleading for budget/amount/CGPA entry. Users type the value directly;
+   keyboard arrows still increment/decrement for accessibility. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .form-error {
   color: var(--danger);
   font-size: 0.875rem;

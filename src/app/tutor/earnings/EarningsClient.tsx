@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { MfsProviderSelect } from "@/components/MfsProviderSelect";
 import { FormSubmit, FormAlert, fieldClass } from "@/components/forms";
+import { bdPhoneFieldProps, onBdPhoneChange } from "@/lib/phone";
 
 interface EarningsClientProps {
   completedRequests: any[];
@@ -175,15 +176,11 @@ export default function EarningsClient({
             <Input
               containerClassName={fieldClass}
               name="accountNumber"
-              type="text"
+              {...bdPhoneFieldProps}
               required
               label="MFS Account Number"
-              placeholder="e.g. 017XXXXXXXX"
               value={accountNumber}
-              maxLength={11}
-              onChange={(e) =>
-                setAccountNumber(e.target.value.replace(/\D/g, ""))
-              }
+              onChange={onBdPhoneChange((e) => setAccountNumber(e.target.value))}
             />
 
             <Select

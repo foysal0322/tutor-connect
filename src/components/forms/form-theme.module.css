@@ -129,7 +129,7 @@
   width: 60px;
   height: 60px;
   border-radius: 18px;
-  background: linear-gradient(135deg, var(--form-accent), var(--form-accent-2));
+  background: linear-gradient(135deg, var(--form-accent, #7c3aed), var(--form-accent-2, #2563eb));
   color: #ffffff;
   box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
   flex-shrink: 0;
@@ -329,7 +329,7 @@
   padding: 16px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--form-accent), var(--form-accent-2));
+  background: linear-gradient(135deg, var(--form-accent, #7c3aed), var(--form-accent-2, #2563eb));
   color: #ffffff;
   font-size: 16px;
   font-weight: 600;
@@ -434,7 +434,7 @@
   display: inline-block;
   padding: 14px 28px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--form-accent), var(--form-accent-2));
+  background: linear-gradient(135deg, var(--form-accent, #7c3aed), var(--form-accent-2, #2563eb));
   color: #ffffff;
   text-decoration: none;
   font-weight: 600;

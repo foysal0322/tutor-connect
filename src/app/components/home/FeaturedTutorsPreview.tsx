@@ -19,7 +19,7 @@ export default function FeaturedTutorsPreview({ tutors }: { tutors: Tutor[] }) {
         <div className={styles.headerRow}>
           <div>
             <span className={styles.eyebrow}>Verified tutors</span>
-            <h2 className={styles.headerRowTitle}>Meet a few of our top NSUers</h2>
+            <h2 className={styles.headerRowTitle}>Meet a few of our top Tutors</h2>
             <p className={styles.headerRowSub}>
               Each tutor has cleared our verification and already helped fellow students.
             </p>
