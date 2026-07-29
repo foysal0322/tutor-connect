@@ -126,6 +126,7 @@ export default function ProfileForm({
             containerClassName={fieldClass}
             name="departmentId"
             label="Department"
+            searchable
             defaultValue={user.departmentId || ''}
             placeholderOption="Select Department"
             options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}

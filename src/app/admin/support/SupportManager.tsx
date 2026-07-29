@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import DataGrid, { ColumnDef } from '@/components/ui/DataGrid';
 import { resolveSupportTicket } from '@/app/actions/support';
+import { Select } from '@/components/ui/Select';
 
 type TicketRow = {
   id: string;
@@ -110,15 +111,17 @@ export default function SupportManager({ initialTickets }: { initialTickets: any
     <div className="card p-0 overflow-hidden">
       <div className="flex flex-col sm:flex-row gap-4 p-4 border-b border-color bg-gray-50/50">
         <div className="w-full sm:w-64 ml-auto">
-          <select
+          <Select
+            label="Filter by status"
+            hideLabel
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="form-select h-[42px]"
-          >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="RESOLVED">Resolved</option>
-          </select>
+            onChange={setStatusFilter}
+            placeholderOption="All Statuses"
+            options={[
+              { value: 'PENDING', label: 'Pending' },
+              { value: 'RESOLVED', label: 'Resolved' },
+            ]}
+          />
         </div>
       </div>
 

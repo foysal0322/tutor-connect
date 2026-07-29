@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { assignTutorToRequest } from './actions';
 import { FormSubmit, fieldClass } from '@/components/forms';
+import { Select } from '@/components/ui/Select';
 
 export default function AssignTutorForm({
   requestId,
@@ -31,16 +32,20 @@ export default function AssignTutorForm({
   return (
     <form action={handleSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
       <input type="hidden" name="requestId" value={requestId} />
-      <div className={fieldClass}>
-        <select name="tutorId" required className="form-select" defaultValue="">
-          <option value="">Select Tutor</option>
-          {eligibleTutors.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} (Fee: {t.expertises.find((e: any) => e.courseId === courseId)?.sessionFee} BDT)
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        containerClassName={fieldClass}
+        name="tutorId"
+        label="Tutor"
+        hideLabel
+        searchable
+        required
+        placeholderOption="Select Tutor"
+        defaultValue=""
+        options={eligibleTutors.map((t) => ({
+          value: t.id,
+          label: `${t.name} (Fee: ${t.expertises.find((e: any) => e.courseId === courseId)?.sessionFee} BDT)`,
+        }))}
+      />
       <FormSubmit fullWidth={false} loading={loading} loadingText="Assigning...">
         Assign
       </FormSubmit>

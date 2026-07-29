@@ -8,6 +8,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/Input';
 import LoadingButton from '@/components/ui/LoadingButton';
 import ErrorAlert from '@/components/ui/ErrorAlert';
+import { Select } from '@/components/ui/Select';
 
 // NOTE: This component is a 558-line monolith (FRONTEND_AUDIT.md E1) and its
 // table is tightly coupled to in-component state (search, status filter,
@@ -210,20 +211,22 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
           />
         </div>
         <div className="w-full sm:w-64">
-          <select 
+          <Select
+            label="Filter by status"
+            hideLabel
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="form-select h-[50px]"
-          >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="MATCHED">Matched</option>
-            <option value="PAYMENT_PENDING">Payment Verifying</option>
-            <option value="ACCEPTED">Active Session</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="REFUND_REQUESTED">Refund Requested</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
+            onChange={setStatusFilter}
+            placeholderOption="All Statuses"
+            options={[
+              { value: 'PENDING', label: 'Pending' },
+              { value: 'MATCHED', label: 'Matched' },
+              { value: 'PAYMENT_PENDING', label: 'Payment Verifying' },
+              { value: 'ACCEPTED', label: 'Active Session' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'REFUND_REQUESTED', label: 'Refund Requested' },
+              { value: 'CANCELLED', label: 'Cancelled' },
+            ]}
+          />
         </div>
       </div>
 

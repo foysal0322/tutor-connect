@@ -32,10 +32,10 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   const [isMounted, setIsMounted] = useState(false);
   const [seenCounts, setSeenCounts] = useState<any>({});
 
-  // Badge Logic for Admin and Student (role-aware storage to avoid collisions).
+  // Badge Logic — admin (admin counts) and members (paymentsDue, student or tutor).
   const badgeStorageKey = role === 'ADMIN' ? 'adminSeenCounts' : 'studentSeenCounts';
   useEffect(() => {
-    if ((role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return;
+    if (!currentCounts) return;
 
     const saved = localStorage.getItem(badgeStorageKey);
     if (saved) {
@@ -52,7 +52,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   }, [currentCounts, role, badgeStorageKey]);
 
   useEffect(() => {
-    if ((role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return;
+    if (!currentCounts) return;
 
     let keyToUpdate: string | null = null;
     if (role === 'ADMIN') {
@@ -63,8 +63,9 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       if (pathname === '/admin/departments') keyToUpdate = 'departments';
       if (pathname === '/admin/courses') keyToUpdate = 'courses';
       if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
-    } else if (role === 'STUDENT') {
-      // Visiting the Payments page marks pending-payment counts as seen.
+    } else {
+      // Member (student or tutor): visiting the Payments page marks pending
+      // payments as seen.
       if (pathname === '/student/payments') keyToUpdate = 'paymentsDue';
     }
 
@@ -81,7 +82,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   }, [pathname, currentCounts, role, badgeStorageKey]);
 
   const getBadge = (key: string) => {
-    if (!isMounted || (role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return null;
+    if (!isMounted || !currentCounts) return null;
 
     // Actionable keys show the absolute pending count (red); others show the
     // delta since last visit (primary). paymentsDue = payments owed by a student.
@@ -91,21 +92,13 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       // For actionable items, show absolute pending count
       const count = currentCounts[key] || 0;
       if (count > 0) {
-        return (
-          <span className="ml-auto bg-danger text-white text-[0.7rem] font-bold h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full">
-            {count}
-          </span>
-        );
+        return <span className={styles.navBadge}>{count}</span>;
       }
     } else {
       // For non-actionable items, show difference (new items since last visit)
       const diff = (currentCounts[key] || 0) - (seenCounts[key] || 0);
       if (diff > 0) {
-        return (
-          <span className="ml-auto bg-primary text-white text-[0.7rem] font-bold h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full">
-            {diff}
-          </span>
-        );
+        return <span className={`${styles.navBadge} ${styles.navBadgePrimary}`}>{diff}</span>;
       }
     }
     return null;

@@ -14,7 +14,10 @@ import {
 
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  // Unified dashboard: both STUDENT and TUTOR may use these actions; only
+  // guests and ADMINs are blocked. Mirrors the /student layout + page gate
+  // and the submitPayment action.
+  if (!session || (session.user as any).role === 'ADMIN') {
     return { error: 'Not authorized.' };
   }
 
@@ -27,6 +30,17 @@ export async function submitTutorRequest(formData: FormData) {
 
   const studentId = (session.user as any).id;
   const status = tutorId ? 'MATCHED' : 'PENDING';
+
+  // Restriction: a user may not request tutoring for a course they themselves
+  // teach (their own TutorExpertise) — i.e. they cannot "buy" their own
+  // course — nor be assigned as their own tutor.
+  const teachesCourse = await prisma.tutorExpertise.findFirst({
+    where: { tutorId: studentId, courseId },
+    select: { id: true },
+  });
+  if (teachesCourse || (tutorId && tutorId === studentId)) {
+    return { error: 'You cannot request tutoring for a course you teach.' };
+  }
 
   // Prevent duplicate requests for the same course
   const existing = await prisma.tutorRequest.findFirst({
@@ -77,7 +91,10 @@ export async function submitTutorRequest(formData: FormData) {
 
 export async function cancelTutorRequest(id: string) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  // Unified dashboard: both STUDENT and TUTOR may use these actions; only
+  // guests and ADMINs are blocked. Mirrors the /student layout + page gate
+  // and the submitPayment action.
+  if (!session || (session.user as any).role === 'ADMIN') {
     return { error: 'Not authorized.' };
   }
 
@@ -251,7 +268,10 @@ export async function submitPayment(formData: FormData) {
 
 export async function completeTutorRequest(requestId: string, rating?: number | null, review?: string | null) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  // Unified dashboard: both STUDENT and TUTOR may use these actions; only
+  // guests and ADMINs are blocked. Mirrors the /student layout + page gate
+  // and the submitPayment action.
+  if (!session || (session.user as any).role === 'ADMIN') {
     return { error: 'Not authorized.' };
   }
 
@@ -290,7 +310,10 @@ export async function completeTutorRequest(requestId: string, rating?: number | 
 
 export async function submitRefundRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'STUDENT') {
+  // Unified dashboard: both STUDENT and TUTOR may use these actions; only
+  // guests and ADMINs are blocked. Mirrors the /student layout + page gate
+  // and the submitPayment action.
+  if (!session || (session.user as any).role === 'ADMIN') {
     return { error: 'Not authorized.' };
   }
 
