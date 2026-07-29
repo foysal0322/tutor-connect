@@ -15,12 +15,6 @@ export default function NavbarClient({ session }: { session: any }) {
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && isMobileMenuOpen) {
-      setIsMobileMenuOpen(false);
-    }
-  };
-
   // Trap focus inside the mobile menu while it's open; restore to the trigger on close.
   useFocusTrap(mobileNavRef, isMobileMenuOpen);
 

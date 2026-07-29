@@ -38,7 +38,7 @@ export default function HowItWorks() {
         </div>
 
         <div className={styles.stepsGrid}>
-          {steps.map((step, i) => (
+          {steps.map((step) => (
             <div key={step.title} className={styles.step}>
               <div className={styles.stepIcon} aria-hidden='true'>
                 {step.icon}

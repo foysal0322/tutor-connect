@@ -94,15 +94,6 @@ export default function NotificationBell() {
     }
   };
 
-  // Format date nicely
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(
-      Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-      'day'
-    );
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape' && isOpen) {
       setIsOpen(false);

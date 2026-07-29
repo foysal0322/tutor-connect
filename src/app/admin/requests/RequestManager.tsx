@@ -356,7 +356,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                       {pendingRefund && (
                         <div className="bg-warning-light p-3 rounded-md border border-warning text-sm mt-2">
                           <div className="font-semibold text-warning-hover mb-1">Refund Reason:</div>
-                          <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">"{pendingRefund.details}"</div>
+                          <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">&quot;{pendingRefund.details}&quot;</div>
                           
                           <div className="flex gap-2 flex-wrap">
                             {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (
@@ -521,7 +521,7 @@ export default function RequestManager({ initialRequests, tutors }: { initialReq
                     {pendingRefund && (
                       <div className="bg-warning-light p-3 rounded-md border border-warning text-sm">
                         <div className="font-semibold text-warning-hover mb-1">Refund Reason:</div>
-                        <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">"{pendingRefund.details}"</div>
+                        <div className="italic bg-white p-2 rounded shadow-sm text-main mb-3">&quot;{pendingRefund.details}&quot;</div>
                         
                         <div className="flex gap-2">
                           {confirmAction?.type === `ref-approve-${pendingRefund.id}` ? (

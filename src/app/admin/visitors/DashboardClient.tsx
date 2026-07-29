@@ -135,12 +135,14 @@ export default function DashboardClient({ initialLogs }: { initialLogs: RawVisit
       return `${m}m ${s}s`;
     };
 
+    const activeThreshold = filteredLogs.length > 0 ? Math.max(...filteredLogs.map((l) => l.timestamp)) - 5 * 60 * 1000 : 0;
+
     return {
       totalVisitors,
       uniqueVisitors,
       bounceRate: bounceRate.toFixed(1) + '%',
       avgSession: formatDuration(avgSessionSeconds),
-      activeNow: parsedLogs.filter(l => Date.now() - l.timestamp < 5 * 60 * 1000).length // active in last 5 mins
+      activeNow: parsedLogs.filter(l => l.timestamp > activeThreshold).length // active in last 5 mins
     };
   }, [filteredLogs, parsedLogs]);
 

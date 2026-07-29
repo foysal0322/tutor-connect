@@ -24,10 +24,12 @@ export default function Tabs({
   tabs: TabItem[];
   panels: Record<string, React.ReactNode>;
 }) {
-  if (tabs.length === 0) return null;
+  const [active, setActive] = useState(() => {
+    if (tabs.length === 0) return '';
+    return tabs.reduce((top, t) => ((t.count ?? 0) > (top.count ?? 0) ? t : top), tabs[0]).id;
+  });
 
-  const initial = tabs.reduce((top, t) => ((t.count ?? 0) > (top.count ?? 0) ? t : top), tabs[0]);
-  const [active, setActive] = useState(initial.id);
+  if (tabs.length === 0) return null;
 
   return (
     <div className={styles.wrap}>

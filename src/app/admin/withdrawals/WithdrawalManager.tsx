@@ -45,7 +45,7 @@ export default function WithdrawalManager({ initialRequests }: { initialRequests
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const filtered = (() => {
-    let result = statusFilter ? requests.filter((w) => w.status === statusFilter) : requests;
+    const result = statusFilter ? requests.filter((w) => w.status === statusFilter) : requests;
     return [...result].sort((a, b) => {
       if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
       if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;

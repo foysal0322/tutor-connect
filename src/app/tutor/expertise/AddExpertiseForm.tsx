@@ -43,11 +43,6 @@ export default function AddExpertiseForm({
     if (!str) return [];
     return str.split(' (')[0].split(', ').filter(Boolean);
   }
-  function parseIsAllDay(str: string) {
-    if (!str) return false;
-    const timeStr = str.split(' (')[1]?.replace(')', '');
-    return timeStr === 'All Day';
-  }
   function parseStartTime(str: string) {
     if (!str) return '';
     const timeStr = str.split(' (')[1]?.replace(')', '');
@@ -147,7 +142,7 @@ export default function AddExpertiseForm({
           router.push('/tutor/expertise');
         }
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while saving expertise.');
       toast.error('An error occurred while saving expertise.');
     }
