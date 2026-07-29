@@ -120,6 +120,11 @@ export interface DashboardData {
 interface DashboardContentProps {
   data: DashboardData;
   learningPanel: React.ReactNode;
+  /**
+   * When provided (fresh member with no learning/teaching activity), renders a
+   * guided onboarding panel instead of the Learning/Teaching tabs.
+   */
+  onboarding?: React.ReactNode;
 }
 
 // ---- KPI card primitive (calm evolution — no border-l stripe) ----
@@ -165,6 +170,7 @@ function Kpi({
 export default function DashboardContent({
   data,
   learningPanel,
+  onboarding,
 }: DashboardContentProps) {
   const {
     firstName,
@@ -220,22 +226,24 @@ export default function DashboardContent({
         </div>
       </header>
 
-      <Tabs
-        tabs={[
-          { id: "learning", label: "Learning", count: learningCount },
-          { id: "teaching", label: "Teaching", count: teachingCount },
-        ]}
-        panels={{
-          learning: learningPanel,
-          teaching: (
-            <TeachingPanel
-              data={data}
-              actionItems={actionItems}
-              expertiseDonutData={expertiseDonutData}
-            />
-          ),
-        }}
-      />
+      {onboarding ?? (
+        <Tabs
+          tabs={[
+            { id: "learning", label: "Learning", count: learningCount },
+            { id: "teaching", label: "Teaching", count: teachingCount },
+          ]}
+          panels={{
+            learning: learningPanel,
+            teaching: (
+              <TeachingPanel
+                data={data}
+                actionItems={actionItems}
+                expertiseDonutData={expertiseDonutData}
+              />
+            ),
+          }}
+        />
+      )}
     </div>
   );
 }
