@@ -1,0 +1,92 @@
+/* Scoped styles for the /tutor/expertise dashboard.
+   Uses global design tokens (see globals.css :root). No new color values —
+   only layout, focus states, and responsive breakpoints that aren't worth
+   inline-styling. */
+
+/* Visible focus ring on the availability switch for keyboard users. */
+.switchFocus:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.filterGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Segmented filter chip. The real control is a visually-hidden radio;
+   the visible <span> is the affordance. */
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.filterChip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+
+/* When the hidden radio inside is checked, highlight the chip. */
+.filterChip:has(input:checked) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filterChip:focus-within {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.sortSelect {
+  width: auto;
+  min-width: 9rem;
+}
+
+/* Tone the delete button red without adding a new variant. */
+.deleteBtn {
+  color: var(--danger-hover);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger-hover);
+}
+
+/* ---------- Responsive ---------- */
+
+/* On narrow screens the toolbar wraps and the search takes the full row. */
+@media (max-width: 640px) {
+  .addCtaMobile {
+    width: 100%;
+  }
+
+  .sortSelect {
+    flex: 1;
+    min-width: 0;
+  }
+}

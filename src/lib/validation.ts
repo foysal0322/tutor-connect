@@ -98,9 +98,12 @@ export const registerUserSchema = z.object({
 
 export const rechargeWalletSchema = z.object({
   amount: bdtAmountSchema.refine((n) => n >= 50, 'Minimum recharge amount is 50 BDT.'),
-  mfsType: mfsTypeSchema,
-  accountNumber: bdPhoneNumberSchema,
-  transactionId: nonEmpty('Transaction ID', 100),
+  // Real providers go through MFS verification; 'DEMO' is the platform's
+  // instant test-credit mode (no TrxID/account required). Both are accepted
+  // here so the wallet's provider picker validates regardless of mode.
+  mfsType: z.union([mfsTypeSchema, z.literal('DEMO')]),
+  accountNumber: bdPhoneNumberSchema.optional().or(z.literal('')),
+  transactionId: nonEmpty('Transaction ID', 100).optional().or(z.literal('')),
 });
 
 export const verifyWithdrawalSchema = z.object({

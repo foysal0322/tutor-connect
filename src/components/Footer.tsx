@@ -1,96 +1,200 @@
-'use client';
-
 import Link from 'next/link';
+import type { SVGProps } from 'react';
+import s from './Footer.module.css';
+
+/**
+ * Global site footer.
+ *
+ * Server component — no client interactivity needed (hover/focus are pure CSS
+ * via Footer.module.css, which also respects prefers-reduced-motion).
+ *
+ * Navigation note: /privacy-policy and /terms routes are not implemented yet,
+ * so those Legal entries are rendered as muted "Coming soon" affordances
+ * (same treatment as One Shop) instead of dead 404 links.
+ */
+
+// Kept in sync with package.json. Surface as a quiet build stamp in the bar.
+const APP_VERSION = 'v0.1.0';
+const YEAR = new Date().getFullYear();
+
+type LinkItem = {
+  label: string;
+  href?: string;
+  soon?: boolean;
+};
+
+const PLATFORM_LINKS: LinkItem[] = [
+  { label: 'Find a Tutor', href: '/find-tutor' },
+  { label: 'Become a Tutor', href: '/auth/tutor-register' },
+  { label: 'Get Consultancy', href: '/consultancy' },
+  { label: 'One Shop', soon: true },
+];
+
+const SUPPORT_LINKS: LinkItem[] = [
+  { label: 'Tutorial', href: '/tutorial' },
+  { label: 'Contact Us', href: '/contact' },
+  { label: 'Refund Policy', href: '/refund-policy' },
+];
+
+const LEGAL_LINKS: LinkItem[] = [
+  { label: 'Privacy Policy', soon: true },
+  { label: 'Terms & Conditions', soon: true },
+];
+
+const SOCIALS = [
+  {
+    label: 'nsuOne on Facebook',
+    href: 'https://www.facebook.com/nsuOne',
+    Icon: FacebookIcon,
+  },
+  {
+    label: 'nsuOne on LinkedIn',
+    href: 'https://linkedin.com',
+    Icon: LinkedinIcon,
+  },
+  {
+    label: 'Email nsuOne support',
+    href: 'mailto:support@nsuone.com',
+    Icon: MailIcon,
+  },
+];
+
+/* Brand/social marks. lucide-react dropped its brand icons, so these are
+   inlined as small stroke icons (same 24×24, currentColor convention). */
+function FacebookIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function LinkedinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect x="2" y="9" width="4" height="12" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
+
+function MailIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+function Column({ heading, items }: { heading: string; items: LinkItem[] }) {
+  return (
+    <nav className={s.col} aria-label={heading}>
+      <h2 className={s.colHeading}>{heading}</h2>
+      <ul className={s.list}>
+        {items.map((item) => (
+          <li key={item.label}>
+            {item.href ? (
+              <Link href={item.href} className={s.link}>
+                {item.label}
+              </Link>
+            ) : (
+              <span className={s.soon} aria-label={`${item.label} (coming soon)`}>
+                {item.label}
+                <span className={s.soonPill} aria-hidden="true">Soon</span>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
 
 export default function Footer() {
   return (
-    <footer style={{
-      backgroundColor: '#f8fafc',
-      borderTop: '1px solid var(--border-color)',
-      padding: '4rem 0 2rem 0',
-      marginTop: 'auto'
-    }}>
-      <div className="container" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '3rem',
-        marginBottom: '3rem'
-      }}>
-        {/* Brand Section */}
-        <div>
-          <Link href="/" style={{
-            fontSize: '1.5rem',
-            fontWeight: 800,
-            color: 'var(--text-main)',
-            letterSpacing: '-0.5px',
-            textDecoration: 'none',
-            display: 'inline-block',
-            marginBottom: '1rem'
-          }}>
-            <span style={{ color: 'var(--primary)' }}>nsu</span>One
-          </Link>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-            Everything an NSUer Needs.
-          </p>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            {/* Facebook Icon */}
-            <a href="https://www.facebook.com/nsuOne" target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-            </a>
-            {/* LinkedIn Icon */}
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-            </a>
-            {/* Email Icon */}
-            <a href="mailto:support@nsuone.com" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </a>
+    <footer className={s.footer}>
+      <div className="container">
+        <div className={s.grid}>
+          {/* Brand */}
+          <div className={s.brand}>
+            <Link href="/" className={s.logo} aria-label="nsuOne — home">
+              <span className={s.logoAccent}>nsu</span>One
+            </Link>
+            <p className={s.tagline}>Everything an NSUer Needs.</p>
+            <p className={s.description}>
+              A peer-to-peer campus marketplace where NSUers find tutors, get academic
+              support, and soon access more campus services — all in one place.
+            </p>
+            <ul className={s.socials} aria-label="Social links">
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target={href.startsWith('http') ? '_blank' : undefined}
+                    rel={href.startsWith('http') ? 'noreferrer' : undefined}
+                    className={s.social}
+                    aria-label={label}
+                  >
+                    <Icon />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
+
+          <Column heading="Platform" items={PLATFORM_LINKS} />
+          <Column heading="Support" items={SUPPORT_LINKS} />
+          <Column heading="Legal" items={LEGAL_LINKS} />
         </div>
 
-        {/* Quick Links */}
-        <div>
-          <h4 style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '1.5rem' }}>Platform</h4>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li><Link href="/find-tutor" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Find a Tutor</Link></li>
-            <li><Link href="/auth/tutor-register" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Become a Tutor</Link></li>
-            <li><Link href="/consultancy" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Get Consultancy</Link></li>
-            <li><span style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem', opacity: 0.7, cursor: 'not-allowed' }}>One Shop (Coming Soon)</span></li>
-          </ul>
+        {/* Bottom bar */}
+        <div className={s.bottom}>
+          <p className={s.copy}>
+            &copy; {YEAR} nsuOne. All rights reserved.
+          </p>
+          <p className={s.designed}>Designed for the NSU Community.</p>
+          <p className={s.version} aria-label={`Version ${APP_VERSION}`}>
+            {APP_VERSION}
+          </p>
         </div>
-
-        {/* Support */}
-        <div>
-          <h4 style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '1.5rem' }}>Support</h4>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li><Link href="/tutorial" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Tutorial</Link></li>
-            <li><Link href="/#support" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Contact Us</Link></li>
-            <li><Link href="/refund-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Refund Policy</Link></li>
-          </ul>
-        </div>
-
-        {/* Legal */}
-        <div>
-          <h4 style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '1.5rem' }}>Legal</h4>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li><Link href="/privacy-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Privacy Policy</Link></li>
-            <li><Link href="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.95rem' }}>Terms & Conditions</Link></li>
-          </ul>
-        </div>
-      </div>
-      
-      <div className="container" style={{
-        borderTop: '1px solid var(--border-color)',
-        paddingTop: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-          &copy; {new Date().getFullYear()} NSUOne. All rights reserved.
-        </p>
       </div>
     </footer>
   );
