@@ -32,11 +32,12 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
   const [isMounted, setIsMounted] = useState(false);
   const [seenCounts, setSeenCounts] = useState<any>({});
 
-  // Badge Logic for Admin
+  // Badge Logic for Admin and Student (role-aware storage to avoid collisions).
+  const badgeStorageKey = role === 'ADMIN' ? 'adminSeenCounts' : 'studentSeenCounts';
   useEffect(() => {
-    if (role !== 'ADMIN' || !currentCounts) return;
-    
-    const saved = localStorage.getItem('adminSeenCounts');
+    if ((role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return;
+
+    const saved = localStorage.getItem(badgeStorageKey);
     if (saved) {
       try {
         setSeenCounts(JSON.parse(saved));
@@ -45,39 +46,46 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       }
     } else {
       setSeenCounts(currentCounts);
-      localStorage.setItem('adminSeenCounts', JSON.stringify(currentCounts));
+      localStorage.setItem(badgeStorageKey, JSON.stringify(currentCounts));
     }
     setIsMounted(true);
-  }, [currentCounts, role]);
+  }, [currentCounts, role, badgeStorageKey]);
 
   useEffect(() => {
-    if (role !== 'ADMIN' || !currentCounts) return;
+    if ((role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return;
 
     let keyToUpdate: string | null = null;
-    if (pathname === '/admin/requests') keyToUpdate = 'requests';
-    if (pathname === '/admin/withdrawals') keyToUpdate = 'withdrawals';
-    if (pathname === '/admin/users') keyToUpdate = 'users';
-    if (pathname === '/admin/support') keyToUpdate = 'support';
-    if (pathname === '/admin/departments') keyToUpdate = 'departments';
-    if (pathname === '/admin/courses') keyToUpdate = 'courses';
-    if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
+    if (role === 'ADMIN') {
+      if (pathname === '/admin/requests') keyToUpdate = 'requests';
+      if (pathname === '/admin/withdrawals') keyToUpdate = 'withdrawals';
+      if (pathname === '/admin/users') keyToUpdate = 'users';
+      if (pathname === '/admin/support') keyToUpdate = 'support';
+      if (pathname === '/admin/departments') keyToUpdate = 'departments';
+      if (pathname === '/admin/courses') keyToUpdate = 'courses';
+      if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
+    } else if (role === 'STUDENT') {
+      // Visiting the Payments page marks pending-payment counts as seen.
+      if (pathname === '/student/payments') keyToUpdate = 'paymentsDue';
+    }
 
     if (keyToUpdate) {
       setSeenCounts((prev: any) => {
         if (prev[keyToUpdate as string] !== currentCounts[keyToUpdate as string]) {
           const updated = { ...prev, [keyToUpdate as string]: currentCounts[keyToUpdate as string] };
-          localStorage.setItem('adminSeenCounts', JSON.stringify(updated));
+          localStorage.setItem(badgeStorageKey, JSON.stringify(updated));
           return updated;
         }
         return prev;
       });
     }
-  }, [pathname, currentCounts, role]);
+  }, [pathname, currentCounts, role, badgeStorageKey]);
 
   const getBadge = (key: string) => {
-    if (!isMounted || role !== 'ADMIN' || !currentCounts) return null;
-    
-    const actionableKeys = ['requests', 'withdrawals', 'support', 'refunds', 'consultancy'];
+    if (!isMounted || (role !== 'ADMIN' && role !== 'STUDENT') || !currentCounts) return null;
+
+    // Actionable keys show the absolute pending count (red); others show the
+    // delta since last visit (primary). paymentsDue = payments owed by a student.
+    const actionableKeys = ['requests', 'withdrawals', 'support', 'refunds', 'consultancy', 'paymentsDue'];
     
     if (actionableKeys.includes(key)) {
       // For actionable items, show absolute pending count
@@ -137,7 +145,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
         links: [
           { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
           { name: 'Tuition Requests', href: '/student/request-tutor', icon: Calendar },
-          { name: 'Payments', href: '/student/payments', icon: CreditCard },
+          { name: 'Payments', href: '/student/payments', icon: CreditCard, badgeKey: 'paymentsDue' },
         ],
       },
       {
