@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import styles from './Tabs.module.css';
+import { useState } from "react";
+import styles from "./Tabs.module.css";
 
 export type TabItem = {
   id: string;
@@ -25,31 +25,36 @@ export default function Tabs({
   panels: Record<string, React.ReactNode>;
 }) {
   const [active, setActive] = useState(() => {
-    if (tabs.length === 0) return '';
-    return tabs.reduce((top, t) => ((t.count ?? 0) > (top.count ?? 0) ? t : top), tabs[0]).id;
+    if (tabs.length === 0) return "";
+    return tabs.reduce(
+      (top, t) => ((t.count ?? 0) > (top.count ?? 0) ? t : top),
+      tabs[0],
+    ).id;
   });
 
   if (tabs.length === 0) return null;
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.tabList} role="tablist">
+      <div className={styles.tabList} role='tablist'>
         {tabs.map((t) => {
           const selected = t.id === active;
           return (
             <button
               key={t.id}
-              type="button"
-              role="tab"
+              type='button'
+              role='tab'
               id={`tab-${t.id}`}
               aria-selected={selected}
               aria-controls={`panel-${t.id}`}
-              className={`${styles.tab} ${selected ? styles.tabActive : ''}`}
+              className={`${styles.tab} ${selected ? styles.tabActive : ""}`}
               onClick={() => setActive(t.id)}
             >
               <span>{t.label}</span>
-              {typeof t.count === 'number' && (
-                <span className={`${styles.badge} ${selected ? styles.badgeActive : ''}`}>
+              {typeof t.count === "number" && (
+                <span
+                  className={`${styles.badge} ${selected ? styles.badgeActive : ""}`}
+                >
                   {t.count}
                 </span>
               )}
@@ -62,7 +67,7 @@ export default function Tabs({
         <div
           key={t.id}
           id={`panel-${t.id}`}
-          role="tabpanel"
+          role='tabpanel'
           aria-labelledby={`tab-${t.id}`}
           hidden={t.id !== active}
           className={styles.panel}
