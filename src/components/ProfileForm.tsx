@@ -145,18 +145,18 @@ export default function ProfileForm({
               label="CGPA"
               defaultValue={user.cgpa || ''}
             />
-            <div className={`${fieldClass} ${gridFullClass}`}>
+            <div className={gridFullClass}>
               <label
-                className="flex items-center gap-2 cursor-pointer text-sm hover:text-main transition-colors"
+                className="flex items-start gap-2 cursor-pointer text-sm hover:text-main transition-colors"
                 style={{ color: 'var(--text-muted)' }}
               >
                 <input
                   type="checkbox"
                   name="hideCgpa"
                   defaultChecked={user.hideCgpa}
-                  className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer"
                 />
-                Hide my CGPA from students
+                <span>Hide my CGPA from students</span>
               </label>
             </div>
           </FormSection>

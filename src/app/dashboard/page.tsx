@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import StatCard from '@/components/ui/StatCard';
 import DashboardContent, { type DashboardData } from './DashboardContent';
+import OnboardingGuide from './OnboardingGuide';
 import StudentRequestList from '@/app/student/StudentRequestList';
 
 /**
@@ -165,6 +166,11 @@ export default async function DashboardPage() {
 
   const totalExpertiseCount = activeExpertiseCount + inactiveExpertiseCount;
   const isTutor = totalExpertiseCount > 0;
+
+  // A member with no learning activity, no consultancy requests, and no teaching
+  // has nothing to act on — show a guided onboarding panel instead of empty tabs.
+  const needsOnboarding =
+    !isTutor && learningRequests.length === 0 && consultancyCount === 0;
 
   // -------- Derived teaching metrics --------
   const statusCount: Record<string, number> = {};
@@ -398,5 +404,11 @@ export default async function DashboardPage() {
     </section>
   );
 
-  return <DashboardContent data={data} learningPanel={learningPanel} />;
+  return (
+    <DashboardContent
+      data={data}
+      learningPanel={learningPanel}
+      onboarding={needsOnboarding ? <OnboardingGuide firstName={firstName} /> : null}
+    />
+  );
 }

@@ -166,7 +166,7 @@ export default function AddExpertiseForm({
 
           {!initialData && (
             <Input
-              containerClassName={fieldClass}
+              containerClassName={`${fieldClass} ${gridFullClass}`}
               name="cgpa"
               type="number"
               step="any"
@@ -178,11 +178,12 @@ export default function AddExpertiseForm({
           )}
 
           <Input
-            containerClassName={fieldClass}
+            containerClassName={`${fieldClass} ${gridFullClass}`}
             name="semesterCompleted"
             type="text"
             required
-            label="Semester Completed"
+            label="When did you take this course?"
+            hint="The semester you completed this course, shown to students so they can see how recent your knowledge is."
             placeholder="e.g. Spring 2023"
             value={semesterCompleted}
             onChange={(e) => setSemesterCompleted(e.target.value)}
@@ -224,9 +225,9 @@ export default function AddExpertiseForm({
             onChange={(v) => setSelectedGrade(v)}
             options={grades.map((g) => ({ value: g, label: g }))}
           />
-          <div className={`${fieldClass} ${gridFullClass}`}>
+          <div className={gridFullClass}>
             <label
-              className="flex items-center gap-2 cursor-pointer text-sm hover:text-main transition-colors w-fit"
+              className="flex items-start gap-2 cursor-pointer text-sm hover:text-main transition-colors w-fit"
               style={{ color: 'var(--text-muted)' }}
             >
               <input
@@ -234,25 +235,25 @@ export default function AddExpertiseForm({
                 name="hideGrade"
                 defaultChecked={initialData?.hideGrade}
                 value="true"
-                className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer"
               />
-              Hide my acquired grade for this course from students
+              <span>Hide my acquired grade for this course from students</span>
             </label>
           </div>
         </FormSection>
 
         <FormSection label="Availability" icon={<Clock size={14} />} columns={1}>
           <label
-            className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-main w-fit hover:text-primary transition-colors"
+            className="flex items-start gap-2 cursor-pointer text-sm font-semibold text-main w-fit hover:text-primary transition-colors"
             style={{ marginBottom: '0.75rem' }}
           >
             <input
               type="checkbox"
               checked={isAllDay}
               onChange={(e) => handleAllDayChange(e.target.checked)}
-              className="w-4 h-4 rounded border-color text-primary focus:ring-primary cursor-pointer"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-color text-primary focus:ring-primary cursor-pointer"
             />
-            Everyday
+            <span>Everyday</span>
           </label>
 
           <div className="flex gap-2 flex-wrap" style={{ marginBottom: '1rem' }}>
