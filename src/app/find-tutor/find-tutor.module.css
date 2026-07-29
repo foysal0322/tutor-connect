@@ -309,60 +309,29 @@
   color: var(--surface-6);
 }
 
-.selectWrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.select {
-  appearance: none;
-  -webkit-appearance: none;
+/* Toolbar dropdown trigger — override the shared .form-select / .form-input
+   base so the trigger keeps the premium 44px card look while the popup uses
+   the unified themed panel. Scoped under .filterField for specificity. */
+.filterField :global(.form-select),
+.filterField :global(.form-input) {
   height: 44px;
   min-width: 168px;
-  padding: 0 2.5rem 0 0.95rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
   background: var(--card-bg);
-  color: var(--text-main);
   font-size: var(--text-sm);
   font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
 }
 
-.select:hover {
+.filterField :global(.form-select):hover,
+.filterField :global(.form-input):hover {
   border-color: var(--border-strong);
 }
 
-.select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-
 /* Active filter state */
-.selectActive {
+.filterFieldActive :global(.form-select),
+.filterFieldActive :global(.form-input) {
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary-hover);
-}
-
-.selectIcon {
-  position: absolute;
-  right: 0.7rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.selectActive + .selectIcon {
-  color: var(--primary);
 }
 
 .clearAll {
@@ -730,6 +699,23 @@
 .cta:focus-visible {
   outline: 3px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Shown instead of the request CTA when the viewer already teaches the
+   course — they cannot request tutoring for their own course. */
+.ctaDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--border-color);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: not-allowed;
 }
 
 .ctaIcon {
@@ -1123,8 +1109,8 @@
   .filterField {
     flex: 1;
   }
-  .select {
-    width: 100%;
+  .filterField :global(.form-select),
+  .filterField :global(.form-input) {
     min-width: 0;
   }
   .clearAll {

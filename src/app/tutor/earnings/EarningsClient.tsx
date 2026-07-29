@@ -191,7 +191,7 @@ export default function EarningsClient({
               name="transferType"
               label="Transfer Type"
               value={transferType}
-              onChange={(e) => setTransferType(e.target.value as any)}
+              onChange={(v) => setTransferType(v as any)}
               options={[
                 { value: "SEND_MONEY", label: "Send Money" },
                 { value: "PAYMENT", label: "Payment" },

@@ -66,3 +66,20 @@ export async function updateUserProfile(formData: FormData) {
   revalidatePath(`/${role.toLowerCase()}/profile`);
   return { success: true };
 }
+
+/**
+ * Returns the course ids the current user teaches (their TutorExpertise rows).
+ * Used client-side to disable "request tutoring" for a course they already
+ * teach — the authoritative guard lives in submitTutorRequest; this is the
+ * matching UI affordance. Returns an empty list for guests/students.
+ */
+export async function getMyTaughtCourseIds(): Promise<string[]> {
+  const session = await getServerSession(authOptions);
+  if (!session) return [];
+  const userId = (session.user as any).id;
+  const rows = await prisma.tutorExpertise.findMany({
+    where: { tutorId: userId },
+    select: { courseId: true },
+  });
+  return rows.map((r) => r.courseId);
+}

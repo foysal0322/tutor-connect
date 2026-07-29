@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/server/auth-gate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { prisma } from '@/lib/prisma';
+import { getMemberSidebarCounts } from '@/lib/server/member-counts';
 
 export default async function DashboardRootLayout({ children }: { children: React.ReactNode }) {
   // Unified member dashboard — both STUDENT and TUTOR roles are welcome.
@@ -9,19 +9,13 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     redirectTo: '/auth/signin?callbackUrl=/dashboard',
   });
 
-  // Count requests awaiting payment (MATCHED) so the sidebar shows a red badge
-  // on the Payments link. Visible across dashboard pages until the payment is done.
-  const paymentsDue = await prisma.tutorRequest.count({
-    where: {
-      studentId: (session.user as { id: string }).id,
-      status: 'MATCHED',
-    },
-  });
+  // Sidebar Payments badge: count of requests awaiting payment (MATCHED).
+  const currentCounts = await getMemberSidebarCounts((session.user as { id: string }).id);
 
   return (
     <DashboardLayout
       role={(session.user as { role: 'STUDENT' | 'TUTOR' }).role}
-      currentCounts={{ paymentsDue }}
+      currentCounts={currentCounts}
     >
       {children}
     </DashboardLayout>

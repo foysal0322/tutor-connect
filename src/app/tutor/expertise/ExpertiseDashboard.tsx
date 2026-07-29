@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/Badge';
 import StatCard from '@/components/ui/StatCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Select } from '@/components/ui/Select';
 
 import AddExpertiseForm from './AddExpertiseForm';
 import { deleteTutorExpertise, toggleTutorExpertise } from '../actions';
@@ -425,18 +426,17 @@ export default function ExpertiseDashboard({
                 <span>Inactive</span>
               </label>
 
-              <label htmlFor="expertise-sort" className="sr-only">
-                Sort expertise
-              </label>
-              <select
-                id="expertise-sort"
-                className={`form-select ${s.sortSelect}`}
+              <Select
+                label="Sort expertise"
+                hideLabel
+                containerClassName={s.sortSelect}
                 value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
-              >
-                <option value="recent">Recently added</option>
-                <option value="alpha">Alphabetical</option>
-              </select>
+                onChange={(v) => setSortKey(v as SortKey)}
+                options={[
+                  { value: 'recent', label: 'Recently added' },
+                  { value: 'alpha', label: 'Alphabetical' },
+                ]}
+              />
             </div>
           </div>
 

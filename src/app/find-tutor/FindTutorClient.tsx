@@ -18,8 +18,9 @@ import {
   BookOpen,
   Telescope,
   HandHeart,
-  ChevronDown,
 } from "lucide-react";
+import { Select } from "@/components/ui/Select";
+import { getMyTaughtCourseIds } from "@/app/actions/user";
 
 /* ------------------------------------------------------------------ */
 /* Types — mirror the server-mapped shape from page.tsx               */
@@ -103,6 +104,19 @@ export default function FindTutorClient({
     useState<TutorSummary | null>(null);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Courses the signed-in viewer teaches — used to disable "request tutoring"
+  // on their own courses. The authoritative guard lives in submitTutorRequest;
+  // this is the matching UI affordance.
+  const [taughtCourseIds, setTaughtCourseIds] = useState<string[]>([]);
+  const taughtCourseIdSet = useMemo(() => new Set(taughtCourseIds), [taughtCourseIds]);
+  useEffect(() => {
+    getMyTaughtCourseIds()
+      .then(setTaughtCourseIds)
+      .catch(() => {
+        /* leave buttons enabled; the server guard still protects */
+      });
+  }, []);
   const panelRef = useRef<HTMLDivElement>(null);
   const modalTitleId = useId();
 
@@ -288,46 +302,29 @@ export default function FindTutorClient({
           </div>
 
           <div className={styles.filters}>
-            <div className={styles.filterField}>
-              <label className={styles.filterLabel} htmlFor='filter-dept'>
-                Department
-              </label>
-              <div className={styles.selectWrap}>
-                <select
-                  id='filter-dept'
-                  className={`${styles.select} ${selectedDept ? styles.selectActive : ""}`}
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                >
-                  <option value=''>All departments</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className={styles.selectIcon} aria-hidden='true' />
-              </div>
-            </div>
+            <Select
+              containerClassName={`${styles.filterField} ${selectedDept ? styles.filterFieldActive : ""}`}
+              label="Department"
+              labelClassName={styles.filterLabel}
+              searchable
+              value={selectedDept}
+              onChange={setSelectedDept}
+              placeholderOption="All departments"
+              options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
+            />
 
-            <div className={styles.filterField}>
-              <label className={styles.filterLabel} htmlFor='filter-gender'>
-                Gender
-              </label>
-              <div className={styles.selectWrap}>
-                <select
-                  id='filter-gender'
-                  className={`${styles.select} ${selectedGender ? styles.selectActive : ""}`}
-                  value={selectedGender}
-                  onChange={(e) => setSelectedGender(e.target.value)}
-                >
-                  <option value=''>Any gender</option>
-                  <option value='Male'>Male</option>
-                  <option value='Female'>Female</option>
-                </select>
-                <ChevronDown className={styles.selectIcon} aria-hidden='true' />
-              </div>
-            </div>
+            <Select
+              containerClassName={`${styles.filterField} ${selectedGender ? styles.filterFieldActive : ""}`}
+              label="Gender"
+              labelClassName={styles.filterLabel}
+              value={selectedGender}
+              onChange={setSelectedGender}
+              placeholderOption="Any gender"
+              options={[
+                { value: 'Male', label: 'Male' },
+                { value: 'Female', label: 'Female' },
+              ]}
+            />
 
             {hasFilters && (
               <button
@@ -349,6 +346,7 @@ export default function FindTutorClient({
               {filteredExpertises.map((exp) => {
                 const reviews = exp.tutor.reviews ?? [];
                 const hasReviews = reviews.length > 0;
+                const viewerTeaches = taughtCourseIdSet.has(exp.course.id);
                 return (
                   <article key={exp.id} className={styles.card}>
                     {/* Identity */}
@@ -479,16 +477,22 @@ export default function FindTutorClient({
                           {reviews.length !== 1 ? "s" : ""}
                         </button>
                       )}
-                      <Link
-                        href={`/student/request-tutor?courseId=${exp.course.id}&tutorId=${exp.tutor.id}`}
-                        className={styles.cta}
-                      >
-                        Request Tutor for this Course
-                        <ArrowRight
-                          className={styles.ctaIcon}
-                          aria-hidden='true'
-                        />
-                      </Link>
+                      {viewerTeaches ? (
+                        <span className={styles.ctaDisabled} aria-disabled='true'>
+                          You teach this course
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/student/request-tutor?courseId=${exp.course.id}&tutorId=${exp.tutor.id}`}
+                          className={styles.cta}
+                        >
+                          Request Tutor for this Course
+                          <ArrowRight
+                            className={styles.ctaIcon}
+                            aria-hidden='true'
+                          />
+                        </Link>
+                      )}
                     </div>
                   </article>
                 );

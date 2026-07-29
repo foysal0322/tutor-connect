@@ -98,8 +98,7 @@ export default function RequestTutorForm({
             </>
           ) : (
             <div className={fieldClass}>
-              <label className="form-label">Course</label>
-              <SearchableCourseSelect courses={courses} defaultValue={defaultCourseId} />
+              <SearchableCourseSelect courses={courses} defaultValue={defaultCourseId} required />
             </div>
           )}
 

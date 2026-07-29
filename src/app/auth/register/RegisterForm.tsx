@@ -140,6 +140,7 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               containerClassName={fieldClass}
               name="departmentId"
               label="Department"
+              searchable
               required
               placeholderOption="Select department"
               options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}

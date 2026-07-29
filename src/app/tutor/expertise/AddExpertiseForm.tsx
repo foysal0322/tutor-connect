@@ -161,7 +161,6 @@ export default function AddExpertiseForm({
       <form action={handleSubmit} noValidate>
         <FormSection label="Course Details" icon={<BookOpen size={14} />}>
           <div className={`${fieldClass} ${gridFullClass}`}>
-            <label className="form-label">Course</label>
             <SearchableCourseSelect courses={courses} defaultValue={initialData?.courseId} />
           </div>
 
@@ -222,7 +221,7 @@ export default function AddExpertiseForm({
             required
             placeholderOption="Select Grade"
             value={selectedGrade}
-            onChange={(e) => setSelectedGrade(e.target.value)}
+            onChange={(v) => setSelectedGrade(v)}
             options={grades.map((g) => ({ value: g, label: g }))}
           />
           <div className={`${fieldClass} ${gridFullClass}`}>
