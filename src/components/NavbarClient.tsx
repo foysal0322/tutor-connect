@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard } from 'lucide-react';
-import NotificationBell from './NotificationBell';
-import UserMenu from './UserMenu';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
-import styles from './Navbar.module.css';
+import { useState, useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard } from "lucide-react";
+import NotificationBell from "./NotificationBell";
+import UserMenu from "./UserMenu";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import styles from "./Navbar.module.css";
 
 export default function NavbarClient({ session }: { session: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,17 +25,19 @@ export default function NavbarClient({ session }: { session: any }) {
   // for signed-in users — the unified Dashboard's Teaching tab covers it
   // (dual-role model: one member can both learn and teach).
   const dashboardHref =
-    session?.user?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
+    session?.user?.role === "ADMIN" ? "/admin/dashboard" : "/dashboard";
 
   // A nav item is active when we are on its exact route or a child of it.
   // "/" is exact-only so it never matches every page.
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname === href || pathname.startsWith(href + '/');
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   const activeClass = (href: string) =>
-    isActive(href) ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink;
+    isActive(href)
+      ? `${styles.navLink} ${styles.navLinkActive}`
+      : styles.navLink;
 
   const dashboardClass = () =>
     isActive(dashboardHref)
@@ -45,26 +47,65 @@ export default function NavbarClient({ session }: { session: any }) {
   return (
     <nav className={styles.navbar}>
       <div className={`container ${styles.navContainer}`}>
-        <Link href="/" className={styles.logo} onClick={() => setIsMobileMenuOpen(false)}>
+        <Link
+          href='/'
+          className={styles.logo}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
           <span className={styles.logoHighlight}>nsu</span>One
         </Link>
-        
+
         <div
           ref={mobileNavRef}
-          className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}
-          id="mobile-navigation"
-          role="navigation"
-          aria-label="Main navigation"
+          className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ""}`}
+          id='mobile-navigation'
+          role='navigation'
+          aria-label='Main navigation'
         >
-          <Link href="/" className={activeClass("/")} aria-current={isActive("/") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <Link href="/find-tutor" className={activeClass("/find-tutor")} aria-current={isActive("/find-tutor") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Find a Tutor</Link>
+          <Link
+            href='/'
+            className={activeClass("/")}
+            aria-current={isActive("/") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            href='/find-tutor'
+            className={activeClass("/find-tutor")}
+            aria-current={isActive("/find-tutor") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Find a Tutor
+          </Link>
           {!session && (
-            <Link href="/auth/tutor-register" className={activeClass("/auth/tutor-register")} aria-current={isActive("/auth/tutor-register") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>
+            <Link
+              href='/auth/tutor-register'
+              className={activeClass("/auth/tutor-register")}
+              aria-current={
+                isActive("/auth/tutor-register") ? "page" : undefined
+              }
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               Become a Tutor
             </Link>
           )}
-          <Link href="/tutorial" className={activeClass("/tutorial")} aria-current={isActive("/tutorial") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Tutorial</Link>
-          <Link href="/contact" className={activeClass("/contact")} aria-current={isActive("/contact") ? "page" : undefined} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+          <Link
+            href='/tutorial'
+            className={activeClass("/tutorial")}
+            aria-current={isActive("/tutorial") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Tutorial
+          </Link>
+          <Link
+            href='/contact'
+            className={activeClass("/contact")}
+            aria-current={isActive("/contact") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Contact
+          </Link>
           {session && (
             <Link
               href={dashboardHref}
@@ -72,21 +113,33 @@ export default function NavbarClient({ session }: { session: any }) {
               aria-current={isActive(dashboardHref) ? "page" : undefined}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <LayoutDashboard size={16} aria-hidden="true" />
+              <LayoutDashboard size={16} aria-hidden='true' />
               Dashboard
             </Link>
           )}
-        
+
           <div className={`${styles.authButtonsMobile}`}>
-            <Link href="/consultancy" className={styles.btnConsultancy} onClick={() => setIsMobileMenuOpen(false)}>Free Consultancy</Link>
+            <Link
+              href='/consultancy'
+              className={styles.btnConsultancy}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Free Consultancy
+            </Link>
             {!session ? (
-              <Link href="/auth/signin" className={styles.btnTutorSignIn} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+              <Link
+                href='/auth/signin'
+                className={styles.btnTutorSignIn}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
             ) : (
               <>
                 <NotificationBell />
                 <UserMenu
                   user={session.user}
-                  variant="inline"
+                  variant='inline'
                   onNavigate={() => setIsMobileMenuOpen(false)}
                 />
               </>
@@ -95,9 +148,13 @@ export default function NavbarClient({ session }: { session: any }) {
         </div>
 
         <div className={styles.authButtonsDesktop}>
-          <Link href="/consultancy" className={styles.btnConsultancy}>Free Consultancy</Link>
+          <Link href='/consultancy' className={styles.btnConsultancy}>
+            Free Consultancy
+          </Link>
           {!session ? (
-            <Link href="/auth/signin" className={styles.btnTutorSignIn}>Sign In</Link>
+            <Link href='/auth/signin' className={styles.btnTutorSignIn}>
+              Sign In
+            </Link>
           ) : (
             <>
               <NotificationBell />
@@ -111,20 +168,31 @@ export default function NavbarClient({ session }: { session: any }) {
           onClick={toggleMenu}
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-navigation"
-          aria-haspopup="true"
+          aria-controls='mobile-navigation'
+          aria-haspopup='true'
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            width='24'
+            height='24'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            aria-hidden='true'
+          >
             {isMobileMenuOpen ? (
               <>
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+                <line x1='18' y1='6' x2='6' y2='18'></line>
+                <line x1='6' y1='6' x2='18' y2='18'></line>
               </>
             ) : (
               <>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
+                <line x1='3' y1='12' x2='21' y2='12'></line>
+                <line x1='3' y1='6' x2='21' y2='6'></line>
+                <line x1='3' y1='18' x2='21' y2='18'></line>
               </>
             )}
           </svg>
