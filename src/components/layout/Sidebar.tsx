@@ -120,6 +120,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
             { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },
             { name: 'Visitors', href: '/admin/visitors', icon: Eye },
             { name: 'Profile', href: '/admin/profile', icon: User },
+            { name: 'Logout', href: '/auth/force-signout?reason=manual', icon: LogOut },
           ],
         },
       ];
@@ -154,6 +155,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
           { name: 'My Wallet', href: '/wallet', icon: CreditCard },
           { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
           { name: 'My Profile', href: '/profile', icon: User },
+          { name: 'Logout', href: '/auth/force-signout?reason=manual', icon: LogOut },
         ],
       },
     ];
@@ -181,7 +183,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
                   onClick={() => {
                     if (window.innerWidth <= 1024) onClose();
                   }}
-                  className={`${styles.navItem} ${isCurrent ? styles.active : ''}`}
+                  className={`${styles.navItem} ${link.name === 'Logout' ? styles.navItemDanger : ''} ${isCurrent ? styles.active : ''}`}
                   suppressHydrationWarning
                 >
                   <Icon size={20} className={styles.navItemIcon} />
@@ -193,13 +195,6 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
           </div>
         ))}
       </nav>
-
-      <div className={styles.sidebarFooter}>
-        <Link href="/auth/force-signout?reason=manual" className={styles.navItem}>
-          <LogOut size={20} className={styles.navItemIcon} />
-          Logout
-        </Link>
-      </div>
     </aside>
   );
 }
