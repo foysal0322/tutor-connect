@@ -731,13 +731,27 @@
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  transition:
-    transform var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.tutorCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 40%, transparent)
+  );
+  opacity: 0.85;
 }
 
 .tutorCard:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border-color));
   box-shadow: var(--shadow-hover);
 }
 
