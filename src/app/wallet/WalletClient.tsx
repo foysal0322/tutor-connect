@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 import { rechargeWallet } from './actions';
+import { formatBDT } from '@/lib/format';
 import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 import { useToast } from '@/components/ToastProvider';
 import { Input } from '@/components/ui/Input';
@@ -76,13 +77,6 @@ function txnMeta(type: string): { label: string; direction: Direction; tone: 'su
     default:
       return { label: type, direction: 'in', tone: 'neutral' };
   }
-}
-
-function formatBDT(n: number): string {
-  return Math.abs(n).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 function formatDate(d: string | Date): string {
