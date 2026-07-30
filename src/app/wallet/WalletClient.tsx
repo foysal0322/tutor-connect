@@ -160,10 +160,10 @@ export default function WalletClient({
   /* ----- render ----------------------------------------------------------- */
 
   return (
-    <div className={`flex flex-col gap-6 animate-fade-in w-full ${s.wrap}`}>
+    <div className={`flex flex-col gap-5 animate-fade-in w-full ${s.wrap}`}>
       {/* ---------- Header ---------- */}
       <header>
-        <h1 style={{ fontSize: 'var(--text-3xl)', marginBottom: 'var(--space-1)' }}>Campus Wallet</h1>
+        <h1 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-1)' }}>Campus Wallet</h1>
         <p style={{ color: 'var(--text-muted)', maxWidth: '42rem', margin: 0 }}>
           Top up your balance, track tuition payments, and monitor withdrawals — all in one place.
         </p>
@@ -204,20 +204,20 @@ export default function WalletClient({
           gap: 'var(--space-4)',
         }}
       >
-        <div className="card" style={{ padding: 'var(--space-5)' }}>
+        <div className="card" style={{ padding: 'var(--space-4)' }}>
           <div className={s.kpiLabel}>
             <ArrowDownLeft size={14} aria-hidden="true" /> Total Deposited
           </div>
           <div className={`${s.kpiValue} text-success-hover`}>৳{formatBDT(totalDeposited)}</div>
         </div>
-        <div className="card" style={{ padding: 'var(--space-5)' }}>
+        <div className="card" style={{ padding: 'var(--space-4)' }}>
           <div className={s.kpiLabel}>
             <ArrowUpRight size={14} aria-hidden="true" /> Total Spent (Tuition)
           </div>
           <div className={`${s.kpiValue} text-danger-hover`}>৳{formatBDT(totalSpent)}</div>
         </div>
         {pendingWithdrawals.length > 0 && (
-          <div className="card" style={{ padding: 'var(--space-5)' }}>
+          <div className="card" style={{ padding: 'var(--space-4)' }}>
             <div className={s.kpiLabel}>
               <Clock size={14} aria-hidden="true" /> Pending Withdrawal{pendingWithdrawals.length > 1 ? 's' : ''}
             </div>

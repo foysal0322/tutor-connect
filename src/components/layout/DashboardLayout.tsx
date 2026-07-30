@@ -38,7 +38,7 @@ export default function DashboardLayout({
           onMenuClick={() => setIsSidebarOpen(true)}
         />
         <main className={styles.content}>
-          <div className="container animate-fade-in">
+          <div className="container container-wide animate-fade-in">
             {children}
           </div>
         </main>

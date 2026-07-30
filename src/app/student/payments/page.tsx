@@ -62,8 +62,8 @@ export default async function StudentPaymentsPage() {
 
   return (
     <div className="max-w-full">
-      <h1 className="mb-2">Payments</h1>
-      <p className="text-muted mb-6">
+      <h1 className="mb-1 text-2xl">Payments</h1>
+      <p className="text-muted mb-4">
         Complete pending payments for your matched tutors and track your submitted payment history.
       </p>
 
@@ -85,7 +85,7 @@ export default async function StudentPaymentsPage() {
       </section>
 
       {/* ---------- KPI summary ---------- */}
-      <div className={`${s.kpiRow} mb-8`}>
+      <div className={`${s.kpiRow} mb-5`}>
         <div className={`card ${s.kpiCard}`}>
           <div className={s.kpiLabel}>
             <Clock size={14} aria-hidden="true" /> Awaiting Payment

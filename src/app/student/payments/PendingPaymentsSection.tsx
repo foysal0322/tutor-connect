@@ -25,7 +25,7 @@ export default function PendingPaymentsSection({
   const isEmpty = pending.length === 0;
 
   return (
-    <section className="mb-8">
+    <section className="mb-6">
       <div className="flex items-center gap-2 mb-2">
         <h2 className="m-0">Pending Payments</h2>
         {!isEmpty && <span className="badge badge-warning">{pending.length}</span>}

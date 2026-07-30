@@ -102,39 +102,39 @@ export default function EarningsClient({
   const calculatedNet = amount ? parseFloat(amount) * 0.95 : 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {/* Dynamic Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card border-t-4 border-primary">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="card card-compact border-t-4" style={{ borderTopColor: 'var(--primary)' }}>
           <span className="text-sm text-muted font-semibold">
             Total Completed Earnings
           </span>
-          <h2 className="text-3xl mt-1 text-primary">
+          <h2 className="text-2xl mt-1 text-primary">
             {totalEarned.toFixed(2)} BDT
           </h2>
-          <p className="mt-2 text-xs text-muted">
+          <p className="mt-1 text-xs text-muted">
             Accumulated from completed sessions
           </p>
         </div>
-        <div className="card border-t-4 border-accent">
+        <div className="card card-compact border-t-4" style={{ borderTopColor: 'var(--accent)' }}>
           <span className="text-sm text-muted font-semibold">
             Total Withdrawn / Pending
           </span>
-          <h2 className="text-3xl mt-1 text-accent">
+          <h2 className="text-2xl mt-1" style={{ color: 'var(--accent-hover)' }}>
             {withdrawn.toFixed(2)} BDT
           </h2>
-          <p className="mt-2 text-xs text-muted">
+          <p className="mt-1 text-xs text-muted">
             Includes pending request amounts
           </p>
         </div>
-        <div className="card border-t-4 border-success bg-success-light">
+        <div className="card card-compact border-t-4 bg-success-light" style={{ borderTopColor: 'var(--success)' }}>
           <span className="text-sm text-success-hover font-semibold">
             Available Balance
           </span>
-          <h2 className="text-3xl mt-1 text-success-hover">
+          <h2 className="text-2xl mt-1 text-success-hover">
             {balance.toFixed(2)} BDT
           </h2>
-          <p className="mt-2 text-xs text-success-hover">
+          <p className="mt-1 text-xs text-success-hover">
             Amount eligible for instant withdrawal
           </p>
         </div>
@@ -144,10 +144,10 @@ export default function EarningsClient({
       {success && <FormAlert tone="success">{success}</FormAlert>}
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ alignItems: 'start' }}>
         {/* Withdrawal Request Form Card */}
-        <div className="card h-fit lg:col-span-1">
-          <h3 className="text-xl mb-2">Request Withdrawal</h3>
+        <div className="card lg:col-span-1">
+          <h3 className="mb-2" style={{ fontSize: 'var(--text-lg)' }}>Request Withdrawal</h3>
           <p className="text-sm text-muted mb-6">
             Submit a withdrawal request to transfer available earnings to your
             MFS account.
@@ -230,16 +230,16 @@ export default function EarningsClient({
         </div>
 
         {/* Tables Column */}
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          <div className="card">
-            <h3 className="text-xl mb-4">Withdrawal Payout History</h3>
+        <div className="flex flex-col gap-5 lg:col-span-2">
+          <div className="card card-compact">
+            <h3 className="mb-3" style={{ fontSize: 'var(--text-lg)' }}>Withdrawal Payout History</h3>
 
             {payouts.length === 0 ? (
               <p className="text-muted text-sm text-center py-4">
                 No withdrawal requests found.
               </p>
             ) : (
-              <div className="data-grid-container max-h-[350px] overflow-y-auto">
+              <div className="data-grid-container overflow-y-auto" style={{ maxHeight: '350px' }}>
                 <table className="data-grid hidden md:table">
                   <thead className="sticky top-0 bg-white">
                     <tr>
@@ -349,15 +349,15 @@ export default function EarningsClient({
           </div>
 
           {/* Earnings / Completed Tuition Sessions */}
-          <div className="card">
-            <h3 className="text-xl mb-4">Tuition Earnings Log</h3>
+          <div className="card card-compact">
+            <h3 className="mb-3" style={{ fontSize: 'var(--text-lg)' }}>Tuition Earnings Log</h3>
 
             {completedRequests.length === 0 ? (
               <p className="text-muted text-sm text-center py-4">
                 No completed sessions found.
               </p>
             ) : (
-              <div className="data-grid-container max-h-[350px] overflow-y-auto">
+              <div className="data-grid-container overflow-y-auto" style={{ maxHeight: '350px' }}>
                 <table className="data-grid hidden md:table">
                   <thead className="sticky top-0 bg-white">
                     <tr>

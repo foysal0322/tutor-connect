@@ -14,7 +14,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-6) var(--space-6);
+  padding: var(--space-5);
 }
 
 .balanceMain {
@@ -170,13 +170,13 @@
 
 .depositCol,
 .historyCol {
-  padding: var(--space-6);
+  padding: var(--space-5);
 }
 
 .historyCol {
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  min-height: 360px;
 }
 
 /* ---------- Deposit form ---------- */
@@ -198,7 +198,7 @@
 .formSub {
   font-size: var(--text-sm);
   color: var(--text-muted);
-  margin: 0 0 var(--space-5);
+  margin: 0 0 var(--space-4);
 }
 
 .fieldLabel {
