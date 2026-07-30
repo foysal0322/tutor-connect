@@ -4,15 +4,11 @@
 
 /* ---------- Header ---------- */
 
+/* Header — plain message, not a card. The greeting + balance/profile
+   actions sit directly on the page background with no surface chrome. */
 .header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .headerTop {
