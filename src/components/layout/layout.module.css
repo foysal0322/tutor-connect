@@ -1,7 +1,11 @@
 /* Layout Shell */
 .layout {
   display: flex;
-  height: 100vh;
+  /* Reserve room for the sticky global Navbar rendered above us in the root
+     layout. At 100vh the shell pushed total document height to navbar + 100vh,
+     causing the page to scroll and the sidebar to slide up under the
+     (semi-transparent) navbar. The .content area scrolls internally instead. */
+  height: calc(100vh - var(--navbar-height, 80px));
   overflow: hidden;
   background-color: var(--bg-color);
 }
