@@ -27,6 +27,16 @@ const eslintConfig = defineConfig([
       "react-hooks/exhaustive-deps": "warn",
     },
   },
+  {
+    // prisma/seed.js is a CommonJS script (the package has no "type":
+    // "module"), so require() is the correct import form there. Seeding also
+    // legitimately logs progress to stdout.
+    files: ["prisma/seed.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -34,6 +44,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Tool-managed directory (skills, skill references, venvs) — not project
+    // source, and linting it produces thousands of spurious errors from
+    // vendored bundles like the playwright driver.
+    ".claude/**",
   ]),
 ]);
 

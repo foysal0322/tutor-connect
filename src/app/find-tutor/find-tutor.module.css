@@ -214,6 +214,9 @@
 
 /* ---------------------------------------------------------------------
    TOOLBAR — result summary + active chips + filters
+   On desktop the toolbar pins under the navbar so search/department/
+   gender stay visible while the cards scroll past. Mobile keeps the
+   default static flow (handled in the responsive block below).
 --------------------------------------------------------------------- */
 .toolbar {
   display: flex;
@@ -1106,6 +1109,19 @@
 /* ---------------------------------------------------------------------
    RESPONSIVE
 --------------------------------------------------------------------- */
+/* Desktop: pin toolbar under the navbar so it stays in view while the
+   card grid scrolls. Mobile keeps static flow for a natural top-to-bottom
+   read. 720px matches the existing mobile breakpoint. */
+@media (min-width: 721px) {
+  .toolbar {
+    position: sticky;
+    top: var(--navbar-height);
+    z-index: 20;
+    padding: var(--space-3) 0;
+    background: var(--bg-color);
+  }
+}
+
 @media (max-width: 720px) {
   .toolbar {
     flex-direction: column;

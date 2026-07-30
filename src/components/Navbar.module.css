@@ -96,25 +96,24 @@
 }
 
 .navLinkHot {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--info-hover);
-  background-color: var(--info-light);
-  padding: 0.4rem 0.6rem;
+  background-color: color-mix(in srgb, var(--info-light) 55%, transparent);
+  padding: 0.3rem 0.55rem;
   border-radius: 9999px;
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  border: 1px solid var(--info);
+  border: 1px solid color-mix(in srgb, var(--info) 35%, transparent);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .navLink.navLinkHot:hover {
-  background-color: var(--info-hover);
-  color: #ffffff !important;
-  border-color: var(--info-hover);
-  transform: translateY(-1px);
+  background-color: var(--info-light);
+  border-color: var(--info);
+  color: var(--info-hover);
 }
 
 /* Dashboard pill — eye-catchy primary CTA shown only when signed in. */

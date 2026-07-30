@@ -172,28 +172,6 @@ export default function FindTutorClient({
   return (
     <div className={styles.page}>
       {/* ============================================================ */}
-      {/* HERO                                                         */}
-      {/* ============================================================ */}
-      <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <span className={styles.kicker}>
-            <span className={styles.kickerDot} aria-hidden='true' />
-            NSU Private Tutoring
-          </span>
-
-          <h1 className={styles.heroTitle}>
-            Find the <span className={styles.heroAccent}>right tutor</span> for
-            your NSU course
-          </h1>
-
-          <p className={styles.heroSubtitle}>
-            Search by course or tutor name to connect with experienced NSU
-            students who can help you ace your courses.
-          </p>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
       {/* CONTENT                                                      */}
       {/* ============================================================ */}
       <div className={styles.content}>
