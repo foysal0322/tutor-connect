@@ -1,44 +1,72 @@
 import React from 'react';
+import styles from './admin-dashboard.module.css';
 
+function Bar({ w, h }: { w: number | string; h: number }) {
+  return <div className="skeleton rounded" style={{ width: w, height: h }} />;
+}
+
+// Skeleton mirrors the refactored admin dashboard layout (header, KPI grid,
+// metric tiles, charts) using the shared module classes so the loading state
+// matches the real layout footprint. Inline sizes avoid the missing w-/h-
+// utility classes this Tailwind-less project doesn't define.
 export default function AdminDashboardLoading() {
   return (
-    <div className="flex flex-col gap-8 pb-12 animate-fade-in">
-      {/* Header Skeleton */}
-      <div className="bg-white p-6 rounded-2xl border border-color shadow-sm flex justify-between items-center">
-        <div className="flex flex-col gap-2">
-          <div className="skeleton h-7 w-64 rounded-lg" />
-          <div className="skeleton h-4 w-96 rounded-md" />
+    <div className={styles.page}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.headerLead}>
+          <span className={`${styles.headerIcon} skeleton`} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+            <Bar w={260} h={26} />
+            <Bar w={360} h={14} />
+          </div>
         </div>
-        <div className="skeleton h-9 w-40 rounded-full" />
+        <div className={styles.headerMeta}>
+          <Bar w={168} h={26} />
+          <Bar w={132} h={26} />
+        </div>
       </div>
 
-      {/* KPI Cards Skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* KPI cards */}
+      <div className={styles.kpiGrid}>
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="card p-5 flex flex-col justify-between h-36">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-2">
-                <div className="skeleton h-3 w-24 rounded" />
-                <div className="skeleton h-8 w-16 rounded" />
+          <div key={i} className={styles.kpi}>
+            <div className={styles.kpiHead}>
+              <div className={styles.kpiLabelBlock}>
+                <Bar w={104} h={12} />
+                <div style={{ height: 8 }} />
+                <Bar w={64} h={26} />
               </div>
-              <div className="skeleton h-12 w-12 rounded-2xl" />
+              <span className={`${styles.kpiIcon} skeleton`} />
             </div>
-            <div className="skeleton h-3 w-full rounded mt-4" />
+            <Bar w="100%" h={12} />
           </div>
         ))}
       </div>
 
-      {/* Secondary Metrics Skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric tiles */}
+      <div className={styles.metricGrid}>
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="card p-4 h-16 skeleton rounded-xl" />
+          <div key={i} className={styles.metricTile}>
+            <span className={`${styles.metricTileIcon} skeleton`} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 0 }}>
+              <Bar w={110} h={12} />
+              <Bar w={150} h={16} />
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Charts Skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card lg:col-span-2 p-6 h-[420px] skeleton rounded-2xl" />
-        <div className="card p-6 h-[420px] skeleton rounded-2xl" />
+      {/* Charts */}
+      <div className={styles.chartGrid}>
+        <div className={styles.chartCard}>
+          <Bar w={200} h={18} />
+          <div className="skeleton rounded" style={{ width: '100%', height: 300 }} />
+        </div>
+        <div className={styles.chartCard}>
+          <Bar w={180} h={18} />
+          <div className="skeleton rounded" style={{ width: '100%', height: 220 }} />
+        </div>
       </div>
     </div>
   );

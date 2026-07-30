@@ -352,7 +352,7 @@ export default async function DashboardPage() {
 
   // -------- Learning panel (server-rendered; passed to client orchestrator) --------
   const learningPanel = (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h2 className="mb-0">Learning</h2>
         <Link href="/student/request-tutor" className="btn-primary">
@@ -360,7 +360,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Active Requests" value={activeLearningRequests} icon={<BookOpen size={20} />} />
         <StatCard title="Completed Sessions" value={completedLearningSessions} icon={<CheckCircle size={20} />} />
         <StatCard title="Consultancy Requests" value={consultancyCount} icon={<MessageSquare size={20} />} />
@@ -368,25 +368,25 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/find-tutor" className="card card-hover flex flex-col items-center justify-center p-6 text-center gap-3">
+        <Link href="/find-tutor" className="card card-hover flex flex-col items-center justify-center p-4 text-center gap-3">
           <div className="p-3 bg-primary-light text-primary rounded-full">
             <Search size={24} />
           </div>
           <span className="font-semibold">Find a Tutor</span>
         </Link>
-        <Link href="/student/request-tutor" className="card card-hover flex flex-col items-center justify-center p-6 text-center gap-3">
+        <Link href="/student/request-tutor" className="card card-hover flex flex-col items-center justify-center p-4 text-center gap-3">
           <div className="p-3 bg-success-light text-success-hover rounded-full">
             <PlusCircle size={24} />
           </div>
           <span className="font-semibold">Request a Tutor</span>
         </Link>
-        <Link href="/consultancy" className="card card-hover flex flex-col items-center justify-center p-6 text-center gap-3">
+        <Link href="/consultancy" className="card card-hover flex flex-col items-center justify-center p-4 text-center gap-3">
           <div className="p-3 bg-accent-light text-accent-hover rounded-full">
             <MessageSquare size={24} />
           </div>
           <span className="font-semibold">Consultancy</span>
         </Link>
-        <Link href="/student/payments" className="card card-hover flex flex-col items-center justify-center p-6 text-center gap-3">
+        <Link href="/student/payments" className="card card-hover flex flex-col items-center justify-center p-4 text-center gap-3">
           <div className="p-3 bg-info-light text-info-hover rounded-full">
             <History size={24} />
           </div>
@@ -395,7 +395,7 @@ export default async function DashboardPage() {
       </div>
 
       <div>
-        <h3 className="mb-4">Recent Requests</h3>
+        <h3 className="mb-3">Recent Requests</h3>
         <StudentRequestList
           initialRequests={learningRequests.slice(0, 5)}
           userBalance={userBalance}

@@ -202,7 +202,7 @@ export default function DashboardContent({
   const learningCount = data.learningCount;
 
   return (
-    <div className="flex flex-col gap-6 pb-12">
+    <div className="flex flex-col gap-5 pb-6">
       {/* -------- Header (role-neutral — tabs own role-specific CTAs) -------- */}
       <header className={styles.header}>
         <div className={styles.headerTop}>
@@ -297,7 +297,7 @@ function TeachingPanel({
   const showBanner = bannerCount > 0;
 
   return (
-    <section className="flex flex-col gap-6" aria-labelledby="teaching-heading">
+    <section className="flex flex-col gap-5" aria-labelledby="teaching-heading">
       <div className="flex items-center justify-between">
         <h2 id="teaching-heading" className="mb-0">
           Teaching
@@ -414,7 +414,7 @@ function TeachingPanel({
       </div>
 
       {/* -------- Action Center + Performance Summary -------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ActionCenter items={actionItems} />
         <PerformanceSummary
           data={{
@@ -428,7 +428,7 @@ function TeachingPanel({
       </div>
 
       {/* -------- Charts row -------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className={`${styles.section} lg:col-span-1`}>
           <div className={styles.sectionHead}>
             <h3 className={styles.sectionTitle}>
@@ -492,7 +492,7 @@ function TeachingPanel({
       </div>
 
       {/* -------- Activity + Assigned students -------- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <RecentActivity entries={t.activity} />
         <section className={styles.section} aria-labelledby="assigned-title">
           <div className={styles.sectionHead}>
