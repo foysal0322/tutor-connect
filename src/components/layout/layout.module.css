@@ -17,17 +17,6 @@
   z-index: 50;
 }
 
-.sidebarHeader {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--primary);
-}
-
 .sidebarNav {
   flex: 1;
   padding: 1.5rem 1rem;
@@ -137,12 +126,14 @@
   overflow: hidden;
 }
 
-/* Top Nav */
+/* Top Nav — mobile/tablet only. On desktop the sidebar is persistent, so
+   this bar would render empty (the menu toggle is hidden > 1024px) and just
+   waste a 64px strip above the page content. */
 .topNav {
+  display: none;
   height: 64px;
   background-color: var(--card-bg);
   border-bottom: 1px solid var(--border-color);
-  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
@@ -229,7 +220,11 @@
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
+  .topNav {
+    display: flex;
+  }
+
   .menuToggle {
     display: block;
   }

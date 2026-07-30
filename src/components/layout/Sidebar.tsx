@@ -163,13 +163,6 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
-      <div className={styles.sidebarHeader}>
-        <div className="flex items-center gap-2">
-          <GraduationCap className="text-primary" size={28} />
-          <span>nsuOne</span>
-        </div>
-      </div>
-      
       <nav className={styles.sidebarNav}>
         {groups.map((group, gi) => (
           <div key={group.heading ?? `group-${gi}`} className={styles.navGroup}>
