@@ -39,11 +39,6 @@ export default function NavbarClient({ session }: { session: any }) {
       ? `${styles.navLink} ${styles.navLinkActive}`
       : styles.navLink;
 
-  const dashboardClass = () =>
-    isActive(dashboardHref)
-      ? `${styles.navLinkDashboard} ${styles.navLinkDashboardActive}`
-      : styles.navLinkDashboard;
-
   return (
     <nav className={styles.navbar}>
       <div className={`container ${styles.navContainer}`}>
@@ -106,26 +101,20 @@ export default function NavbarClient({ session }: { session: any }) {
           >
             Contact
           </Link>
-          {session && (
-            <Link
-              href={dashboardHref}
-              className={dashboardClass()}
-              aria-current={isActive(dashboardHref) ? "page" : undefined}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <LayoutDashboard size={16} aria-hidden='true' />
-              Dashboard
-            </Link>
-          )}
+          <Link
+            href='/consultancy'
+            className={
+              !session
+                ? `${styles.navLink} ${styles.navLinkHot}`
+                : activeClass("/consultancy")
+            }
+            aria-current={isActive("/consultancy") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Free Consultancy
+          </Link>
 
           <div className={`${styles.authButtonsMobile}`}>
-            <Link
-              href='/consultancy'
-              className={styles.btnConsultancy}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Free Consultancy
-            </Link>
             {!session ? (
               <Link
                 href='/auth/signin'
@@ -148,9 +137,6 @@ export default function NavbarClient({ session }: { session: any }) {
         </div>
 
         <div className={styles.authButtonsDesktop}>
-          <Link href='/consultancy' className={styles.btnConsultancy}>
-            Free Consultancy
-          </Link>
           {!session ? (
             <Link href='/auth/signin' className={styles.btnTutorSignIn}>
               Sign In
@@ -158,6 +144,18 @@ export default function NavbarClient({ session }: { session: any }) {
           ) : (
             <>
               <NotificationBell />
+              <Link
+                href={dashboardHref}
+                className={
+                  isActive(dashboardHref)
+                    ? `${styles.dashboardInline} ${styles.dashboardInlineActive}`
+                    : styles.dashboardInline
+                }
+                aria-current={isActive(dashboardHref) ? "page" : undefined}
+              >
+                <LayoutDashboard size={16} aria-hidden='true' />
+                Dashboard
+              </Link>
               <UserMenu user={session.user} />
             </>
           )}
