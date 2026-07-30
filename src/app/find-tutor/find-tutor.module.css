@@ -99,10 +99,18 @@
 }
 
 /* Search */
+/* Search field — mirrors .filterField (label + control) so it aligns with the
+   Department/Gender selects, and grows to fill the left side of the row. */
 .searchWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.searchBox {
   position: relative;
-  max-width: 620px;
-  margin: 0 auto;
 }
 
 .searchIcon {
@@ -119,7 +127,7 @@
 
 .searchInput {
   width: 100%;
-  height: 52px;
+  height: 44px;
   padding: 0 3.25rem 0 3.25rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
@@ -190,17 +198,6 @@
   outline-offset: 1px;
 }
 
-.searchHint {
-  margin-top: var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--surface-6);
-}
-
-.searchHint strong {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
 /* ---------------------------------------------------------------------
    CONTENT WRAPPER (toolbar + grid + fallback)
 --------------------------------------------------------------------- */
@@ -215,11 +212,17 @@
 --------------------------------------------------------------------- */
 .toolbar {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+/* Controls row: search grows on the left, filters pin to the right. */
+.toolbarControls {
+  display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  gap: var(--space-3);
 }
 
 .toolbarMain {
@@ -1103,6 +1106,13 @@
     flex-direction: column;
     align-items: stretch;
   }
+  .toolbarControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .searchWrap {
+    max-width: none;
+  }
   .filters {
     width: 100%;
   }
@@ -1134,7 +1144,7 @@
     font-size: 1.5rem;
   }
   .searchInput {
-    height: 48px;
+    height: 44px;
     font-size: 1rem;
   }
   .cgpaBadge {

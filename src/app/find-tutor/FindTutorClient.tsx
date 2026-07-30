@@ -191,42 +191,6 @@ export default function FindTutorClient({
             South University students who can help you master your courses, prep
             for exams, and lift your grades.
           </p>
-
-          {/* Search */}
-          <div className={styles.searchWrap}>
-            <label htmlFor='find-tutor-search' className='sr-only'>
-              Search tutors by course name or tutor name
-            </label>
-            <Search className={styles.searchIcon} aria-hidden='true' />
-            <input
-              id='find-tutor-search'
-              type='text'
-              className={styles.searchInput}
-              placeholder='Search by course name or tutor name...'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoComplete='off'
-              aria-describedby='find-tutor-hint'
-            />
-            {isSearching && (
-              <Loader2 className={styles.searchLive} aria-hidden='true' />
-            )}
-            {searchQuery && !isSearching && (
-              <button
-                type='button'
-                className={styles.searchClear}
-                onClick={() => setSearchQuery("")}
-                aria-label='Clear search'
-              >
-                <X size={16} aria-hidden='true' />
-              </button>
-            )}
-          </div>
-
-          <p className={styles.searchHint} id='find-tutor-hint'>
-            <strong>{totalOptions}</strong> tutor options across{" "}
-            <strong>{departments.length}</strong> departments
-          </p>
         </div>
       </section>
 
@@ -301,7 +265,39 @@ export default function FindTutorClient({
             )}
           </div>
 
-          <div className={styles.filters}>
+          <div className={styles.toolbarControls}>
+            <div className={styles.searchWrap}>
+              <label htmlFor='find-tutor-search' className={styles.filterLabel}>
+                Search
+              </label>
+              <div className={styles.searchBox}>
+                <Search className={styles.searchIcon} aria-hidden='true' />
+                <input
+                  id='find-tutor-search'
+                  type='text'
+                  className={styles.searchInput}
+                  placeholder='Course or tutor name...'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoComplete='off'
+                />
+                {isSearching && (
+                  <Loader2 className={styles.searchLive} aria-hidden='true' />
+                )}
+                {searchQuery && !isSearching && (
+                  <button
+                    type='button'
+                    className={styles.searchClear}
+                    onClick={() => setSearchQuery('')}
+                    aria-label='Clear search'
+                  >
+                    <X size={16} aria-hidden='true' />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.filters}>
             <Select
               containerClassName={`${styles.filterField} ${selectedDept ? styles.filterFieldActive : ""}`}
               label="Department"
@@ -336,6 +332,7 @@ export default function FindTutorClient({
                 Clear all
               </button>
             )}
+          </div>
           </div>
         </div>
 
