@@ -104,9 +104,9 @@ export default function NavbarClient({ session }: { session: any }) {
           <Link
             href='/consultancy'
             className={
-              !session
-                ? `${styles.navLink} ${styles.navLinkHot}`
-                : activeClass("/consultancy")
+              isActive("/consultancy")
+                ? `${styles.navLink} ${styles.navLinkHot} ${styles.navLinkActive}`
+                : `${styles.navLink} ${styles.navLinkHot}`
             }
             aria-current={isActive("/consultancy") ? "page" : undefined}
             onClick={() => setIsMobileMenuOpen(false)}

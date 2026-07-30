@@ -26,13 +26,17 @@ export default function RequestTutorForm({
 }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Disable selection of past dates/times in the preferred datetime picker.
-  // Computed once on mount in the user's local timezone; format: YYYY-MM-DDTHH:mm
-  const [minDateTime] = useState(() => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  });
+  // Native <input type="datetime-local"> renders an inconsistent, time-less
+  // control in Firefox. We split it into date + time inputs (both reliable
+  // cross-browser) and merge back into a single ISO-ish string on submit.
+  // Values are in the user's local timezone; format: YYYY-MM-DD / HH:mm.
+  const todayStr = useState(() => new Date().toISOString().slice(0, 10))[0];
+  const [preferredDate, setPreferredDate] = useState('');
+  const [preferredTime, setPreferredTime] = useState('');
+  // When the chosen day is today, also block past times.
+  const minTime = preferredDate === todayStr
+    ? new Date().toTimeString().slice(0, 5)
+    : undefined;
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultCourseId = searchParams.get('courseId') || '';
@@ -50,6 +54,18 @@ export default function RequestTutorForm({
       formData.set('courseId', defaultCourseId);
       formData.set('budget', defaultFee.toString());
       formData.set('tutorId', selectedTutor.id);
+    }
+
+    // Merge the date + time fields back into the single preferredDateTime
+    // value the schema/server expects. Treat "only one of the two filled"
+    // as invalid so we never persist a half-formed timestamp.
+    if (preferredDate && preferredTime) {
+      formData.set('preferredDateTime', `${preferredDate}T${preferredTime}`);
+    } else if (!preferredDate && !preferredTime) {
+      formData.set('preferredDateTime', '');
+    } else {
+      setError('Please fill in both the preferred date and the time, or leave both blank.');
+      return;
     }
 
     if (!formData.get('courseId')) {
@@ -134,13 +150,28 @@ export default function RequestTutorForm({
             error={form.errors.preferredMode}
           />
 
-          <Input
-            containerClassName={fieldClass}
-            name="preferredDateTime"
-            type="datetime-local"
-            label="Preferred Date & Time (Optional)"
-            min={minDateTime}
-          />
+          <div className={fieldClass} style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ flex: 1 }}>
+              <Input
+                name="preferredDate"
+                type="date"
+                label="Preferred Date (Optional)"
+                min={todayStr}
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Input
+                name="preferredTime"
+                type="time"
+                label="Preferred Time (Optional)"
+                min={minTime}
+                value={preferredTime}
+                onChange={(e) => setPreferredTime(e.target.value)}
+              />
+            </div>
+          </div>
 
           {!selectedTutor && (
             <Input

@@ -109,7 +109,10 @@ export default function FindTutorClient({
   // on their own courses. The authoritative guard lives in submitTutorRequest;
   // this is the matching UI affordance.
   const [taughtCourseIds, setTaughtCourseIds] = useState<string[]>([]);
-  const taughtCourseIdSet = useMemo(() => new Set(taughtCourseIds), [taughtCourseIds]);
+  const taughtCourseIdSet = useMemo(
+    () => new Set(taughtCourseIds),
+    [taughtCourseIds]
+  );
   useEffect(() => {
     getMyTaughtCourseIds()
       .then(setTaughtCourseIds)
@@ -177,38 +180,21 @@ export default function FindTutorClient({
       <div className={styles.content}>
         {/* ----- Toolbar: result summary + active chips + filters ----- */}
         <div className={styles.toolbar}>
-          <div className={styles.toolbarMain}>
-            <p className={styles.resultSummary} aria-live='polite'>
-              {hasFilters ? (
-                <>
-                  Showing{" "}
-                  <span className={styles.resultStrong}>
-                    {filteredExpertises.length}
-                  </span>{" "}
-                  of {totalOptions} options
-                </>
-              ) : (
-                <>
-                  <span className={styles.resultStrong}>{totalOptions}</span>{" "}
-                  tutor options available
-                </>
-              )}
-            </p>
-
-            {hasFilters && (
-              <div className={styles.chips} aria-label='Active filters'>
+          {hasFilters && (
+            <div className={styles.toolbarMain}>
+              <div className={styles.chips} aria-label="Active filters">
                 {searchQuery && (
                   <span className={styles.chip}>
                     <span className={styles.chipLabel}>
                       &ldquo;{searchQuery}&rdquo;
                     </span>
                     <button
-                      type='button'
+                      type="button"
                       className={styles.chipRemove}
                       onClick={() => setSearchQuery("")}
                       aria-label={`Clear search ${searchQuery}`}
                     >
-                      <X size={12} aria-hidden='true' />
+                      <X size={12} aria-hidden="true" />
                     </button>
                   </span>
                 )}
@@ -216,12 +202,12 @@ export default function FindTutorClient({
                   <span className={styles.chip}>
                     <span className={styles.chipLabel}>{selectedDeptName}</span>
                     <button
-                      type='button'
+                      type="button"
                       className={styles.chipRemove}
                       onClick={() => setSelectedDept("")}
                       aria-label={`Clear department filter ${selectedDeptName}`}
                     >
-                      <X size={12} aria-hidden='true' />
+                      <X size={12} aria-hidden="true" />
                     </button>
                   </span>
                 )}
@@ -229,87 +215,87 @@ export default function FindTutorClient({
                   <span className={styles.chip}>
                     <span className={styles.chipLabel}>{selectedGender}</span>
                     <button
-                      type='button'
+                      type="button"
                       className={styles.chipRemove}
                       onClick={() => setSelectedGender("")}
                       aria-label={`Clear gender filter ${selectedGender}`}
                     >
-                      <X size={12} aria-hidden='true' />
+                      <X size={12} aria-hidden="true" />
                     </button>
                   </span>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className={styles.toolbarControls}>
             <div className={styles.searchWrap}>
-              <label htmlFor='find-tutor-search' className={styles.filterLabel}>
-                Search
-              </label>
               <div className={styles.searchBox}>
-                <Search className={styles.searchIcon} aria-hidden='true' />
+                <Search className={styles.searchIcon} aria-hidden="true" />
                 <input
-                  id='find-tutor-search'
-                  type='text'
+                  id="find-tutor-search"
+                  type="text"
                   className={styles.searchInput}
-                  placeholder='Course or tutor name...'
+                  placeholder="Course or tutor name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  autoComplete='off'
+                  autoComplete="off"
                 />
                 {isSearching && (
-                  <Loader2 className={styles.searchLive} aria-hidden='true' />
+                  <Loader2 className={styles.searchLive} aria-hidden="true" />
                 )}
                 {searchQuery && !isSearching && (
                   <button
-                    type='button'
+                    type="button"
                     className={styles.searchClear}
-                    onClick={() => setSearchQuery('')}
-                    aria-label='Clear search'
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
                   >
-                    <X size={16} aria-hidden='true' />
+                    <X size={16} aria-hidden="true" />
                   </button>
                 )}
               </div>
             </div>
 
             <div className={styles.filters}>
-            <Select
-              containerClassName={`${styles.filterField} ${selectedDept ? styles.filterFieldActive : ""}`}
-              label="Department"
-              labelClassName={styles.filterLabel}
-              searchable
-              value={selectedDept}
-              onChange={setSelectedDept}
-              placeholderOption="All departments"
-              options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
-            />
+              <Select
+                containerClassName={`${styles.filterField} ${selectedDept ? styles.filterFieldActive : ""}`}
+                label=""
+                labelClassName={styles.filterLabel}
+                searchable
+                value={selectedDept}
+                onChange={setSelectedDept}
+                placeholderOption="All departments"
+                options={departments.map((dept) => ({
+                  value: dept.id,
+                  label: dept.name,
+                }))}
+              />
 
-            <Select
-              containerClassName={`${styles.filterField} ${selectedGender ? styles.filterFieldActive : ""}`}
-              label="Gender"
-              labelClassName={styles.filterLabel}
-              value={selectedGender}
-              onChange={setSelectedGender}
-              placeholderOption="Any gender"
-              options={[
-                { value: 'Male', label: 'Male' },
-                { value: 'Female', label: 'Female' },
-              ]}
-            />
+              <Select
+                containerClassName={`${styles.filterField} ${selectedGender ? styles.filterFieldActive : ""}`}
+                label=""
+                labelClassName={styles.filterLabel}
+                value={selectedGender}
+                onChange={setSelectedGender}
+                placeholderOption="Select gender"
+                options={[
+                  { value: "Male", label: "Male" },
+                  { value: "Female", label: "Female" },
+                ]}
+              />
 
-            {hasFilters && (
-              <button
-                type='button'
-                className={styles.clearAll}
-                onClick={clearAll}
-              >
-                <X size={15} aria-hidden='true' />
-                Clear all
-              </button>
-            )}
-          </div>
+              {hasFilters && (
+                <button
+                  type="button"
+                  className={styles.clearAll}
+                  onClick={clearAll}
+                >
+                  <X size={15} aria-hidden="true" />
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -325,7 +311,7 @@ export default function FindTutorClient({
                   <article key={exp.id} className={styles.card}>
                     {/* Identity */}
                     <div className={styles.cardTop}>
-                      <div className={styles.avatar} aria-hidden='true'>
+                      <div className={styles.avatar} aria-hidden="true">
                         {getInitials(exp.tutor.name)}
                       </div>
                       <div className={styles.identity}>
@@ -346,7 +332,7 @@ export default function FindTutorClient({
                     <div className={styles.courseBlock}>
                       <BookOpen
                         className={styles.courseIcon}
-                        aria-hidden='true'
+                        aria-hidden="true"
                       />
                       <div className={styles.courseMeta}>
                         <span className={styles.courseLabel}>Teaches</span>
@@ -390,7 +376,7 @@ export default function FindTutorClient({
                         <span className={styles.rating}>
                           <Star
                             className={styles.starIcon}
-                            aria-hidden='true'
+                            aria-hidden="true"
                           />
                           {exp.tutor.averageRating}
                         </span>
@@ -401,21 +387,21 @@ export default function FindTutorClient({
                           New to tutoring
                         </span>
                       )}
-                      <span className={styles.trustDot} aria-hidden='true' />
+                      <span className={styles.trustDot} aria-hidden="true" />
                       <span className={styles.trustMeta}>
-                        <Users className={styles.metaIcon} aria-hidden='true' />
+                        <Users className={styles.metaIcon} aria-hidden="true" />
                         {exp.tutor.studentsTaught ?? 0} taught
                       </span>
                       {hasReviews && (
                         <>
                           <span
                             className={styles.trustDot}
-                            aria-hidden='true'
+                            aria-hidden="true"
                           />
                           <span className={styles.trustMeta}>
                             <MessageSquareQuote
                               className={styles.metaIcon}
-                              aria-hidden='true'
+                              aria-hidden="true"
                             />
                             {reviews.length} review
                             {reviews.length !== 1 ? "s" : ""}
@@ -427,8 +413,8 @@ export default function FindTutorClient({
                     {/* Availability + fee */}
                     <div className={styles.availFee}>
                       <span className={styles.avail} title={exp.availability}>
-                        <span className={styles.availDot} aria-hidden='true' />
-                        <Clock className={styles.metaIcon} aria-hidden='true' />
+                        <span className={styles.availDot} aria-hidden="true" />
+                        <Clock className={styles.metaIcon} aria-hidden="true" />
                         <span className={styles.availText}>
                           {exp.availability}
                         </span>
@@ -443,7 +429,7 @@ export default function FindTutorClient({
                     <div className={styles.cardFooter}>
                       {hasReviews && (
                         <button
-                          type='button'
+                          type="button"
                           className={styles.reviewsBtn}
                           onClick={() => setActiveReviewsTutor(exp.tutor)}
                         >
@@ -452,7 +438,10 @@ export default function FindTutorClient({
                         </button>
                       )}
                       {viewerTeaches ? (
-                        <span className={styles.ctaDisabled} aria-disabled='true'>
+                        <span
+                          className={styles.ctaDisabled}
+                          aria-disabled="true"
+                        >
                           You teach this course
                         </span>
                       ) : (
@@ -463,7 +452,7 @@ export default function FindTutorClient({
                           Request Tutor for this Course
                           <ArrowRight
                             className={styles.ctaIcon}
-                            aria-hidden='true'
+                            aria-hidden="true"
                           />
                         </Link>
                       )}
@@ -474,7 +463,7 @@ export default function FindTutorClient({
             </div>
           ) : (
             <div className={styles.emptyState}>
-              <div className={styles.emptyIcon} aria-hidden='true'>
+              <div className={styles.emptyIcon} aria-hidden="true">
                 <Telescope />
               </div>
               <h3 className={styles.emptyTitle}>No tutors found</h3>
@@ -485,16 +474,16 @@ export default function FindTutorClient({
               <div className={styles.emptyActions}>
                 {hasFilters && (
                   <button
-                    type='button'
-                    className='btn-secondary'
+                    type="button"
+                    className="btn-secondary"
                     onClick={clearAll}
                   >
                     Clear all filters
                   </button>
                 )}
-                <Link href='/student/request-tutor' className='btn-primary'>
+                <Link href="/student/request-tutor" className="btn-primary">
                   Request a tutor
-                  <ArrowRight size={16} aria-hidden='true' />
+                  <ArrowRight size={16} aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -503,7 +492,7 @@ export default function FindTutorClient({
 
         {/* ----- Fallback CTA ----- */}
         <section className={styles.fallback}>
-          <div className={styles.fallbackIcon} aria-hidden='true'>
+          <div className={styles.fallbackIcon} aria-hidden="true">
             <HandHeart />
           </div>
           <div className={styles.fallbackBody}>
@@ -517,9 +506,9 @@ export default function FindTutorClient({
             </p>
           </div>
           <div className={styles.fallbackAction}>
-            <Link href='/student/request-tutor' className={styles.fallbackBtn}>
+            <Link href="/student/request-tutor" className={styles.fallbackBtn}>
               Request a Tutor
-              <ArrowRight size={18} aria-hidden='true' />
+              <ArrowRight size={18} aria-hidden="true" />
             </Link>
           </div>
         </section>
@@ -540,13 +529,13 @@ export default function FindTutorClient({
             <div
               ref={panelRef}
               className={styles.modalPanel}
-              role='dialog'
-              aria-modal='true'
+              role="dialog"
+              aria-modal="true"
               aria-labelledby={modalTitleId}
               tabIndex={-1}
             >
               <div className={styles.modalHeader}>
-                <div className={styles.modalAvatar} aria-hidden='true'>
+                <div className={styles.modalAvatar} aria-hidden="true">
                   {getInitials(activeReviewsTutor.name)}
                 </div>
                 <div className={styles.modalHeadInfo}>
@@ -558,10 +547,10 @@ export default function FindTutorClient({
                       <>
                         <Star
                           className={styles.modalSubtitleStar}
-                          aria-hidden='true'
+                          aria-hidden="true"
                         />
                         <strong>{activeReviewsTutor.averageRating}</strong>
-                        <span className={styles.trustDot} aria-hidden='true' />
+                        <span className={styles.trustDot} aria-hidden="true" />
                         <span>
                           {reviewCount} review{reviewCount !== 1 ? "s" : ""}
                         </span>
@@ -574,12 +563,12 @@ export default function FindTutorClient({
                   </span>
                 </div>
                 <button
-                  type='button'
+                  type="button"
                   className={styles.modalClose}
                   onClick={() => setActiveReviewsTutor(null)}
-                  aria-label='Close reviews'
+                  aria-label="Close reviews"
                 >
-                  <X size={20} aria-hidden='true' />
+                  <X size={20} aria-hidden="true" />
                 </button>
               </div>
 
@@ -602,7 +591,7 @@ export default function FindTutorClient({
                             <Star
                               key={i}
                               className={`${styles.reviewStar} ${i < r.rating ? "" : styles.reviewStarEmpty}`}
-                              aria-hidden='true'
+                              aria-hidden="true"
                             />
                           ))}
                         </span>
@@ -634,7 +623,7 @@ export default function FindTutorClient({
               </div>
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </div>
   );
