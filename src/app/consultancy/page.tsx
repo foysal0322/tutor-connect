@@ -11,10 +11,10 @@ import {
   FormCard,
   FormSection,
   FormSubmit,
-  FormSuccess,
   fieldClass,
   gridFullClass,
 } from '@/components/forms';
+import ConsultancySuccessToast from './ConsultancySuccessToast';
 
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
@@ -23,14 +23,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/consultancy' },
 };
 
-export default async function ConsultancyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ success?: string }>;
-}) {
-  const params = await searchParams;
-  const isSuccess = params.success === 'true';
-
+export default async function ConsultancyPage() {
   async function submitConsultancy(formData: FormData) {
     'use server';
 
@@ -95,13 +88,8 @@ export default async function ConsultancyPage({
         title="Get Free Consultancy"
         subtitle="Book a one-on-one session with a senior mentor for course selection, semester planning, or career guidance."
       >
-        {isSuccess ? (
-          <FormSuccess title="Request Submitted!">
-            Thank you for reaching out. We&apos;ve sent a confirmation to your email and a mentor
-            will contact you shortly.
-          </FormSuccess>
-        ) : (
-          <form action={submitConsultancy} noValidate>
+        <ConsultancySuccessToast />
+        <form action={submitConsultancy} noValidate>
             {/* Section: Identity */}
             <FormSection label="Your Identity" icon={<User size={14} />} columns={1}>
               <Input
@@ -141,8 +129,7 @@ export default async function ConsultancyPage({
             </FormSection>
 
             <FormSubmit icon={<MessageSquareText size={18} />}>Submit Request</FormSubmit>
-          </form>
-        )}
+        </form>
       </FormCard>
     </FormPage>
   );
