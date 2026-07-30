@@ -187,9 +187,8 @@ export default function FindTutorClient({
           </h1>
 
           <p className={styles.heroSubtitle}>
-            Search by course or tutor name to connect with experienced North
-            South University students who can help you master your courses, prep
-            for exams, and lift your grades.
+            Search by course or tutor name to connect with experienced NSU
+            students who can help you ace your courses.
           </p>
         </div>
       </section>

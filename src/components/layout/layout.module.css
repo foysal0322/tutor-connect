@@ -90,6 +90,20 @@
   flex-shrink: 0;
 }
 
+/* Destructive action (e.g. Logout) — red treatment so it reads as irreversible. */
+.navItemDanger {
+  color: var(--danger);
+}
+
+.navItemDanger:hover {
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: #ffffff;
+}
+
+.navItemDanger:hover .navItemIcon {
+  color: #ffffff;
+}
+
 /* Count badge shown on nav items (e.g. pending payments, admin queues).
    Fixed height + min-width so a single digit reads as a clean circle and
    larger numbers grow into a pill. margin-left:auto pushes it to the row end. */
@@ -113,11 +127,6 @@
 .navBadgePrimary {
   background-color: var(--primary);
   box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
-}
-
-.sidebarFooter {
-  padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--border-color);
 }
 
 /* Main Content Wrapper */
