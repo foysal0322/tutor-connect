@@ -6,7 +6,7 @@ export default async function RegisterPage() {
   const departments = await getDepartments();
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={null}>
       <RegisterForm departments={departments} />
     </Suspense>
   );

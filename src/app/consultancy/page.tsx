@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { MessageSquareText, User } from 'lucide-react';
+import Link from 'next/link';
+import { MessageSquareText, User, LogIn, CheckCircle2 } from 'lucide-react';
+import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
+import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -16,6 +19,9 @@ import {
 } from '@/components/forms';
 import ConsultancySuccessToast from './ConsultancySuccessToast';
 
+/** Each student is allowed at most this many free consultancy sessions. */
+const MAX_FREE_CONSULTANCY = 2;
+
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
   description:
@@ -24,21 +30,48 @@ export const metadata: Metadata = {
 };
 
 export default async function ConsultancyPage() {
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user as { id?: string; nsuId?: string; name?: string | null } | undefined;
+
+  // Precompute usage so the UI can show remaining slots (guests default to 2/2).
+  const usedCount = sessionUser?.id
+    ? await prisma.consultancyRequest.count({
+        where: { studentId: sessionUser.id },
+      })
+    : 0;
+  const remaining = Math.max(0, MAX_FREE_CONSULTANCY - usedCount);
+
   async function submitConsultancy(formData: FormData) {
     'use server';
 
-    // For MVP, we will lookup the user by their NSU ID
-    const nsuId = formData.get('nsuId') as string;
-    const topic = formData.get('topic') as string;
-    const details = formData.get('details') as string;
+    const submittingSession = await getServerSession(authOptions);
+    const user = submittingSession?.user as { id?: string } | undefined;
+    if (!user?.id) {
+      // Not logged in — bounce to sign-in, then back here.
+      redirect('/auth/signin?callbackUrl=/consultancy');
+    }
 
     const student = await prisma.user.findUnique({
-      where: { nsuId },
+      where: { id: user.id },
+      select: { id: true, name: true, nsuId: true, email: true },
     });
 
     if (!student) {
-      throw new Error('Student with this NSU ID not found. Please register first.');
+      throw new Error('Account not found. Please register first.');
     }
+
+    // Enforce the free-quota cap.
+    const existing = await prisma.consultancyRequest.count({
+      where: { studentId: student.id },
+    });
+    if (existing >= MAX_FREE_CONSULTANCY) {
+      throw new Error(
+        `You have already used your ${MAX_FREE_CONSULTANCY} free consultancy sessions.`,
+      );
+    }
+
+    const topic = formData.get('topic') as string;
+    const details = formData.get('details') as string;
 
     await prisma.consultancyRequest.create({
       data: {
@@ -81,6 +114,85 @@ export default async function ConsultancyPage() {
     redirect('/consultancy?success=true');
   }
 
+  // -------- Guest state: gate behind login --------
+  if (!sessionUser?.id) {
+    return (
+      <FormPage>
+        <FormCard
+          icon={<MessageSquareText size={28} />}
+          title="Get Free Consultancy"
+          subtitle="Book a one-on-one session with a senior mentor for course selection, semester planning, or career guidance."
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '2rem 1rem',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
+              Please log in first to claim your {MAX_FREE_CONSULTANCY} free consultancy sessions.
+            </p>
+            <Link
+              href={`/auth/signin?callbackUrl=${encodeURIComponent('/consultancy')}`}
+              className="btn-primary"
+            >
+              <LogIn size={18} /> Login to get free consultancy
+            </Link>
+          </div>
+        </FormCard>
+      </FormPage>
+    );
+  }
+
+  const quotaBadgeStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    alignSelf: 'flex-start',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '999px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    background:
+      remaining > 0 ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+    color: remaining > 0 ? 'var(--primary)' : 'var(--danger)',
+  };
+
+  // -------- Quota exhausted --------
+  if (remaining === 0) {
+    return (
+      <FormPage>
+        <FormCard
+          icon={<MessageSquareText size={28} />}
+          title="Free Consultancy Quota Used"
+          subtitle="You've used all your complimentary consultancy sessions."
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+              padding: '2rem 1rem',
+              textAlign: 'center',
+            }}
+          >
+            <CheckCircle2 size={40} style={{ color: 'var(--primary)' }} />
+            <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
+              You've used all {MAX_FREE_CONSULTANCY} of your free consultancy sessions.
+              Our team will reach out about your pending requests.
+            </p>
+          </div>
+        </FormCard>
+      </FormPage>
+    );
+  }
+
+  // -------- Logged in with remaining slots --------
   return (
     <FormPage>
       <FormCard
@@ -89,46 +201,53 @@ export default async function ConsultancyPage() {
         subtitle="Book a one-on-one session with a senior mentor for course selection, semester planning, or career guidance."
       >
         <ConsultancySuccessToast />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <span style={quotaBadgeStyle}>
+            <MessageSquareText size={14} />
+            {remaining} of {MAX_FREE_CONSULTANCY} free sessions remaining
+          </span>
+        </div>
         <form action={submitConsultancy} noValidate>
-            {/* Section: Identity */}
-            <FormSection label="Your Identity" icon={<User size={14} />} columns={1}>
-              <Input
-                containerClassName={fieldClass}
-                name="nsuId"
-                type="text"
-                label="Your NSU ID"
-                placeholder="e.g. 2211458642"
-                required
-              />
-            </FormSection>
+          {/* Section: Identity (pre-filled, read-only) */}
+          <FormSection label="Your Identity" icon={<User size={14} />} columns={1}>
+            <Input
+              containerClassName={fieldClass}
+              name="nsuId"
+              type="text"
+              label="Your NSU ID"
+              defaultValue={sessionUser.nsuId}
+              readOnly
+              required
+            />
+          </FormSection>
 
-            {/* Section: Consultancy Details */}
-            <FormSection label="Consultancy Details" icon={<MessageSquareText size={14} />}>
-              <Select
-                containerClassName={fieldClass}
-                name="topic"
-                label="Topic"
-                required
-                placeholderOption="Select a topic"
-                options={[
-                  { value: 'Course Selection Advice', label: 'Course Selection Advice' },
-                  { value: 'Semester Planning', label: 'Semester Planning' },
-                  { value: 'Internship Guidance', label: 'Internship Guidance' },
-                  { value: 'Career Advice', label: 'Career Advice' },
-                  { value: 'Study Strategy', label: 'Study Strategy' },
-                ]}
-              />
-              <Textarea
-                containerClassName={`${fieldClass} ${gridFullClass}`}
-                name="details"
-                label="Additional Details"
-                required
-                rows={4}
-                placeholder="Briefly describe what you need help with..."
-              />
-            </FormSection>
+          {/* Section: Consultancy Details */}
+          <FormSection label="Consultancy Details" icon={<MessageSquareText size={14} />}>
+            <Select
+              containerClassName={fieldClass}
+              name="topic"
+              label="Topic"
+              required
+              placeholderOption="Select a topic"
+              options={[
+                { value: 'Course Selection Advice', label: 'Course Selection Advice' },
+                { value: 'Semester Planning', label: 'Semester Planning' },
+                { value: 'Internship Guidance', label: 'Internship Guidance' },
+                { value: 'Career Advice', label: 'Career Advice' },
+                { value: 'Study Strategy', label: 'Study Strategy' },
+              ]}
+            />
+            <Textarea
+              containerClassName={`${fieldClass} ${gridFullClass}`}
+              name="details"
+              label="Additional Details"
+              required
+              rows={4}
+              placeholder="Briefly describe what you need help with..."
+            />
+          </FormSection>
 
-            <FormSubmit icon={<MessageSquareText size={18} />}>Submit Request</FormSubmit>
+          <FormSubmit icon={<MessageSquareText size={18} />}>Submit Request</FormSubmit>
         </form>
       </FormCard>
     </FormPage>
