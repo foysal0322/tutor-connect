@@ -22,8 +22,20 @@ export default function VerifyForm({ userId }: { userId: string }) {
   const [maskedEmail, setMaskedEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  // Cooldown (seconds) before the user can request another code. Reset to
+  // RESEND_COOLDOWN_SEC on every send — including the initial auto-send —
+  // so the button can't be spammed and the mailbox doesn't get flooded.
+  const [cooldown, setCooldown] = useState(0);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const sentOnMount = useRef(false);
+
+  const RESEND_COOLDOWN_SEC = 60;
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   // Auto-send a code on first mount so every entry path (registration,
   // sign-in redirect, manual link) gets exactly one email.
@@ -38,6 +50,9 @@ export default function VerifyForm({ userId }: { userId: string }) {
     const res = await requestEmailVerification(userId);
     if (res.maskedEmail) setMaskedEmail(res.maskedEmail);
     setMessage(res.success ? { type: 'success', text: res.message } : { type: 'error', text: res.message });
+    // Only arm the cooldown when a code was actually sent — otherwise a
+    // server-side failure would lock the button for a minute for nothing.
+    if (res.success) setCooldown(RESEND_COOLDOWN_SEC);
     setResending(false);
   }
 
@@ -111,7 +126,7 @@ export default function VerifyForm({ userId }: { userId: string }) {
             <button
               type="button"
               onClick={send}
-              disabled={resending}
+              disabled={resending || cooldown > 0}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -123,10 +138,14 @@ export default function VerifyForm({ userId }: { userId: string }) {
                 color: 'var(--text-muted)',
                 fontSize: '0.75rem',
                 fontWeight: 600,
-                cursor: resending ? 'not-allowed' : 'pointer',
+                cursor: resending || cooldown > 0 ? 'not-allowed' : 'pointer',
               }}
             >
-              {resending ? 'Sending...' : 'Resend code'}
+              {resending
+                ? 'Sending...'
+                : cooldown > 0
+                  ? `Resend code in ${cooldown}s`
+                  : 'Resend code'}
             </button>
           </form>
         )}
