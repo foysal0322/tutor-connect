@@ -3,21 +3,13 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { sendNoReplyEmail } from '@/lib/mail';
+import { maskEmail } from '@/lib/format';
 import {
   rateLimit,
   retryMessage,
   OTP_ISSUE_RATE_LIMIT,
   OTP_VERIFY_RATE_LIMIT,
 } from '@/lib/rateLimit';
-
-function maskEmail(email: string) {
-  const parts = email.split('@');
-  if (parts.length !== 2) return email;
-  const name = parts[0];
-  const domain = parts[1];
-  if (name.length <= 2) return `${name[0]}***@${domain}`;
-  return `${name[0]}***${name[name.length - 1]}@${domain}`;
-}
 
 // Action for users to request a password reset with OTP via Email
 export async function requestPasswordReset(identifier: string) {

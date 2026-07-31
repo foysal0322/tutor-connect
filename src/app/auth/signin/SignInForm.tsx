@@ -46,6 +46,14 @@ export default function SignInForm() {
       });
 
       if (res?.error) {
+        // Detect our EMAIL_NOT_VERIFIED:<userId> sentinel from authorize
+        // and route the user to the verify page instead of leaving them
+        // stuck on a generic "auth failed" message.
+        const m = res.error.match(/^EMAIL_NOT_VERIFIED:(.+)$/);
+        if (m) {
+          router.push(`/auth/verify?userId=${m[1]}`);
+          return;
+        }
         setError(`Authentication failed: ${res.error}`);
         setLoading(false);
       } else {

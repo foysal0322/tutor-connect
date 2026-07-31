@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { registerUser } from '../actions';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Eye, EyeOff, Lock, GraduationCap, User, UserPlus } from 'lucide-react';
-import { useZodForm } from '@/hooks/useZodForm';
-import { registerUserSchema } from '@/lib/validation';
-import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { registerUser } from "../actions";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Eye, EyeOff, Lock, GraduationCap, User, UserPlus } from "lucide-react";
+import { useZodForm } from "@/hooks/useZodForm";
+import { registerUserSchema } from "@/lib/validation";
+import { bdPhoneFieldProps, onBdPhoneChange } from "@/lib/phone";
 import {
   FormPage,
   FormCard,
@@ -19,13 +19,13 @@ import {
   fieldClass,
   toggleClass,
   footerLinkClass,
-} from '@/components/forms';
+} from "@/components/forms";
 
 export default function RegisterForm({ departments }: { departments: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-  const [error, setError] = useState('');
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -36,19 +36,20 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
     const formData = new FormData(e.currentTarget);
     if (!form.validateAll(formData)) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       // New accounts are always created as STUDENT. The member can start
       // teaching at any time by adding an expertise — no second registration.
-      const res = await registerUser(formData, 'STUDENT');
+      const res = await registerUser(formData, "STUDENT");
       if (res?.error) {
         setError(res.error);
+      } else if (res?.userId) {
+        router.push(`/auth/verify?userId=${res.userId}`);
       } else {
-        const target = `/auth/signin?registered=true${callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`;
-        router.push(target);
+        router.push("/auth/signin");
       }
     } catch {
-      setError('An unexpected error occurred.');
+      setError("An unexpected error occurred.");
     }
     setLoading(false);
   }
@@ -63,7 +64,7 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
           <>
             <span>Already have an account?</span>
             <Link
-              href={`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
+              href={`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
               className={footerLinkClass}
             >
               Sign In
@@ -84,8 +85,8 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               placeholder="John Doe"
               required
               error={form.errors.name}
-              onChange={form.onChange('name')}
-              onBlur={form.onBlur('name')}
+              onChange={form.onChange("name")}
+              onBlur={form.onBlur("name")}
             />
             <Input
               containerClassName={fieldClass}
@@ -95,19 +96,20 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               placeholder="2211458642"
               required
               error={form.errors.nsuId}
-              onChange={form.onChange('nsuId')}
-              onBlur={form.onBlur('nsuId')}
+              onChange={form.onChange("nsuId")}
+              onBlur={form.onBlur("nsuId")}
             />
             <Input
               containerClassName={fieldClass}
               name="email"
               type="email"
-              label="University Email"
-              placeholder="you@nsu.edu"
+              label="Email"
+              placeholder="you@northsouth.edu"
+              hint="Any email works, but a verified @northsouth.edu email helps you get matched with tutors or students more quickly."
               required
               error={form.errors.email}
-              onChange={form.onChange('email')}
-              onBlur={form.onBlur('email')}
+              onChange={form.onChange("email")}
+              onBlur={form.onBlur("email")}
             />
             <Input
               containerClassName={fieldClass}
@@ -117,8 +119,8 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               hint="11-digit BD mobile"
               required
               error={form.errors.contact}
-              onChange={onBdPhoneChange(form.onChange('contact'))}
-              onBlur={form.onBlur('contact')}
+              onChange={onBdPhoneChange(form.onChange("contact"))}
+              onBlur={form.onBlur("contact")}
             />
             <Select
               containerClassName={fieldClass}
@@ -127,15 +129,19 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               required
               placeholderOption="Select gender"
               options={[
-                { value: 'MALE', label: 'Male' },
-                { value: 'FEMALE', label: 'Female' },
+                { value: "MALE", label: "Male" },
+                { value: "FEMALE", label: "Female" },
               ]}
               error={form.errors.gender}
             />
           </FormSection>
 
           {/* Section: Academic */}
-          <FormSection label="Academic Details" icon={<GraduationCap size={14} />} columns={1}>
+          <FormSection
+            label="Academic Details"
+            icon={<GraduationCap size={14} />}
+            columns={1}
+          >
             <Select
               containerClassName={fieldClass}
               name="departmentId"
@@ -143,7 +149,10 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               searchable
               required
               placeholderOption="Select department"
-              options={departments.map((dept) => ({ value: dept.id, label: dept.name }))}
+              options={departments.map((dept) => ({
+                value: dept.id,
+                label: dept.name,
+              }))}
               error={form.errors.departmentId}
             />
           </FormSection>
@@ -153,20 +162,20 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             <Input
               containerClassName={fieldClass}
               name="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               label="Password"
               placeholder="........"
               hint="At least 8 characters"
               required
               error={form.errors.password}
-              onChange={form.onChange('password')}
-              onBlur={form.onBlur('password')}
+              onChange={form.onChange("password")}
+              onBlur={form.onBlur("password")}
               trailingIcon={
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   className={toggleClass}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
                   {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
@@ -176,19 +185,19 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             <Input
               containerClassName={fieldClass}
               name="confirmPassword"
-              type={showConfirm ? 'text' : 'password'}
+              type={showConfirm ? "text" : "password"}
               label="Confirm Password"
               placeholder="........"
               required
               error={form.errors.confirmPassword}
-              onChange={form.onChange('confirmPassword')}
-              onBlur={form.onBlur('confirmPassword')}
+              onChange={form.onChange("confirmPassword")}
+              onBlur={form.onBlur("confirmPassword")}
               trailingIcon={
                 <button
                   type="button"
                   onClick={() => setShowConfirm((s) => !s)}
                   className={toggleClass}
-                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                  aria-label={showConfirm ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
                   {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
@@ -197,7 +206,11 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             />
           </FormSection>
 
-          <FormSubmit loading={loading} loadingText="Registering..." icon={<GraduationCap size={18} />}>
+          <FormSubmit
+            loading={loading}
+            loadingText="Registering..."
+            icon={<GraduationCap size={18} />}
+          >
             Create Campus Account
           </FormSubmit>
         </form>

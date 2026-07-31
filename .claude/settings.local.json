@@ -6,7 +6,11 @@
       "Bash(xargs wc:*)",
       "Bash(npx next:*)",
       "Skill(update-config)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",

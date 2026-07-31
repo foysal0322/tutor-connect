@@ -1,41 +1,52 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-// Email addresses are read from env so they can be changed without code edits,
-// but fall back to the canonical addresses so existing call sites keep working.
-const NO_REPLY_USER =
-  process.env.MAIL_NOREPLY_USER ?? "noreply.nsuone@gmail.com";
-const SUPPORT_USER =
-  process.env.MAIL_SUPPORT_USER ?? "support.nsuone@gmail.com";
+/**
+ * Transactional email via Resend.
+ *
+ * Why Resend (not nodemailer + Gmail SMTP): a free Gmail "from" address cannot
+ * publish SPF/DKIM/DMARC and is heavily spam-filtered by Gmail/Outlook/Yahoo.
+ * Resend handles authentication for any domain you own once you add the DNS
+ * records it generates during domain verification.
+ *
+ * Required env:
+ *   RESEND_API_KEY           — re_xxx from Resend dashboard
+ *   MAIL_FROM_NOREPLY        — e.g. "NSUone <noreply@mail.nsuone.com>"
+ *   MAIL_FROM_SUPPORT        — e.g. "NSUone Support <support@mail.nsuone.com>"
+ * Optional:
+ *   MAIL_FROM_NOREPLY_FALLBACK / MAIL_FROM_SUPPORT_FALLBACK — used only when
+ *     the primary "from" is unset, so existing local dev keeps working without
+ *     a verified domain. Defaults to the Resend shared sandbox sender.
+ *
+ * Call sites use sendNoReplyEmail / sendSupportEmail and are unchanged from
+ * the nodemailer era — the return shape is still { success, messageId? }.
+ */
 
-const NO_REPLY_PASS = process.env.MAIL_NOREPLY_PASS;
-const SUPPORT_PASS = process.env.MAIL_SUPPORT_PASS;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-if (!NO_REPLY_PASS && process.env.NODE_ENV === "production") {
-  console.warn("MAIL_NOREPLY_PASS is not set — no-reply emails will fail.");
+const FROM_NOREPLY =
+  process.env.MAIL_FROM_NOREPLY ??
+  process.env.MAIL_FROM_NOREPLY_FALLBACK ??
+  "NSUone <onboarding@resend.dev>";
+const FROM_SUPPORT =
+  process.env.MAIL_FROM_SUPPORT ??
+  process.env.MAIL_FROM_SUPPORT_FALLBACK ??
+  "NSUone Support <onboarding@resend.dev>";
+
+const DEFAULT_REPLY_TO =
+  process.env.MAIL_SUPPORT_REPLY_TO ?? "support.nsuone@gmail.com";
+
+// Lazily built so a missing API key (e.g. during typecheck or local dev that
+// never actually sends) doesn't crash module load.
+let _client: Resend | null = null;
+function client(): Resend {
+  if (!_client) {
+    if (!RESEND_API_KEY && process.env.NODE_ENV === "production") {
+      console.warn("RESEND_API_KEY is not set — outbound email will fail.");
+    }
+    _client = new Resend(RESEND_API_KEY ?? "");
+  }
+  return _client;
 }
-if (!SUPPORT_PASS && process.env.NODE_ENV === "production") {
-  console.warn("MAIL_SUPPORT_PASS is not set — support emails will fail.");
-}
-
-// Transporter for notifications that do NOT require user replies
-// (new registration, forgot password, teacher allocation, status updates, etc.)
-export const noReplyTransporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: NO_REPLY_USER,
-    pass: NO_REPLY_PASS ?? "",
-  },
-});
-
-// Transporter for support, inquiries, consultancy, and replies
-// (promo updates, queries, user support, consultancy, etc.)
-export const supportTransporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: SUPPORT_USER,
-    pass: SUPPORT_PASS ?? "",
-  },
-});
 
 interface SendEmailOptions {
   to: string;
@@ -52,15 +63,20 @@ export async function sendNoReplyEmail({
   text,
 }: SendEmailOptions) {
   try {
-    const info = await noReplyTransporter.sendMail({
-      from: `"NSUone No-Reply" <${NO_REPLY_USER}>`,
+    const { data, error } = await client().emails.send({
+      from: FROM_NOREPLY,
       to,
       subject,
       html,
-      text: text || html.replace(/<[^>]*>?/gm, ""),
+      text: text || html.replace(/<[^>]*>?/g, ""),
+      tags: [{ name: "channel", value: "noreply" }],
     });
-    console.warn("No-reply email sent:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error("Resend no-reply send failed:", error);
+      return { success: false, error: error };
+    }
+    console.warn("No-reply email sent:", data?.id);
+    return { success: true, messageId: data?.id };
   } catch (error) {
     console.error("Error sending no-reply email:", error);
     return { success: false, error };
@@ -75,16 +91,21 @@ export async function sendSupportEmail({
   replyTo,
 }: SendEmailOptions) {
   try {
-    const info = await supportTransporter.sendMail({
-      from: `"NSUone Support" <${SUPPORT_USER}>`,
+    const { data, error } = await client().emails.send({
+      from: FROM_SUPPORT,
       to,
       subject,
       html,
-      text: text || html.replace(/<[^>]*>?/gm, ""),
-      replyTo: replyTo || SUPPORT_USER,
+      text: text || html.replace(/<[^>]*>?/g, ""),
+      replyTo: replyTo || DEFAULT_REPLY_TO,
+      tags: [{ name: "channel", value: "support" }],
     });
-    console.warn("Support email sent:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error("Resend support send failed:", error);
+      return { success: false, error: error };
+    }
+    console.warn("Support email sent:", data?.id);
+    return { success: true, messageId: data?.id };
   } catch (error) {
     console.error("Error sending support email:", error);
     return { success: false, error };

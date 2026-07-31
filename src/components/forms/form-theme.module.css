@@ -300,27 +300,76 @@
 
 /* ---------- Alert banner ---------- */
 .alert {
-  background: rgba(239, 68, 68, 0.1);
-  color: #b91c1c;
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  padding: 0.85rem 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: rgba(254, 242, 242, 0.96);
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  /* Strong left stripe so the banner reads as an error at a glance. */
+  border-left: 4px solid #dc2626;
+  padding: 0.9rem 1rem;
   border-radius: 12px;
-  text-align: center;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   margin-bottom: 1.5rem;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.15);
+  outline: none;
 }
 
 .alertSuccess {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
   background: rgba(34, 197, 94, 0.1);
   color: #15803d;
   border: 1px solid rgba(34, 197, 94, 0.28);
+  border-left: 4px solid #16a34a;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  text-align: center;
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1.5rem;
+  outline: none;
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.alertText {
+  flex: 1;
+  text-align: left;
+  line-height: 1.4;
+}
+
+/* Brief shake on mount — catches the eye even when the user is scrolled
+   away from the top of the form. Paired with auto-scrollIntoView in JS. */
+.alertShake {
+  animation: alertShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes alertShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alertShake {
+    animation: none;
+  }
 }
 
 /* ---------- Submit button ---------- */

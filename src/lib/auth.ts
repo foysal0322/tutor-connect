@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
             role: true,
             password: true,
             isBlocked: true,
+            emailVerified: true,
           }
         });
 
@@ -64,6 +65,12 @@ export const authOptions: NextAuthOptions = {
 
         if (user.isBlocked) {
           throw new Error("Your account has been blocked by an administrator.");
+        }
+
+        if (!user.emailVerified) {
+          // Sentinel carries the userId so the sign-in form can route
+          // directly to the verify page for this account.
+          throw new Error(`EMAIL_NOT_VERIFIED:${user.id}`);
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
