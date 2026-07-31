@@ -3,8 +3,9 @@
 import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import Spinner from '@/components/Spinner';
 
-const REASONS: Record<string, { title: string; description: string }> = {
+const REASONS: Record<string, { title: string; description?: string }> = {
   'session-expired': {
     title: 'Session expired',
     description: 'Your session is no longer valid. Please sign in again to continue.',
@@ -17,9 +18,9 @@ const REASONS: Record<string, { title: string; description: string }> = {
     title: 'Signed out for security',
     description: 'We detected unusual activity on your account. Please sign in again to verify it was you.',
   },
+  // Manual logout: keep it minimal — just "Signing you out" + spinner.
   manual: {
     title: 'Signing you out',
-    description: 'Clearing your session and returning to the home page.',
   },
 };
 
@@ -27,6 +28,7 @@ function ForceSignoutContent() {
   const searchParams = useSearchParams();
   const reason = searchParams.get('reason') ?? 'session-expired';
   const meta = REASONS[reason] ?? REASONS['session-expired'];
+  const isManual = reason === 'manual';
 
   useEffect(() => {
     signOut({ callbackUrl: '/', redirect: true });
@@ -39,13 +41,24 @@ function ForceSignoutContent() {
         aria-live="assertive"
         className="max-w-md w-full text-center"
       >
-        <h1 className="text-2xl font-semibold tracking-tight">{meta.title}</h1>
-        <p className="mt-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-          {meta.description}
-        </p>
-        <p className="mt-6 text-xs" style={{ color: 'var(--text-muted)' }}>
-          Redirecting…
-        </p>
+        {isManual ? (
+          <div className="flex flex-col items-center gap-4">
+            <Spinner size={36} color="var(--primary)" />
+            <h1 className="text-2xl font-semibold tracking-tight">{meta.title}…</h1>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight">{meta.title}</h1>
+            {meta.description && (
+              <p className="mt-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                {meta.description}
+              </p>
+            )}
+            <p className="mt-6 text-xs" style={{ color: 'var(--text-muted)' }}>
+              Redirecting…
+            </p>
+          </>
+        )}
       </div>
     </main>
   );
