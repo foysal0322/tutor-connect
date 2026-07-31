@@ -8,9 +8,9 @@ export const metadata = {
 export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ userId?: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const { userId } = await searchParams;
-  if (!userId) redirect('/auth/signin');
-  return <VerifyForm userId={userId} />;
+  const { token } = await searchParams;
+  if (!token) redirect('/auth/signin');
+  return <VerifyForm token={token} />;
 }

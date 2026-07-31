@@ -43,8 +43,8 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
       const res = await registerUser(formData, "STUDENT");
       if (res?.error) {
         setError(res.error);
-      } else if (res?.userId) {
-        router.push(`/auth/verify?userId=${res.userId}`);
+      } else if (res?.token) {
+        router.push(`/auth/verify?token=${res.token}`);
       } else {
         router.push("/auth/signin");
       }

@@ -16,7 +16,7 @@ import {
   homeLinkClass,
 } from '@/components/forms';
 
-export default function VerifyForm({ userId }: { userId: string }) {
+export default function VerifyForm({ token }: { token: string }) {
   const [step, setStep] = useState<'VERIFY' | 'SUCCESS'>('VERIFY');
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
@@ -47,7 +47,7 @@ export default function VerifyForm({ userId }: { userId: string }) {
 
   async function send() {
     setResending(true);
-    const res = await requestEmailVerification(userId);
+    const res = await requestEmailVerification(token);
     if (res.maskedEmail) setMaskedEmail(res.maskedEmail);
     setMessage(res.success ? { type: 'success', text: res.message } : { type: 'error', text: res.message });
     // Only arm the cooldown when a code was actually sent — otherwise a
@@ -64,7 +64,7 @@ export default function VerifyForm({ userId }: { userId: string }) {
     }
     setLoading(true);
     setMessage(null);
-    const res = await verifyEmail(userId, otp);
+    const res = await verifyEmail(token, otp);
     if (res.success) {
       setStep('SUCCESS');
       setMessage({ type: 'success', text: res.message });

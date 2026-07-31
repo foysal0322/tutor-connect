@@ -193,6 +193,31 @@ model EmailVerificationRequest {
   @@index([token])
 }
 
+// Holds the registration payload + OTP before the User row is created.
+// Keyed by `id` (passed as ?token=… in the verify URL). Consumed on
+// successful OTP — the User is then created with emailVerified preset.
+model PendingRegistration {
+  id             String   @id @default(cuid()) // opaque token in the URL
+  email          String   @unique
+  nsuId          String   @unique
+  name           String
+  contact        String
+  gender         String?
+  departmentId   String?
+  cgpa           Float?
+  role           String   @default("STUDENT")
+  hashedPassword String
+  otp            String   // 6-digit code
+  expiresAt      DateTime
+  status         String   @default("PENDING") // PENDING | RESOLVED | EXPIRED
+  createdAt      DateTime @default(now())
+
+  @@index([email])
+  @@index([nsuId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
 model Payment {
   id            String   @id @default(cuid())
   requestId     String   @unique
