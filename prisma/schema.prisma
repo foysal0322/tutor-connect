@@ -41,10 +41,11 @@ model User {
   departmentId String?
   cgpa         Float?
   password     String
-  isBlocked    Boolean  @default(false)
-  hideCgpa     Boolean  @default(false)
-  balance      Float    @default(0)
-  createdAt    DateTime @default(now())
+  isBlocked      Boolean   @default(false)
+  hideCgpa       Boolean   @default(false)
+  balance        Float     @default(0)
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
 
   department Department? @relation(fields: [departmentId], references: [id])
 
@@ -54,7 +55,8 @@ model User {
 
   consultancyRequests   ConsultancyRequest[]
   refundRequests        RefundRequest[]
-  passwordResetRequests PasswordResetRequest[]
+  passwordResetRequests       PasswordResetRequest[]
+  emailVerificationRequests   EmailVerificationRequest[]
   withdrawalRequests    WithdrawalRequest[]
   walletTransactions    WalletTransaction[]
   notifications         Notification[]
@@ -175,6 +177,20 @@ model PasswordResetRequest {
 
   @@index([userId])
   @@index([status])
+}
+
+model EmailVerificationRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   // 6-digit OTP
+  expiresAt DateTime
+  status    String   @default("PENDING") // PENDING | RESOLVED | EXPIRED
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
 }
 
 model Payment {

@@ -13,7 +13,9 @@ import s from './Footer.module.css';
  * Client component so the link grid can collapse on app routes where vertical
  * space is at a premium (dashboard, admin, tutor, wallet, student). The full
  * footer stays expanded by default on marketing pages (home, find-tutor,
- * contact). Users can toggle it open/closed anywhere via the footer toggle.
+ * contact). Users can toggle it open/closed anywhere via the footer toggle,
+ * except on Home (/), where the footer is always fully expanded and the hide
+ * bar is not rendered.
  *
  * Navigation note: /privacy-policy and /terms routes are not implemented yet,
  * so those Legal entries are rendered as muted "Coming soon" affordances
@@ -159,10 +161,14 @@ function Column({ heading, items }: { heading: string; items: LinkItem[] }) {
   );
 }
 
+// Home is always fully expanded and non-collapsible — no hide bar rendered.
+const ALWAYS_EXPANDED_ROUTES = ['/'];
+
 export default function Footer() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(() =>
-    COLLAPSED_ROUTES.some((route) => pathname.startsWith(route)),
+  const isAlwaysExpanded = ALWAYS_EXPANDED_ROUTES.includes(pathname);
+  const [collapsed, setCollapsed] = useState(
+    () => !isAlwaysExpanded && COLLAPSED_ROUTES.some((route) => pathname.startsWith(route)),
   );
   const footerRef = useRef<HTMLElement>(null);
 
@@ -198,6 +204,7 @@ export default function Footer() {
         </button>
       ) : (
         <div className="container" id="footer-content">
+          {!isAlwaysExpanded && (
           <div className={s.hideBarWrap}>
             <button
               type="button"
@@ -215,6 +222,7 @@ export default function Footer() {
               <span className={s.hideBarHint}>·  Collapse this section</span>
             </button>
           </div>
+          )}
 
           <div className={s.grid}>
             {/* Brand */}

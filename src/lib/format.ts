@@ -12,3 +12,13 @@ export function formatBDT(n: number): string {
     maximumFractionDigits: 2,
   });
 }
+
+// Masks an email for display in confirmation messages, e.g. "j***e@gmail.com".
+export function maskEmail(email: string): string {
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  const name = parts[0];
+  const domain = parts[1];
+  if (name.length <= 2) return `${name[0]}***@${domain}`;
+  return `${name[0]}***${name[name.length - 1]}@${domain}`;
+}
