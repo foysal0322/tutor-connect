@@ -17,6 +17,8 @@ import {
   footerLinkClass,
 } from '@/components/forms';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,17 +26,41 @@ export default function SignInForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  function validate(identifier: string, password: string): boolean {
+    const next: typeof fieldErrors = {};
+    const id = identifier.trim();
+
+    if (!id) {
+      next.identifier = 'Email or NSU ID is required.';
+    } else if (id.includes('@') && !EMAIL_REGEX.test(id)) {
+      // Only enforce strict format when the value looks like an email.
+      // NSU IDs (e.g. 12345678) shouldn't be forced into email shape.
+      next.identifier = 'Please enter a valid email address.';
+    }
+
+    if (!password) {
+      next.password = 'Password is required.';
+    }
+
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     const formData = new FormData(e.currentTarget);
-    const identifier = formData.get('identifier') as string;
-    const password = formData.get('password') as string;
+    const identifier = (formData.get('identifier') as string) ?? '';
+    const password = (formData.get('password') as string) ?? '';
+
+    if (!validate(identifier, password)) return;
+
+    setLoading(true);
 
     try {
       // No role is sent — auth.ts lets any non-admin sign in here. Admins must
@@ -45,21 +71,28 @@ export default function SignInForm() {
         password,
       });
 
-      if (res?.error) {
+      // Treat anything that isn't an explicit success as a failure. Previously
+      // we only checked `res?.error`, which meant a response with ok=false but
+      // a falsy error fell through to router.push(callbackUrl) — bouncing the
+      // user to /dashboard and back to a blank signin form with no message.
+      if (!res || !res.ok || res.error) {
+        const err = res?.error ?? 'Sign in failed. Please try again.';
         // Detect our EMAIL_NOT_VERIFIED:<userId> sentinel from authorize
         // and route the user to the verify page instead of leaving them
         // stuck on a generic "auth failed" message.
-        const m = res.error.match(/^EMAIL_NOT_VERIFIED:(.+)$/);
+        const m = err.match(/^EMAIL_NOT_VERIFIED:(.+)$/);
         if (m) {
           router.push(`/auth/verify?userId=${m[1]}`);
           return;
         }
-        setError(`Authentication failed: ${res.error}`);
+        // Map next-auth's opaque default to a friendlier message.
+        setError(err === 'CredentialsSignin' ? 'Incorrect email/NSU ID or password.' : err);
         setLoading(false);
-      } else {
-        router.push(callbackUrl);
-        router.refresh();
+        return;
       }
+
+      router.push(callbackUrl);
+      router.refresh();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred during sign in.';
@@ -103,6 +136,8 @@ export default function SignInForm() {
               type="text"
               label="Email or NSU ID"
               required
+              error={fieldErrors.identifier}
+              autoComplete="username"
             />
             <Input
               containerClassName={fieldClass}
@@ -110,6 +145,8 @@ export default function SignInForm() {
               type={showPassword ? 'text' : 'password'}
               label="Password"
               required
+              error={fieldErrors.password}
+              autoComplete="current-password"
               trailingIcon={
                 <button
                   type="button"

@@ -75,9 +75,16 @@ const nextConfig: NextConfig = {
   // Allowed dev origins (ngrok for local testing)
   allowedDevOrigins: ['hettie-interludial-untremendously.ngrok-free.dev'],
 
-  // Optimize package imports to reduce bundle size
+  // Optimize package imports to reduce bundle size and speed up compilation.
+  // Each listed package gets per-file granular imports instead of pulling the
+  // whole module graph into every file that references it. This is a dev-time
+  // and bundling hint — it does not change runtime behavior.
   experimental: {
-    optimizePackageImports: ['bcryptjs'],
+    optimizePackageImports: [
+      'lucide-react', // used across 15+ components — biggest win
+      'recharts',     // large chart lib, only used on admin/dashboard
+      'date-fns',     // many small fns, benefits from per-fn imports
+    ],
   },
 
   // Pin the Turbopack root to this project to suppress the lockfile warning

@@ -236,9 +236,17 @@ model WithdrawalRequest {
   amount        Float // Gross amount requested
   platformFee   Float // Platform fee deducted (5%)
   netAmount     Float // Net amount paid (95%)
-  mfsType       String // BKASH, NAGAD, ROCKET
-  accountNumber String
-  transferType  String // SEND_MONEY, PAYMENT
+  method        String   @default("MFS") // MFS or BANK
+  // MFS fields (nullable for BANK rows)
+  mfsType       String?  // BKASH, NAGAD, ROCKET
+  accountNumber String?  // MFS account number
+  transferType  String?  // SEND_MONEY, PAYMENT
+  // Bank fields (nullable for MFS rows)
+  accountHolderName String? // Name as it appears on the bank account
+  bankName          String?
+  bankAccountNumber String?
+  branch            String?
+  bftn              String? // Bangladesh Bank Fund Transfer Number
   status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt     DateTime @default(now())
 

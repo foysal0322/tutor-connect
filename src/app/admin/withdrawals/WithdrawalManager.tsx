@@ -12,9 +12,15 @@ type WithdrawalRow = {
   amount: number;
   platformFee: number;
   netAmount: number;
-  mfsType: string;
-  accountNumber: string;
-  transferType: string;
+  method: string;
+  mfsType: string | null;
+  accountNumber: string | null;
+  transferType: string | null;
+  accountHolderName: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  branch: string | null;
+  bftn: string | null;
   status: string;
   createdAt: string;
 };
@@ -38,9 +44,15 @@ export default function WithdrawalManager({
       amount: w.amount,
       platformFee: w.platformFee,
       netAmount: w.netAmount,
-      mfsType: w.mfsType,
-      accountNumber: w.accountNumber,
-      transferType: w.transferType,
+      method: w.method || "MFS",
+      mfsType: w.mfsType ?? null,
+      accountNumber: w.accountNumber ?? null,
+      transferType: w.transferType ?? null,
+      accountHolderName: w.accountHolderName ?? null,
+      bankName: w.bankName ?? null,
+      bankAccountNumber: w.bankAccountNumber ?? null,
+      branch: w.branch ?? null,
+      bftn: w.bftn ?? null,
       status: w.status,
       createdAt: new Date(w.createdAt).toLocaleDateString(),
     })),
@@ -113,21 +125,43 @@ export default function WithdrawalManager({
       ),
     },
     {
-      header: "MFS Method & Account",
-      cell: (row) => (
-        <div>
-          <div
-            className='text-sm font-bold'
-            style={{ color: MFS_COLOR[row.mfsType] ?? "var(--text-main)" }}
-          >
-            {row.mfsType}
+      header: "Method & Destination",
+      cell: (row) =>
+        row.method === "BANK" ? (
+          <div>
+            <div className='text-sm font-bold' style={{ color: "#1e40af" }}>
+              BANK
+            </div>
+            <div className='font-medium text-main'>{row.bankName}</div>
+            <div className='text-xs text-muted mt-1'>
+              A/C: {row.bankAccountNumber}
+            </div>
+            <div className='text-xs text-muted'>
+              Branch: {row.branch}
+            </div>
+            <div className='text-xs text-muted'>
+              BFTN: {row.bftn}
+            </div>
+            {row.accountHolderName && (
+              <div className='text-xs text-muted'>
+                Name: {row.accountHolderName}
+              </div>
+            )}
           </div>
-          <div className='font-medium text-main'>{row.accountNumber}</div>
-          <div className='text-xs text-muted mt-1'>
-            Type: {row.transferType}
+        ) : (
+          <div>
+            <div
+              className='text-sm font-bold'
+              style={{ color: MFS_COLOR[row.mfsType ?? ""] ?? "var(--text-main)" }}
+            >
+              {row.mfsType}
+            </div>
+            <div className='font-medium text-main'>{row.accountNumber}</div>
+            <div className='text-xs text-muted mt-1'>
+              Type: {row.transferType}
+            </div>
           </div>
-        </div>
-      ),
+        ),
     },
     { header: "Request Date", accessorKey: "createdAt" },
     {

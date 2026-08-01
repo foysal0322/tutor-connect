@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 // requestIdleCallback gives the browser room to paint first; fall back to
@@ -16,9 +16,30 @@ const cancelIdle: (h: IdleHandle) => void =
     ? (window as any).cancelIdleCallback
     : (h) => window.clearTimeout(h);
 
+// Per-session dedupe: survives Fast Refresh remounts and hard refreshes within
+// the same tab session, so each unique path is tracked once per session instead
+// of once per mount. Reduces dev DB writes from HMR and prod duplicate writes
+// from same-session revisits, without losing analytics signal.
+const SESSION_KEY = 'tc:tracked-paths';
+function readTrackedSet(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    return new Set<string>(JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '[]'));
+  } catch {
+    return new Set();
+  }
+}
+function writeTrackedSet(set: Set<string>) {
+  try {
+    // Cap the set size so a long session can't blow sessionStorage's quota.
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify([...set].slice(-200)));
+  } catch {
+    /* quota exceeded — non-fatal, skip persistence */
+  }
+}
+
 export default function VisitorTracker() {
   const pathname = usePathname();
-  const hasTracked = useRef<string | null>(null);
 
   useEffect(() => {
     // Skip tracking on admin/auth/api routes entirely — the audit recommended
@@ -32,8 +53,8 @@ export default function VisitorTracker() {
       return;
     }
 
-    // Dedupe rapid re-renders (React strict mode in dev, etc.).
-    if (hasTracked.current === pathname) return;
+    const tracked = readTrackedSet();
+    if (tracked.has(pathname)) return;
 
     const trackVisit = async () => {
       try {
@@ -42,7 +63,8 @@ export default function VisitorTracker() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ path: pathname }),
         });
-        hasTracked.current = pathname;
+        tracked.add(pathname);
+        writeTrackedSet(tracked);
       } catch (error) {
         console.error('Failed to track visitor', error);
       }

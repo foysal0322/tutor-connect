@@ -183,7 +183,7 @@ export default async function ConsultancyPage() {
           >
             <CheckCircle2 size={40} style={{ color: 'var(--primary)' }} />
             <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
-              You've used all {MAX_FREE_CONSULTANCY} of your free consultancy sessions.
+              You&apos;ve used all {MAX_FREE_CONSULTANCY} of your free consultancy sessions.
               Our team will reach out about your pending requests.
             </p>
           </div>

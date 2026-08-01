@@ -14,16 +14,43 @@ export async function submitWithdrawalRequest(formData: FormData) {
 
   const tutorId = (session.user as any).id;
   const amount = parseFloat(formData.get('amount') as string);
-  const mfsType = formData.get('mfsType') as string;
-  const accountNumber = formData.get('accountNumber') as string;
-  const transferType = formData.get('transferType') as string;
+  const method = (formData.get('method') as string) || 'MFS';
 
   if (isNaN(amount) || amount <= 0) {
     return { error: 'Please enter a valid amount.' };
   }
 
-  if (!mfsType || !accountNumber || !transferType) {
-    return { error: 'All fields are required.' };
+  // Validate destination fields per method.
+  let mfsType: string | null = null;
+  let accountNumber: string | null = null;
+  let transferType: string | null = null;
+  let accountHolderName: string | null = null;
+  let bankName: string | null = null;
+  let bankAccountNumber: string | null = null;
+  let branch: string | null = null;
+  let bftn: string | null = null;
+
+  if (method === 'BANK') {
+    accountHolderName = (formData.get('accountHolderName') as string)?.trim() || null;
+    bankName = (formData.get('bankName') as string)?.trim() || null;
+    bankAccountNumber = (formData.get('bankAccountNumber') as string)?.trim() || null;
+    branch = (formData.get('branch') as string)?.trim() || null;
+    bftn = (formData.get('bftn') as string)?.trim() || null;
+
+    if (!accountHolderName || !bankName || !bankAccountNumber || !branch || !bftn) {
+      return { error: 'All bank fields are required.' };
+    }
+    if (!/^\d{9}$/.test(bftn)) {
+      return { error: 'BFTN must be exactly 9 digits.' };
+    }
+  } else {
+    mfsType = (formData.get('mfsType') as string) || null;
+    accountNumber = (formData.get('accountNumber') as string) || null;
+    transferType = (formData.get('transferType') as string) || 'SEND_MONEY';
+
+    if (!mfsType || !accountNumber || !transferType) {
+      return { error: 'All MFS fields are required.' };
+    }
   }
 
   try {
@@ -67,9 +94,15 @@ export async function submitWithdrawalRequest(formData: FormData) {
         amount,
         platformFee,
         netAmount,
+        method,
         mfsType,
         accountNumber,
         transferType,
+        accountHolderName,
+        bankName,
+        bankAccountNumber,
+        branch,
+        bftn,
         status: 'PENDING'
       }
     });
@@ -79,7 +112,7 @@ export async function submitWithdrawalRequest(formData: FormData) {
       await notifyWithdrawRequest({
         tutorName,
         amount,
-        method: mfsType
+        method: method === 'BANK' ? `Bank (${bankName})` : (mfsType || 'MFS')
       });
     } catch (err) {
       console.error('Failed to send discord withdraw notification', err);

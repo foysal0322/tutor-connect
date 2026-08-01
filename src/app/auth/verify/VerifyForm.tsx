@@ -3,7 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MailCheck, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { requestEmailVerification, verifyEmail } from '../actions/emailVerification';
+import {
+  requestEmailVerification,
+  verifyEmail,
+  requestUserEmailVerification,
+  verifyUserEmail,
+} from '../actions/emailVerification';
 import { Input } from '@/components/ui/Input';
 import {
   FormPage,
@@ -16,7 +21,7 @@ import {
   homeLinkClass,
 } from '@/components/forms';
 
-export default function VerifyForm({ token }: { token: string }) {
+export default function VerifyForm({ token, userId }: { token?: string; userId?: string }) {
   const [step, setStep] = useState<'VERIFY' | 'SUCCESS'>('VERIFY');
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
@@ -47,7 +52,10 @@ export default function VerifyForm({ token }: { token: string }) {
 
   async function send() {
     setResending(true);
-    const res = await requestEmailVerification(token);
+    // userId → existing-User flow; token → PendingRegistration flow.
+    const res = userId
+      ? await requestUserEmailVerification(userId)
+      : await requestEmailVerification(token!);
     if (res.maskedEmail) setMaskedEmail(res.maskedEmail);
     setMessage(res.success ? { type: 'success', text: res.message } : { type: 'error', text: res.message });
     // Only arm the cooldown when a code was actually sent — otherwise a
@@ -64,7 +72,9 @@ export default function VerifyForm({ token }: { token: string }) {
     }
     setLoading(true);
     setMessage(null);
-    const res = await verifyEmail(token, otp);
+    const res = userId
+      ? await verifyUserEmail(userId, otp)
+      : await verifyEmail(token!, otp);
     if (res.success) {
       setStep('SUCCESS');
       setMessage({ type: 'success', text: res.message });

@@ -94,6 +94,111 @@ export async function requestEmailVerification(token: string) {
   }
 }
 
+// --- Existing-user verification (EmailVerificationRequest) ------------------
+//
+// Used when a User row already exists but emailVerified is null — e.g. they
+// try to sign in before verifying. The registration flow above uses
+// PendingRegistration instead; these two functions are the User-scoped mirror.
+
+export async function requestUserEmailVerification(userId: string) {
+  try {
+    const rl = rateLimit(
+      `user-verify-issue:${userId}`,
+      OTP_ISSUE_RATE_LIMIT.limit,
+      OTP_ISSUE_RATE_LIMIT.windowMs,
+    );
+    if (!rl.ok) {
+      return { success: false, message: retryMessage(rl.resetAt) };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, nsuId: true, emailVerified: true },
+    });
+
+    if (!user) {
+      return { success: false, message: 'Account not found. Please register first.' };
+    }
+    if (user.emailVerified) {
+      return { success: false, message: 'Your email is already verified. Please sign in.' };
+    }
+
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
+
+    // Void any prior pending requests so only the newest code is valid.
+    await prisma.emailVerificationRequest.updateMany({
+      where: { userId: user.id, status: 'PENDING' },
+      data: { status: 'EXPIRED' },
+    });
+    await prisma.emailVerificationRequest.create({
+      data: { userId: user.id, token: otp, expiresAt },
+    });
+
+    try {
+      await sendNoReplyEmail({
+        to: user.email,
+        subject: `Verify Your Email - NSUone`,
+        html: otpEmailHtml(user.name, user.nsuId, otp),
+      });
+    } catch (mailErr) {
+      console.error('Failed to send verification email:', mailErr);
+      return { success: false, message: 'Failed to send verification email. Please try again later.' };
+    }
+
+    return {
+      success: true,
+      message: `A 6-digit verification code has been sent to ${maskEmail(user.email)}.`,
+      maskedEmail: maskEmail(user.email),
+    };
+  } catch (error: any) {
+    console.error('User email verification request error:', error);
+    return { success: false, message: 'An error occurred while sending the verification email.' };
+  }
+}
+
+export async function verifyUserEmail(userId: string, otp: string) {
+  try {
+    const rl = rateLimit(
+      `user-verify:${userId}`,
+      OTP_VERIFY_RATE_LIMIT.limit,
+      OTP_VERIFY_RATE_LIMIT.windowMs,
+    );
+    if (!rl.ok) {
+      return { success: false, message: retryMessage(rl.resetAt) };
+    }
+
+    const request = await prisma.emailVerificationRequest.findFirst({
+      where: {
+        userId,
+        token: otp,
+        status: 'PENDING',
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!request) {
+      return { success: false, message: 'Invalid or expired verification code. Please request a new code.' };
+    }
+
+    await prisma.$transaction([
+      prisma.emailVerificationRequest.update({
+        where: { id: request.id },
+        data: { status: 'RESOLVED' },
+      }),
+      prisma.user.update({
+        where: { id: userId },
+        data: { emailVerified: new Date() },
+      }),
+    ]);
+
+    return { success: true, message: 'Your email has been verified! You can now sign in.' };
+  } catch (error: any) {
+    console.error('User email verification error:', error);
+    return { success: false, message: 'An error occurred while verifying your email.' };
+  }
+}
+
 // Verify the OTP against the pending registration and, on success, create
 // the real User row (with emailVerified preset) in the same transaction.
 export async function verifyEmail(token: string, otp: string) {

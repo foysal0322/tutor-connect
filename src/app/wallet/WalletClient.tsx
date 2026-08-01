@@ -40,9 +40,9 @@ interface Withdrawal {
   amount: number;
   platformFee: number;
   netAmount: number;
-  mfsType: string;
-  accountNumber: string;
-  transferType: string;
+  mfsType: string | null;
+  accountNumber: string | null;
+  transferType: string | null;
   status: string;
   createdAt: string | Date;
 }
@@ -248,7 +248,7 @@ export default function WalletClient({
                     ৳{formatBDT(w.amount)} <span className={s.muted}>· net ৳{formatBDT(w.netAmount)}</span>
                   </span>
                   <span className={s.withdrawalMeta}>
-                    {w.mfsType} · ••••{w.accountNumber.slice(-4)} · {w.transferType.replace('_', ' ').toLowerCase()} · {formatDate(w.createdAt)}
+                    {w.mfsType ?? "BANK"} · ••••{(w.accountNumber ?? "").slice(-4)} · {(w.transferType ?? "SEND_MONEY").replace('_', ' ').toLowerCase()} · {formatDate(w.createdAt)}
                   </span>
                 </div>
                 <StatusBadge status={w.status} domain="withdrawal" />
