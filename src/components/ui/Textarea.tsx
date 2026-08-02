@@ -12,6 +12,8 @@ export interface TextareaProps
   label: string;
   error?: string | null;
   hint?: string;
+  /** Small decorative icon shown at the start of the label text (aria-hidden). */
+  labelIcon?: React.ReactNode;
   containerClassName?: string;
 }
 
@@ -19,6 +21,7 @@ export function Textarea({
   label,
   error,
   hint,
+  labelIcon,
   id: idProp,
   required,
   className,
@@ -44,6 +47,11 @@ export function Textarea({
           color: 'var(--text-main)',
         }}
       >
+        {labelIcon && (
+          <span aria-hidden="true" style={labelIconStyle}>
+            {labelIcon}
+          </span>
+        )}
         {label}
         {required && (
           <span aria-label="required" style={{ color: 'var(--danger)', marginLeft: '0.25rem' }}>
@@ -68,3 +76,12 @@ export function Textarea({
     </div>
   );
 }
+
+/** Inline decorative icon placed at the start of a field label. */
+const labelIconStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  marginRight: '0.4rem',
+  verticalAlign: '-0.18em',
+  color: 'var(--form-accent, var(--primary, #7c3aed))',
+};

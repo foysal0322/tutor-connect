@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquareText, User, LogIn, CheckCircle2 } from 'lucide-react';
+import { MessageSquareText, LogIn, CheckCircle2, IdCard, Tags } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -208,25 +208,27 @@ export default async function ConsultancyPage() {
           </span>
         </div>
         <form action={submitConsultancy} noValidate>
-          {/* Section: Identity (pre-filled, read-only) */}
-          <FormSection label="Your Identity" icon={<User size={14} />} columns={1}>
+          {/* Identity field (pre-filled, read-only) — title omitted per client request */}
+          <FormSection columns={1}>
             <Input
               containerClassName={fieldClass}
               name="nsuId"
               type="text"
               label="Your NSU ID"
+              labelIcon={<IdCard size={14} />}
               defaultValue={sessionUser.nsuId}
               readOnly
               required
             />
           </FormSection>
 
-          {/* Section: Consultancy Details */}
-          <FormSection label="Consultancy Details" icon={<MessageSquareText size={14} />}>
+          {/* Consultancy details — title omitted per client request */}
+          <FormSection>
             <Select
               containerClassName={fieldClass}
               name="topic"
               label="Topic"
+              labelIcon={<Tags size={14} />}
               required
               placeholderOption="Select a topic"
               options={[
@@ -241,6 +243,7 @@ export default async function ConsultancyPage() {
               containerClassName={`${fieldClass} ${gridFullClass}`}
               name="details"
               label="Additional Details"
+              labelIcon={<MessageSquareText size={14} />}
               required
               rows={4}
               placeholder="Briefly describe what you need help with..."

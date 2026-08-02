@@ -55,6 +55,8 @@ export interface SelectProps {
   required?: boolean;
   error?: string | null;
   hint?: string;
+  /** Small decorative icon shown at the start of the label text (aria-hidden). */
+  labelIcon?: React.ReactNode;
   /** Render the label off-screen (admin filters, sort, inline rows). */
   hideLabel?: boolean;
   /** Override the default label styling (e.g. toolbar micro-labels). */
@@ -81,6 +83,7 @@ export function Select({
   required,
   error = null,
   hint,
+  labelIcon,
   hideLabel = false,
   labelClassName,
   containerClassName,
@@ -313,6 +316,11 @@ export function Select({
   return (
     <div className={containerClassName} ref={containerRef}>
       <label htmlFor={triggerId} id={labelId} className={labelClass}>
+        {labelIcon && (
+          <span aria-hidden="true" style={labelIconStyle}>
+            {labelIcon}
+          </span>
+        )}
         {label}
         {required && (
           <span aria-label="required" style={{ color: 'var(--danger)', marginLeft: '0.25rem' }}>
@@ -431,3 +439,12 @@ export function Select({
     </div>
   );
 }
+
+/** Inline decorative icon placed at the start of a field label. */
+const labelIconStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  marginRight: '0.4rem',
+  verticalAlign: '-0.18em',
+  color: 'var(--form-accent, var(--primary, #7c3aed))',
+};

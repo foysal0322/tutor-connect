@@ -27,6 +27,8 @@ export interface InputProps
   hint?: string;
   /** Hide the visible label. Still rendered for screen readers. */
   visuallyHideLabel?: boolean;
+  /** Small decorative icon shown at the start of the label text (aria-hidden). */
+  labelIcon?: React.ReactNode;
   /** Render an icon inside the input, left-aligned. */
   leadingIcon?: React.ReactNode;
   /** Optional decorative suffix (e.g. "BDT", "%"). Not interactive. */
@@ -41,6 +43,7 @@ export function Input({
   error,
   hint,
   visuallyHideLabel,
+  labelIcon,
   leadingIcon,
   suffix,
   trailingIcon,
@@ -78,6 +81,7 @@ export function Input({
               }
         }
       >
+        {labelIcon && <span aria-hidden="true" style={labelIconStyle}>{labelIcon}</span>}
         {label}
         {required && (
           <span aria-label="required" style={{ color: 'var(--danger)', marginLeft: '0.25rem' }}>
@@ -172,4 +176,13 @@ const visuallyHiddenStyle: React.CSSProperties = {
   clip: 'rect(0,0,0,0)',
   whiteSpace: 'nowrap',
   border: 0,
+};
+
+/** Inline decorative icon placed at the start of a field label. */
+const labelIconStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  marginRight: '0.4rem',
+  verticalAlign: '-0.18em',
+  color: 'var(--form-accent, var(--primary, #7c3aed))',
 };
