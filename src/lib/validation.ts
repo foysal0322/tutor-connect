@@ -138,3 +138,29 @@ export const submitRefundRequestSchema = z.object({
   requestId: idSchema,
   details: reasonSchema,
 });
+
+// Withdrawal submission — server-authoritative validation. Replaces the
+// hand-rolled parseFloat/field checks that lived in the action.
+export const submitWithdrawalSchema = z.object({
+  amount: bdtAmountSchema,
+  method: z.enum(['MFS', 'BANK'], { message: 'Select a valid withdrawal method.' }),
+  // MFS fields (required when method === 'MFS', validated in the action to
+  // keep cross-field rules here minimal).
+  mfsType: mfsTypeSchema.optional().or(z.literal('')),
+  accountNumber: z.string().trim().max(50, 'Account number is too long.').optional().or(z.literal('')),
+  transferType: z.enum(['SEND_MONEY', 'PAYMENT']).optional().or(z.literal('')),
+  // Bank fields
+  accountHolderName: z.string().trim().max(120, 'Name is too long.').optional().or(z.literal('')),
+  bankName: z.string().trim().max(120, 'Bank name is too long.').optional().or(z.literal('')),
+  bankAccountNumber: z.string().trim().max(50, 'Account number is too long.').optional().or(z.literal('')),
+  branch: z.string().trim().max(120, 'Branch name is too long.').optional().or(z.literal('')),
+  bftn: z.string().trim().optional().or(z.literal('')),
+});
+
+// Admin direct wallet adjustment.
+export const adjustWalletSchema = z.object({
+  userId: idSchema,
+  direction: z.enum(['CREDIT', 'DEBIT'], { message: 'Select credit or debit.' }),
+  amount: bdtAmountSchema,
+  reason: reasonSchema,
+});

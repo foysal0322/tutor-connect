@@ -5,6 +5,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { revalidatePath, updateTag } from 'next/cache';
+import { createNotification } from '@/lib/notification';
+import { sendNoReplyEmail } from '@/lib/mail';
+import { parseFormData, adjustWalletSchema } from '@/lib/validation';
 
 export async function adminUpdateUser(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -232,12 +235,12 @@ export async function deleteBulkCourses(ids: string[]) {
 export async function deleteUser(userId: string) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'ADMIN') throw new Error('Not authorized');
-  
+
   try {
     await prisma.$transaction(async (tx) => {
       await tx.refundRequest.deleteMany({ where: { studentId: userId } });
       await tx.consultancyRequest.deleteMany({ where: { studentId: userId } });
-      
+
       const studentRequests = await tx.tutorRequest.findMany({ where: { studentId: userId } });
       const requestIds = studentRequests.map(r => r.id);
       if (requestIds.length > 0) {
@@ -249,14 +252,139 @@ export async function deleteUser(userId: string) {
         where: { assignedTutorId: userId },
         data: { assignedTutorId: null, status: 'PENDING' }
       });
-      
+
       await tx.tutorExpertise.deleteMany({ where: { tutorId: userId } });
       await tx.user.delete({ where: { id: userId } });
     });
-    
+
     revalidatePath('/admin/users');
     return { success: true };
   } catch (err: any) {
     return { error: 'Failed to delete user.' };
+  }
+}
+
+/**
+ * Direct admin adjustment of a user's wallet balance. Credits or debits the
+ * given amount, records the change as a WalletTransaction (type
+ * ADMIN_ADJUSTMENT) with the admin's reason, and notifies the user.
+ *
+ * The wallet mutation + transaction row are written atomically; for DEBIT,
+ * the server rejects any amount that would push the balance below zero
+ * (product decision — no negative balances).
+ *
+ * The signed delta (+amount / -amount) is stored on WalletTransaction.amount
+ * so the existing transaction history rendering (which already signs amounts)
+ * continues to work without special casing.
+ */
+export async function adjustUserBalance(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'ADMIN') {
+    return { error: 'Not authorized.' };
+  }
+
+  const adminId = (session.user as any).id;
+
+  const parsed = parseFormData(formData, adjustWalletSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+  const { userId, direction, amount, reason } = parsed.data;
+
+  const isCredit = direction === 'CREDIT';
+  const signedDelta = isCredit ? amount : -amount;
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // Lock + read the current balance inside the transaction. SELECT FOR
+      // UPDATE semantics come from Prisma's interactive tx on Postgres.
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true, balance: true, role: true },
+      });
+
+      if (!user) {
+        throw new Error('NOT_FOUND');
+      }
+
+      if (user.role === 'ADMIN') {
+        throw new Error('ADMIN_BLOCKED');
+      }
+
+      // Server-authoritative guard: debits cannot push the balance negative.
+      if (!isCredit && user.balance - amount < 0) {
+        throw new Error(`INSUFFICIENT:${user.balance}`);
+      }
+
+      const updated = await tx.user.update({
+        where: { id: userId },
+        data: { balance: { increment: signedDelta } },
+        select: { balance: true },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          userId,
+          amount: signedDelta,
+          type: 'ADMIN_ADJUSTMENT',
+          description: reason,
+          referenceId: adminId,
+        },
+      });
+
+      return { user, newBalance: updated.balance };
+    });
+
+    // Notify the user (push + email). Fire-and-forget.
+    const verb = isCredit ? 'credited to' : 'debited from';
+    try {
+      await createNotification(
+        userId,
+        isCredit ? 'Wallet Credited' : 'Wallet Debited',
+        `${amount} BDT has been ${verb} your wallet — ${reason}`,
+        '/wallet',
+      );
+    } catch (err) {
+      console.error('Failed to notify user of wallet adjustment:', err);
+    }
+
+    try {
+      await sendNoReplyEmail({
+        to: result.user.email,
+        subject: `Wallet ${isCredit ? 'Credit' : 'Debit'} — NSUone`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: ${isCredit ? '#10b981' : '#ef4444'};">Wallet ${isCredit ? 'Credit' : 'Debit'}</h2>
+            <p>Hello ${result.user.name},</p>
+            <p>An admin has ${verb} your wallet.</p>
+            <p><strong>Amount:</strong> ${amount} BDT</p>
+            <p><strong>New balance:</strong> ${result.newBalance} BDT</p>
+            <p><strong>Reason:</strong> ${reason}</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+            <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.error('Failed to send wallet adjustment email:', mailErr);
+    }
+
+    revalidatePath('/admin/wallets');
+    revalidatePath('/admin/users');
+    revalidatePath('/wallet');
+    return { success: true, newBalance: result.newBalance };
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === 'NOT_FOUND') return { error: 'User not found.' };
+      if (err.message === 'ADMIN_BLOCKED') return { error: 'Admin wallets cannot be adjusted.' };
+      if (err.message.startsWith('INSUFFICIENT:')) {
+        const balance = err.message.split(':')[1];
+        return {
+          error: `Insufficient balance. User has ${balance} BDT — cannot debit ${amount} BDT.`,
+        };
+      }
+    }
+    console.error('Adjust wallet balance error:', err);
+    return { error: 'Failed to adjust wallet balance.' };
   }
 }

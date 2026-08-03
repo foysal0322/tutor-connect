@@ -60,11 +60,18 @@ export default async function AdminUsersPage() {
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td>
                     <div className="flex gap-2 items-center">
-                      <Link 
-                        href={`/admin/users/${user.id}`} 
+                      <Link
+                        href={`/admin/users/${user.id}`}
                         className="btn bg-primary text-white hover:bg-primary-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
                       >
                         Edit
+                      </Link>
+
+                      <Link
+                        href={`/admin/wallets?userId=${user.id}`}
+                        className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
+                      >
+                        Wallet
                       </Link>
 
                       <form action={async () => {
@@ -125,11 +132,18 @@ export default async function AdminUsersPage() {
                 </div>
                 
                 <div className="mt-2 pt-3 border-t border-color flex gap-2 flex-wrap">
-                  <Link 
-                    href={`/admin/users/${user.id}`} 
+                  <Link
+                    href={`/admin/users/${user.id}`}
                     className="btn bg-primary text-white hover:bg-primary-hover px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex-1 text-center"
                   >
                     Edit
+                  </Link>
+
+                  <Link
+                    href={`/admin/wallets?userId=${user.id}`}
+                    className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex-1 text-center"
+                  >
+                    Wallet
                   </Link>
 
                   <form className="flex-1" action={async () => {

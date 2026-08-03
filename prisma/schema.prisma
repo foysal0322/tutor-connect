@@ -55,6 +55,7 @@ model User {
 
   consultancyRequests   ConsultancyRequest[]
   refundRequests        RefundRequest[]
+  processedRefunds      RefundRequest[] @relation("RefundProcessor")
   passwordResetRequests       PasswordResetRequest[]
   emailVerificationRequests   EmailVerificationRequest[]
   withdrawalRequests    WithdrawalRequest[]
@@ -136,19 +137,26 @@ model ConsultancyRequest {
 }
 
 model RefundRequest {
-  id        String   @id @default(cuid())
-  requestId String
-  studentId String
-  details   String
-  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  requestId     String
+  studentId     String
+  details       String
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  // Audit fields — populated when an admin actioned the request.
+  amount        Float?    // Session fee credited to wallet on approval (TutorRequest.budget)
+  reviewNote    String?   // Optional admin note shown to student + kept on record
+  resolvedAt    DateTime? // When the admin approved or rejected
+  processedById String?   // Admin who actioned the request
+  createdAt     DateTime  @default(now())
 
-  request TutorRequest @relation(fields: [requestId], references: [id])
-  student User         @relation(fields: [studentId], references: [id])
+  request      TutorRequest @relation(fields: [requestId], references: [id])
+  student      User         @relation(fields: [studentId], references: [id])
+  processedBy  User?        @relation("RefundProcessor", fields: [processedById], references: [id])
 
   @@index([requestId])
   @@index([studentId])
   @@index([status])
+  @@index([processedById])
 }
 
 model SupportTicket {
@@ -302,7 +310,7 @@ model WalletTransaction {
   id          String   @id @default(cuid())
   userId      String
   amount      Float    // Positive for credit/recharge, negative for payment/withdrawal
-  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL
+  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT
   description String
   referenceId String?  // MFS transaction ID or TutorRequest ID
   createdAt   DateTime @default(now())

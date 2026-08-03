@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { completeTutorRequest, submitRefundRequest, cancelTutorRequest } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import PaymentForm from '@/components/payments/PaymentForm';
@@ -146,6 +147,49 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                     {badge.label}
                   </span>
                 </div>
+
+                {/* Refund outcome banner — shown when a refund has been actioned. */}
+                {req.refundRequests && req.refundRequests.length > 0 && (() => {
+                  const ref = req.refundRequests[0];
+                  if (ref.status === 'APPROVED') {
+                    return (
+                      <div style={{
+                        background: '#ecfdf5', border: '1px solid #a7f3d0',
+                        borderRadius: '8px', padding: '0.85rem 1rem',
+                        display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem',
+                        alignItems: 'center', justifyContent: 'space-between',
+                      }}>
+                        <div>
+                          <strong style={{ color: '#047857' }}>
+                            Refunded {ref.amount != null ? `${ref.amount} BDT` : ''} to your wallet
+                          </strong>
+                          {ref.reviewNote && (
+                            <span style={{ display: 'block', fontSize: '0.85rem', color: '#065f46', marginTop: '0.15rem' }}>
+                              Note: {ref.reviewNote}
+                            </span>
+                          )}
+                        </div>
+                        <Link href="/wallet" style={{ color: '#047857', fontWeight: 600, textDecoration: 'underline' }}>
+                          View wallet →
+                        </Link>
+                      </div>
+                    );
+                  }
+                  if (ref.status === 'REJECTED') {
+                    return (
+                      <div style={{
+                        background: '#fff7ed', border: '1px solid #fed7aa',
+                        borderRadius: '8px', padding: '0.85rem 1rem',
+                        color: '#9a3412', fontSize: '0.9rem',
+                      }}>
+                        <strong>Your refund request was rejected.</strong>
+                        {ref.reviewNote && <span style={{ display: 'block', marginTop: '0.15rem' }}>Note: {ref.reviewNote}</span>}
+                      </div>
+                    );
+                  }
+                  // PENDING — quiet nudge, no banner noise.
+                  return null;
+                })()}
 
                 {/* Details Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px' }}>

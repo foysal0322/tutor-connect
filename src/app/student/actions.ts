@@ -326,6 +326,24 @@ export async function submitRefundRequest(formData: FormData) {
   const studentId = (session.user as any).id;
 
   try {
+    // Verify the request belongs to this student and is in a paid state.
+    const request = await prisma.tutorRequest.findFirst({
+      where: { id: requestId, studentId },
+      select: { id: true, status: true },
+    });
+
+    if (!request) {
+      return { error: 'Request not found.' };
+    }
+
+    // Refunds are only allowed for sessions the student has actually paid
+    // for (or is in the process of paying). PENDING/CANCELLED requests have
+    // no money to return.
+    const paidStatuses = ['MATCHED', 'PAYMENT_PENDING', 'ACCEPTED', 'COMPLETED'];
+    if (!paidStatuses.includes(request.status)) {
+      return { error: 'This session is not eligible for a refund.' };
+    }
+
     // Check if there is already a refund request
     const existing = await prisma.refundRequest.findFirst({
       where: { requestId },

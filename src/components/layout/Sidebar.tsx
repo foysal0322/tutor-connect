@@ -114,6 +114,7 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
             { name: 'Tutor Requests', href: '/admin/requests', icon: BookOpen, badgeKey: 'requests' },
             { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
+            { name: 'Wallets', href: '/admin/wallets', icon: CreditCard },
             { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
             { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
             { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },

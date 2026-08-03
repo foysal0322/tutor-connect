@@ -72,7 +72,7 @@ export default async function DashboardPage() {
           },
         },
         refundRequests: {
-          select: { id: true, status: true, details: true, createdAt: true },
+          select: { id: true, status: true, details: true, amount: true, reviewNote: true, createdAt: true },
           orderBy: { createdAt: 'desc' },
         },
       },

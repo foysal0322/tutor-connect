@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import LoadingButton from "@/components/ui/LoadingButton";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 
 // NOTE: This component is a 558-line monolith (FRONTEND_AUDIT.md E1) and its
 // table is tightly coupled to in-component state (search, status filter,
@@ -35,6 +36,8 @@ export default function RequestManager({
     extra?: any;
   } | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  // Admin note attached to a refund action — shared across desktop/mobile.
+  const [refundNote, setRefundNote] = useState('');
   const { toast } = useToast();
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -135,14 +138,19 @@ export default function RequestManager({
     refundRequestId: string,
     requestId: string,
     approve: boolean,
+    reviewNote?: string,
   ) => {
     setConfirmAction(null);
     setLoadingId(refundRequestId);
-    const res = await verifyRefundAction(refundRequestId, approve);
+    const res = await verifyRefundAction(refundRequestId, approve, reviewNote);
     if (res?.error) {
       toast.error(res.error);
     } else {
-      toast.success(approve ? "Refund approved." : "Refund rejected.");
+      toast.success(
+        approve
+          ? "Refund approved — session fee credited to wallet."
+          : "Refund rejected.",
+      );
       setRequests((prev) =>
         prev.map((r) => {
           if (r.id === requestId) {
@@ -151,7 +159,13 @@ export default function RequestManager({
               status: approve ? "CANCELLED" : r.status,
               refundRequests: r.refundRequests.map((ref: any) =>
                 ref.id === refundRequestId
-                  ? { ...ref, status: approve ? "APPROVED" : "REJECTED" }
+                  ? {
+                      ...ref,
+                      status: approve ? "APPROVED" : "REJECTED",
+                      reviewNote: reviewNote ?? null,
+                      amount: approve ? r.budget : null,
+                      resolvedAt: new Date().toISOString(),
+                    }
                   : ref,
               ),
             };
@@ -491,26 +505,58 @@ export default function RequestManager({
                       {/* Case 3: Refund request is pending approval */}
                       {pendingRefund && (
                         <div className='bg-warning-light p-3 rounded-md border border-warning text-sm mt-2'>
-                          <div className='font-semibold text-warning-hover mb-1'>
-                            Refund Reason:
+                          <div className='flex items-center justify-between mb-2'>
+                            <span className='font-semibold text-warning-hover'>
+                              Refund Request
+                            </span>
+                            <span className='text-xs text-muted'>
+                              {new Date(pendingRefund.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className='font-semibold text-warning-hover mb-1 text-xs uppercase tracking-wide'>
+                            Student&rsquo;s reason
                           </div>
                           <div className='italic bg-white p-2 rounded shadow-sm text-main mb-3'>
                             &quot;{pendingRefund.details}&quot;
                           </div>
 
-                          <div className='flex gap-2 flex-wrap'>
+                          {/* Amount breakdown — make the financial impact obvious. */}
+                          <div className='grid grid-cols-3 gap-2 mb-3 text-center'>
+                            <div className='bg-white p-2 rounded border border-color'>
+                              <div className='text-xs text-muted'>Paid</div>
+                              <div className='font-semibold text-main'>
+                                {req.payment?.amount?.toLocaleString() ?? req.budget.toLocaleString()} BDT
+                              </div>
+                            </div>
+                            <div className='bg-white p-2 rounded border border-color'>
+                              <div className='text-xs text-muted'>Refund</div>
+                              <div className='font-semibold text-success'>
+                                {req.budget.toLocaleString()} BDT
+                              </div>
+                            </div>
+                            <div className='bg-white p-2 rounded border border-color'>
+                              <div className='text-xs text-muted'>Platform keeps</div>
+                              <div className='font-semibold text-muted'>
+                                {(req.budget * 0.05).toLocaleString()} BDT
+                              </div>
+                            </div>
+                          </div>
+                          <div className='text-xs text-muted mb-3'>
+                            Approving credits <strong>{req.budget.toLocaleString()} BDT</strong> to the student&rsquo;s wallet. The 5% platform fee is retained.
+                          </div>
+
+                          <div className='flex gap-2 flex-wrap items-center'>
                             {confirmAction?.type ===
                             `ref-approve-${pendingRefund.id}` ? (
                               <>
-                                <span className='text-success-hover font-semibold self-center mr-2'>
-                                  Approve?
-                                </span>
                                 <LoadingButton
                                   onClick={() =>
                                     handleVerifyRefund(
                                       pendingRefund.id,
                                       req.id,
                                       true,
+                                      refundNote || undefined,
                                     )
                                   }
                                   loading={loadingId === pendingRefund.id}
@@ -522,7 +568,7 @@ export default function RequestManager({
                                     fontSize: "0.8rem",
                                   }}
                                 >
-                                  Yes, Approve
+                                  Confirm Credit
                                 </LoadingButton>
                                 <button
                                   onClick={() => setConfirmAction(null)}
@@ -535,15 +581,13 @@ export default function RequestManager({
                             ) : confirmAction?.type ===
                               `ref-reject-${pendingRefund.id}` ? (
                               <>
-                                <span className='text-danger-hover font-semibold self-center mr-2'>
-                                  Reject?
-                                </span>
                                 <LoadingButton
                                   onClick={() =>
                                     handleVerifyRefund(
                                       pendingRefund.id,
                                       req.id,
                                       false,
+                                      refundNote || undefined,
                                     )
                                   }
                                   loading={loadingId === pendingRefund.id}
@@ -555,7 +599,7 @@ export default function RequestManager({
                                     fontSize: "0.8rem",
                                   }}
                                 >
-                                  Yes, Reject
+                                  Confirm Reject
                                 </LoadingButton>
                                 <button
                                   onClick={() => setConfirmAction(null)}
@@ -568,12 +612,13 @@ export default function RequestManager({
                             ) : (
                               <>
                                 <LoadingButton
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setRefundNote('');
                                     setConfirmAction({
                                       type: `ref-approve-${pendingRefund.id}`,
                                       id: pendingRefund.id,
-                                    })
-                                  }
+                                    });
+                                  }}
                                   loading={loadingId === pendingRefund.id}
                                   className='bg-success text-white px-3 py-1 text-xs'
                                   aria-label='Initiate refund approval for {req.course.name} from {req.student.name}'
@@ -582,15 +627,16 @@ export default function RequestManager({
                                     fontSize: "0.8rem",
                                   }}
                                 >
-                                  Approve
+                                  Approve &amp; Credit
                                 </LoadingButton>
                                 <LoadingButton
-                                  onClick={() =>
+                                  onClick={() => {
+                                    setRefundNote('');
                                     setConfirmAction({
                                       type: `ref-reject-${pendingRefund.id}`,
                                       id: pendingRefund.id,
-                                    })
-                                  }
+                                    });
+                                  }}
                                   loading={loadingId === pendingRefund.id}
                                   className='bg-danger text-white px-3 py-1 text-xs'
                                   aria-label='Initiate refund rejection for {req.course.name} from {req.student.name}'
@@ -604,6 +650,23 @@ export default function RequestManager({
                               </>
                             )}
                           </div>
+
+                          {/* Optional admin note — appears once an action is
+                              chosen, before confirmation. */}
+                          {confirmAction &&
+                            (confirmAction.type === `ref-approve-${pendingRefund.id}` ||
+                              confirmAction.type === `ref-reject-${pendingRefund.id}`) && (
+                              <div className='mt-3'>
+                                <Textarea
+                                  label='Admin note (optional)'
+                                  rows={2}
+                                  placeholder='e.g. Approved — session never started. / Rejected — session already completed.'
+                                  value={refundNote}
+                                  onChange={(e) => setRefundNote(e.target.value)}
+                                  hint='Shown to the student and saved on the refund record.'
+                                />
+                              </div>
+                            )}
                         </div>
                       )}
 
@@ -790,10 +853,13 @@ export default function RequestManager({
                     {pendingRefund && (
                       <div className='bg-warning-light p-3 rounded-md border border-warning text-sm'>
                         <div className='font-semibold text-warning-hover mb-1'>
-                          Refund Reason:
+                          Refund Request
                         </div>
-                        <div className='italic bg-white p-2 rounded shadow-sm text-main mb-3'>
+                        <div className='italic bg-white p-2 rounded shadow-sm text-main mb-2'>
                           &quot;{pendingRefund.details}&quot;
+                        </div>
+                        <div className='text-xs text-muted mb-3'>
+                          Credit <strong className='text-success'>{req.budget.toLocaleString()} BDT</strong> to wallet · platform keeps {(req.budget * 0.05).toLocaleString()} BDT.
                         </div>
 
                         <div className='flex gap-2'>
@@ -806,6 +872,7 @@ export default function RequestManager({
                                     pendingRefund.id,
                                     req.id,
                                     true,
+                                    refundNote || undefined,
                                   )
                                 }
                                 disabled={loadingId === pendingRefund.id}
@@ -814,7 +881,7 @@ export default function RequestManager({
                               >
                                 {loadingId === pendingRefund.id
                                   ? "..."
-                                  : "Confirm"}
+                                  : "Confirm Credit"}
                               </button>
                               <button
                                 onClick={() => setConfirmAction(null)}
@@ -833,6 +900,7 @@ export default function RequestManager({
                                     pendingRefund.id,
                                     req.id,
                                     false,
+                                    refundNote || undefined,
                                   )
                                 }
                                 disabled={loadingId === pendingRefund.id}
@@ -841,7 +909,7 @@ export default function RequestManager({
                               >
                                 {loadingId === pendingRefund.id
                                   ? "..."
-                                  : "Confirm"}
+                                  : "Confirm Reject"}
                               </button>
                               <button
                                 onClick={() => setConfirmAction(null)}
@@ -854,34 +922,50 @@ export default function RequestManager({
                           ) : (
                             <>
                               <button
-                                onClick={() =>
+                                onClick={() => {
+                                  setRefundNote('');
                                   setConfirmAction({
                                     type: `ref-approve-${pendingRefund.id}`,
                                     id: pendingRefund.id,
-                                  })
-                                }
+                                  });
+                                }}
                                 disabled={loadingId === pendingRefund.id}
                                 className='btn bg-success text-white px-3 py-1 text-xs flex-1'
                                 aria-label='Initiate refund approval for {req.course.name} from {req.student.name}'
                               >
-                                Approve Refund
+                                Approve
                               </button>
                               <button
-                                onClick={() =>
+                                onClick={() => {
+                                  setRefundNote('');
                                   setConfirmAction({
                                     type: `ref-reject-${pendingRefund.id}`,
                                     id: pendingRefund.id,
-                                  })
-                                }
+                                  });
+                                }}
                                 disabled={loadingId === pendingRefund.id}
                                 className='btn bg-danger text-white px-3 py-1 text-xs flex-1'
                                 aria-label='Initiate refund rejection for {req.course.name} from {req.student.name}'
                               >
-                                Reject Refund
+                                Reject
                               </button>
                             </>
                           )}
                         </div>
+
+                        {confirmAction &&
+                          (confirmAction.type === `ref-approve-${pendingRefund.id}` ||
+                            confirmAction.type === `ref-reject-${pendingRefund.id}`) && (
+                            <div className='mt-3'>
+                              <Textarea
+                                label='Admin note (optional)'
+                                rows={2}
+                                placeholder='Optional note for the student…'
+                                value={refundNote}
+                                onChange={(e) => setRefundNote(e.target.value)}
+                              />
+                            </div>
+                          )}
                       </div>
                     )}
 

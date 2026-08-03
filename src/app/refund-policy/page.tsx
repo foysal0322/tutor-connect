@@ -28,6 +28,11 @@ export default function RefundPolicyPage() {
         <p>
           Students must submit a refund request through their dashboard within 24 hours of the scheduled session time. Admins will review the case and process the refund if approved.
         </p>
+
+        <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>How Refunds Are Paid</h3>
+        <p>
+          Approved refunds are credited to your <strong>nsuOne campus wallet</strong>, not returned to the original payment method (bKash/Nagad/Rocket). The session fee is refunded in full; the 5% platform service fee is retained. Wallet funds can be used immediately for new sessions or future payments.
+        </p>
       </div>
     </div>
   );

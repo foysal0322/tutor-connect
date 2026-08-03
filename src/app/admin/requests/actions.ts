@@ -215,41 +215,122 @@ export async function verifyPaymentAction(requestId: string, approve: boolean) {
   }
 }
 
-export async function verifyRefundAction(refundRequestId: string, approve: boolean) {
+export async function verifyRefundAction(
+  refundRequestId: string,
+  approve: boolean,
+  reviewNote?: string,
+) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'ADMIN') {
     throw new Error('Not authorized');
   }
 
+  const adminId = (session.user as any).id;
+  const note = reviewNote?.trim() || null;
+
   try {
+    // Fetch with all relations needed for the credit + email.
     const refundRequest = await prisma.refundRequest.findUnique({
       where: { id: refundRequestId },
-      include: { student: true, request: { include: { course: true } } }
+      include: {
+        student: true,
+        request: { include: { course: true } },
+      },
     });
 
     if (!refundRequest) {
       return { error: 'Refund request not found.' };
     }
 
-    if (approve) {
-      await prisma.refundRequest.update({
-        where: { id: refundRequestId },
-        data: { status: 'APPROVED' }
-      });
+    // Idempotency guard — only PENDING rows can be actioned.
+    if (refundRequest.status !== 'PENDING') {
+      return { error: `This refund request has already been ${refundRequest.status.toLowerCase()}.` };
+    }
 
-      await prisma.tutorRequest.update({
-        where: { id: refundRequest.requestId },
-        data: { status: 'CANCELLED' } // or keep a custom status like 'REFUNDED', cancelled fits best based on schema
-      });
+    const resolvedAt = new Date();
+
+    if (approve) {
+      // Refund the session fee only (platform keeps the 5% fee).
+      const refundAmount = refundRequest.request.budget;
+
+      await prisma.$transaction([
+        // 1. Credit the student's wallet.
+        prisma.user.update({
+          where: { id: refundRequest.studentId },
+          data: { balance: { increment: refundAmount } },
+        }),
+        // 2. Record the refund as a wallet transaction (auditable).
+        prisma.walletTransaction.create({
+          data: {
+            userId: refundRequest.studentId,
+            amount: refundAmount,
+            type: 'REFUND',
+            description: `Refund for ${refundRequest.request.course.name} — ${refundRequest.request.topic || 'session'}`,
+            referenceId: refundRequest.id,
+          },
+        }),
+        // 3. Mark the refund request approved with audit metadata.
+        prisma.refundRequest.update({
+          where: { id: refundRequestId },
+          data: {
+            status: 'APPROVED',
+            amount: refundAmount,
+            reviewNote: note,
+            resolvedAt,
+            processedById: adminId,
+          },
+        }),
+        // 4. Cancel the underlying tutoring request.
+        prisma.tutorRequest.update({
+          where: { id: refundRequest.requestId },
+          data: { status: 'CANCELLED' },
+        }),
+      ]);
+
+      // Notify the student (push + email). Fire-and-forget.
+      try {
+        await createNotification(
+          refundRequest.studentId,
+          'Refund Approved',
+          `${refundAmount} BDT has been credited to your wallet${note ? ` — ${note}` : '.'}`,
+          '/wallet',
+        );
+      } catch (err) {
+        console.error('Failed to notify student of refund approval:', err);
+      }
     } else {
       await prisma.refundRequest.update({
         where: { id: refundRequestId },
-        data: { status: 'REJECTED' }
+        data: {
+          status: 'REJECTED',
+          reviewNote: note,
+          resolvedAt,
+          processedById: adminId,
+        },
       });
+
+      try {
+        await createNotification(
+          refundRequest.studentId,
+          'Refund Request Rejected',
+          note
+            ? `Your refund request was rejected — ${note}`
+            : 'Your refund request was rejected. Please contact support if you have questions.',
+          '/student',
+        );
+      } catch (err) {
+        console.error('Failed to notify student of refund rejection:', err);
+      }
     }
 
     try {
       const statusText = approve ? 'APPROVED' : 'REJECTED';
+      const amountLine = approve
+        ? `<p><strong>${refundRequest.request.budget} BDT</strong> has been credited to your NSUone wallet and is available immediately.</p>`
+        : '';
+      const noteLine = note
+        ? `<p style="background:#f8fafc;padding:0.75rem;border-radius:6px;border:1px solid #e2e8f0;"><strong>Admin note:</strong> ${note}</p>`
+        : '';
       await sendNoReplyEmail({
         to: refundRequest.student.email,
         subject: `Refund Request ${statusText}: ${refundRequest.request.course.name}`,
@@ -258,16 +339,20 @@ export async function verifyRefundAction(refundRequestId: string, approve: boole
             <h2 style="color: ${approve ? '#10b981' : '#ef4444'};">Refund Request ${statusText}</h2>
             <p>Hello ${refundRequest.student.name},</p>
             <p>Your refund request for course <strong>${refundRequest.request.course.name}</strong> has been <strong>${statusText}</strong>.</p>
+            ${amountLine}
+            ${noteLine}
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
             <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
           </div>
-        `
+        `,
       });
     } catch (mailErr) {
-      console.error("Failed to send refund status email:", mailErr);
+      console.error('Failed to send refund status email:', mailErr);
     }
 
     revalidatePath('/admin/requests');
+    revalidatePath('/student');
+    revalidatePath('/wallet');
     return { success: true };
   } catch (err) {
     console.error('Verify refund error:', err);
