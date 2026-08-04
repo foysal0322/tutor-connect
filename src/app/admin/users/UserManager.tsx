@@ -19,7 +19,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { KPI } from '@/components/ui/KPI';
-import EmptyState from '@/components/ui/EmptyState';
+import DataGrid, { type ColumnDef } from '@/components/ui/DataGrid';
 import DeleteUserButton from './DeleteUserButton';
 
 interface UserRow {
@@ -81,7 +81,6 @@ export default function UserManager({ users }: Props) {
     return result;
   }, [userList, debouncedSearch, roleFilter, statusFilter]);
 
-  // KPI derivations (cheap, client-side).
   const total = userList.length;
   const studentCount = userList.filter((u) => u.role === 'STUDENT').length;
   const tutorCount = userList.filter((u) => u.role === 'TUTOR').length;
@@ -108,6 +107,184 @@ export default function UserManager({ users }: Props) {
   function handleDelete(userId: string) {
     setUserList((prev) => prev.filter((u) => u.id !== userId));
   }
+
+  function renderActions(user: UserRow) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--space-1)',
+          justifyContent: 'flex-end',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Link
+          href={`/admin/users/${user.id}`}
+          aria-label={`Edit ${user.name}`}
+          title='Edit'
+          className='btn btn-secondary btn-sm'
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        >
+          <Pencil size={12} aria-hidden='true' />
+          Edit
+        </Link>
+        <Link
+          href={`/admin/wallets?userId=${user.id}`}
+          aria-label={`Adjust ${user.name}'s wallet`}
+          title='Adjust wallet'
+          className='btn btn-secondary btn-sm'
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        >
+          <Wallet size={12} aria-hidden='true' />
+          Wallet
+        </Link>
+        <button
+          type='button'
+          onClick={() => handleToggleBlock(user)}
+          disabled={isPending && pendingBlockId === user.id}
+          aria-label={user.isBlocked ? `Unblock ${user.name}` : `Block ${user.name}`}
+          title={user.isBlocked ? 'Unblock' : 'Block'}
+          className={`btn btn-sm ${user.isBlocked ? 'btn-primary' : ''}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            ...(user.isBlocked
+              ? {}
+              : {
+                  background: 'var(--accent-light)',
+                  color: 'var(--accent-hover)',
+                  border: '1px solid transparent',
+                }),
+          }}
+        >
+          {user.isBlocked ? (
+            <CheckCircle2 size={12} aria-hidden='true' />
+          ) : (
+            <ShieldOff size={12} aria-hidden='true' />
+          )}
+          {user.isBlocked ? 'Unblock' : 'Block'}
+        </button>
+        <DeleteUserButton userId={user.id} onDelete={handleDelete} />
+      </div>
+    );
+  }
+
+  const columns: ColumnDef<UserRow>[] = [
+    {
+      header: 'Member',
+      accessorKey: 'name',
+      cell: (user) => {
+        const colors = avatarBg(user.role, user.isBlocked);
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span
+              aria-hidden='true'
+              style={{
+                flexShrink: 0,
+                width: 32,
+                height: 32,
+                borderRadius: 'var(--radius-full)',
+                background: colors.bg,
+                color: colors.fg,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {initials(user.name)}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: 'var(--text-main)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-1)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {user.name}
+                {user.isBlocked && (
+                  <span title='Blocked' style={{ display: 'inline-flex', color: 'var(--danger)' }}>
+                    <Ban size={12} aria-hidden='true' />
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--text-muted)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {user.nsuId} · {user.email}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Role',
+      accessorKey: 'role',
+      cell: (user) => (
+        <span className={`badge ${user.role === 'TUTOR' ? 'badge-primary' : 'badge-secondary'}`}>
+          {user.role === 'TUTOR' ? 'Tutor' : 'Student'}
+        </span>
+      ),
+    },
+    {
+      header: 'Department',
+      accessorKey: 'department',
+      cell: (user) => (
+        <span
+          style={{
+            fontSize: 'var(--text-sm)',
+            color: user.department?.name ? 'var(--text-main)' : 'var(--text-muted)',
+            fontStyle: user.department?.name ? 'normal' : 'italic',
+          }}
+        >
+          {user.department?.name || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Contact',
+      accessorKey: 'contact',
+      cell: (user) => (
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+          {user.contact || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Joined',
+      accessorKey: 'createdAt',
+      cell: (user) => (
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+          {new Date(user.createdAt).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      accessorKey: 'id',
+      align: 'right',
+      cell: renderActions,
+    },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -298,338 +475,19 @@ export default function UserManager({ users }: Props) {
           }
         />
 
-        <div className='data-grid-container'>
-          {filteredUsers.length === 0 ? (
-            <EmptyState
-              icon={<Users size={32} aria-hidden='true' />}
-              title='No members match your filters'
-              description='Try a different name, NSU ID, or email, or clear the role/status filters.'
-            />
-          ) : (
-            <>
-              {/* Desktop / tablet table */}
-              <table className='data-grid' style={{ display: 'table' }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: '30%' }}>Member</th>
-                    <th style={{ width: '10%' }}>Role</th>
-                    <th style={{ width: '15%' }}>Department</th>
-                    <th style={{ width: '15%' }}>Contact</th>
-                    <th style={{ width: '10%' }}>Joined</th>
-                    <th style={{ width: '20%', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => {
-                    const colors = avatarBg(user.role, user.isBlocked);
-                    return (
-                      <tr
-                        key={user.id}
-                        style={{
-                          opacity: user.isBlocked ? 0.65 : 1,
-                          background: user.isBlocked ? 'var(--surface-1)' : undefined,
-                        }}
-                      >
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                            <span
-                              aria-hidden='true'
-                              style={{
-                                flexShrink: 0,
-                                width: 32,
-                                height: 32,
-                                borderRadius: 'var(--radius-full)',
-                                background: colors.bg,
-                                color: colors.fg,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 11,
-                                fontWeight: 700,
-                              }}
-                            >
-                              {initials(user.name)}
-                            </span>
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontWeight: 600,
-                                  color: 'var(--text-main)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 'var(--space-1)',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {user.name}
-                                {user.isBlocked && (
-                                  <span
-                                    title='Blocked'
-                                    style={{
-                                      display: 'inline-flex',
-                                      color: 'var(--danger)',
-                                    }}
-                                  >
-                                    <Ban size={12} aria-hidden='true' />
-                                  </span>
-                                )}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: 'var(--text-xs)',
-                                  color: 'var(--text-muted)',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {user.nsuId} · {user.email}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${user.role === 'TUTOR' ? 'badge-primary' : 'badge-secondary'}`}
-                          >
-                            {user.role === 'TUTOR' ? 'Tutor' : 'Student'}
-                          </span>
-                        </td>
-                        <td
-                          style={{
-                            fontSize: 'var(--text-sm)',
-                            color: user.department?.name ? 'var(--text-main)' : 'var(--text-muted)',
-                            fontStyle: user.department?.name ? 'normal' : 'italic',
-                          }}
-                        >
-                          {user.department?.name || 'N/A'}
-                        </td>
-                        <td style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                          {user.contact || '—'}
-                        </td>
-                        <td style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {new Date(user.createdAt).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </td>
-                        <td>
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: 'var(--space-1)',
-                              justifyContent: 'flex-end',
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <Link
-                              href={`/admin/users/${user.id}`}
-                              aria-label={`Edit ${user.name}`}
-                              title='Edit'
-                              className='btn btn-secondary btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                            >
-                              <Pencil size={12} aria-hidden='true' />
-                              Edit
-                            </Link>
-                            <Link
-                              href={`/admin/wallets?userId=${user.id}`}
-                              aria-label={`Adjust ${user.name}'s wallet`}
-                              title='Adjust wallet'
-                              className='btn btn-secondary btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                            >
-                              <Wallet size={12} aria-hidden='true' />
-                              Wallet
-                            </Link>
-                            <button
-                              type='button'
-                              onClick={() => handleToggleBlock(user)}
-                              disabled={isPending && pendingBlockId === user.id}
-                              aria-label={user.isBlocked ? `Unblock ${user.name}` : `Block ${user.name}`}
-                              title={user.isBlocked ? 'Unblock' : 'Block'}
-                              className={`btn btn-sm ${user.isBlocked ? 'btn-primary' : ''}`}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                ...(user.isBlocked
-                                  ? {}
-                                  : {
-                                      background: 'var(--accent-light)',
-                                      color: 'var(--accent-hover)',
-                                      border: '1px solid transparent',
-                                    }),
-                              }}
-                            >
-                              {user.isBlocked ? (
-                                <CheckCircle2 size={12} aria-hidden='true' />
-                              ) : (
-                                <ShieldOff size={12} aria-hidden='true' />
-                              )}
-                              {user.isBlocked ? 'Unblock' : 'Block'}
-                            </button>
-                            <DeleteUserButton userId={user.id} onDelete={handleDelete} />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* Mobile cards */}
-              <div
-                className='md:hidden'
-                style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--border-color)' }}
-              >
-                {filteredUsers.map((user) => {
-                  const colors = avatarBg(user.role, user.isBlocked);
-                  return (
-                    <div
-                      key={user.id}
-                      style={{
-                        background: 'var(--card-bg)',
-                        padding: 'var(--space-3)',
-                        opacity: user.isBlocked ? 0.7 : 1,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-                        <span
-                          aria-hidden='true'
-                          style={{
-                            flexShrink: 0,
-                            width: 36,
-                            height: 36,
-                            borderRadius: 'var(--radius-full)',
-                            background: colors.bg,
-                            color: colors.fg,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 12,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {initials(user.name)}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: 'var(--text-main)',
-                                fontSize: 'var(--text-sm)',
-                              }}
-                            >
-                              {user.name}
-                            </span>
-                            <span
-                              className={`badge ${user.role === 'TUTOR' ? 'badge-primary' : 'badge-secondary'}`}
-                              style={{ fontSize: 10, padding: '1px 6px' }}
-                            >
-                              {user.role === 'TUTOR' ? 'Tutor' : 'Student'}
-                            </span>
-                            {user.isBlocked && (
-                              <span
-                                className='badge badge-warning'
-                                style={{ fontSize: 10, padding: '1px 6px' }}
-                              >
-                                Blocked
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                            {user.nsuId} · {user.email}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 'var(--space-2)',
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr',
-                              gap: 'var(--space-2)',
-                              fontSize: 11,
-                              color: 'var(--text-muted)',
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 600 }}>Dept</div>
-                              <div style={{ color: 'var(--text-main)' }}>
-                                {user.department?.name || 'N/A'}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 600 }}>Contact</div>
-                              <div style={{ color: 'var(--text-main)' }}>
-                                {user.contact || '—'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 'var(--space-3)',
-                          paddingTop: 'var(--space-3)',
-                          borderTop: '1px solid var(--border-color)',
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 1fr',
-                          gap: 'var(--space-2)',
-                        }}
-                      >
-                        <Link
-                          href={`/admin/users/${user.id}`}
-                          className='btn btn-secondary btn-sm'
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
-                        >
-                          <Pencil size={12} aria-hidden='true' />
-                          Edit
-                        </Link>
-                        <Link
-                          href={`/admin/wallets?userId=${user.id}`}
-                          className='btn btn-secondary btn-sm'
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
-                        >
-                          <Wallet size={12} aria-hidden='true' />
-                          Wallet
-                        </Link>
-                        <button
-                          type='button'
-                          onClick={() => handleToggleBlock(user)}
-                          disabled={isPending && pendingBlockId === user.id}
-                          className={`btn btn-sm ${user.isBlocked ? 'btn-primary' : ''}`}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 4,
-                            ...(user.isBlocked
-                              ? {}
-                              : {
-                                  background: 'var(--accent-light)',
-                                  color: 'var(--accent-hover)',
-                                }),
-                          }}
-                        >
-                          {user.isBlocked ? (
-                            <CheckCircle2 size={12} aria-hidden='true' />
-                          ) : (
-                            <ShieldOff size={12} aria-hidden='true' />
-                          )}
-                          {user.isBlocked ? 'Unblock' : 'Block'}
-                        </button>
-                        <DeleteUserButton userId={user.id} onDelete={handleDelete} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+        <DataGrid
+          data={filteredUsers}
+          columns={columns}
+          searchable={false}
+          itemsPerPage={20}
+          getRowId={(u) => u.id}
+          emptyState={{
+            icon: <Users size={32} aria-hidden='true' />,
+            title: 'No members match your filters',
+            description:
+              'Try a different name, NSU ID, or email, or clear the role/status filters.',
+          }}
+        />
       </section>
     </div>
   );
