@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { addDepartment, updateDepartment, deleteDepartment } from '@/app/actions/admin';
 import { Input } from '@/components/ui/Input';
 import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
+import DataGrid, { type ColumnDef, type RowAction } from '@/components/ui/DataGrid';
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
-// NOTE: This table is not migrated to <DataGrid> because it uses inline-edit
-// (clicking Edit turns the row itself into a form). DataGrid's cell renderer
-// is presentation-only and cannot host row-level form state. Revisit if
-// DataGrid grows an `inlineEdit` opt-in. See plan.md Step 2.
+type Department = { id: string; name: string };
 
-export default function DepartmentManager({ departments }: { departments: any[] }) {
+export default function DepartmentManager({ departments }: { departments: Department[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const { confirm, dialog } = useConfirmDialog();
 
   async function handleAdd(formData: FormData) {
     setLoading(true);
@@ -34,7 +35,14 @@ export default function DepartmentManager({ departments }: { departments: any[] 
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this department?')) return;
+    const ok = await confirm({
+      title: 'Delete department?',
+      description:
+        'This cannot be undone. Departments with associated courses or users cannot be deleted.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setLoading(true);
     setError('');
     const res = await deleteDepartment(id);
@@ -42,8 +50,31 @@ export default function DepartmentManager({ departments }: { departments: any[] 
     setLoading(false);
   }
 
+  const columns: ColumnDef<Department>[] = [
+    {
+      header: 'Department Name',
+      accessorKey: 'name',
+      cell: (dept) => <span className="font-semibold text-main">{dept.name}</span>,
+    },
+  ];
+
+  const actions = (dept: Department): RowAction<Department>[] => [
+    {
+      label: 'Edit',
+      icon: <Pencil size={14} />,
+      onSelect: () => setEditingId(dept.id),
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} />,
+      onSelect: () => handleDelete(dept.id),
+      danger: true,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
+      {dialog}
       {error && <FormAlert>{error}</FormAlert>}
 
       <div className="card">
@@ -56,68 +87,52 @@ export default function DepartmentManager({ departments }: { departments: any[] 
             label="Department Name"
             required
           />
-          <FormSubmit loading={loading} loadingText="Adding...">Add Department</FormSubmit>
+          <FormSubmit loading={loading} loadingText="Adding...">
+            Add Department
+          </FormSubmit>
         </form>
       </div>
 
       <div className="card p-0 overflow-hidden">
-        <div className="data-grid-container">
-          <table className="data-grid">
-            <thead>
-              <tr>
-                <th>Department Name</th>
-                <th className="w-48">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {departments.map((dept) => (
-                <tr key={dept.id}>
-                  <td colSpan={editingId === dept.id ? 2 : 1}>
-                    {editingId === dept.id ? (
-                      <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
-                        <input type="hidden" name="id" value={dept.id} />
-                        <div className="flex-1">
-                          <Input
-                            containerClassName={fieldClass}
-                            name="name"
-                            type="text"
-                            defaultValue={dept.name}
-                            label="Department Name"
-                            required
-                          />
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
-                            Save
-                          </FormSubmit>
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                            className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors"
-                            disabled={loading}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="font-semibold text-main">{dept.name}</div>
-                    )}
-                  </td>
-                  {editingId !== dept.id && (
-                    <td>
-                      <div className="flex gap-2">
-                        <button onClick={() => setEditingId(dept.id)} className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Edit</button>
-                        <button onClick={() => handleDelete(dept.id)} className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-3 py-1.5 text-xs font-semibold rounded-md transition-colors">Delete</button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {departments.length === 0 && <div className="p-8 text-center text-muted">No departments found.</div>}
-        </div>
+        <DataGrid
+          data={departments}
+          columns={columns}
+          searchable={false}
+          getRowId={(dept) => dept.id}
+          rowActions={actions}
+          editingRowId={editingId}
+          renderEditableRow={(dept) => (
+            <td colSpan={2}>
+              <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
+                <input type="hidden" name="id" value={dept.id} />
+                <div className="flex-1">
+                  <Input
+                    containerClassName={fieldClass}
+                    name="name"
+                    type="text"
+                    defaultValue={dept.name}
+                    label="Department Name"
+                    required
+                  />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
+                    Save
+                  </FormSubmit>
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(null)}
+                    className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </td>
+          )}
+          emptyState={{ title: 'No departments yet' }}
+        />
       </div>
     </div>
   );
