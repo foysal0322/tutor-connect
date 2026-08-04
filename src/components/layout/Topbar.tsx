@@ -1,25 +1,18 @@
 "use client";
 
 /**
- * Topbar — sticky 48 px top bar that replaces the empty <TopNav/>.
- *
- * Phase 3 of ADMIN_DASHBOARD_REDESIGN_PLAN.md.
+ * Topbar — sticky 48 px top bar (Phase 3 + Phase 4).
  *
  * Anatomy:
  *   [≡/☰ toggle] [breadcrumb]                [⌘K] [🔔] [🌙] [👤 UserMenu]
  *
  * Behavior:
- *  - Mobile: toggle button opens/closes the off-canvas sidebar (onMenuClick).
- *    The sidebar collapse-to-rail is a Phase 4 deliverable; here we only
- *    persist the user's intent so Phase 4 can read it on mount.
- *  - Breadcrumbs are derived from the current pathname via buildBreadcrumbs
- *    + the route→title map.
- *  - ⌘K / Ctrl+K opens the <CommandPalette>. Items are derived from the
- *    static route map; Phase 9 will wire richer per-page commands.
- *  - Theme toggle flips ThemeProvider between light/dark; persisted there.
- *  - NotificationBell + UserMenu are existing components, now wired in.
- *
- * Density: 48 px tall (was 64), 13 px label type, 16 px gutters.
+ *  - Mobile: hamburger opens the off-canvas sidebar (onMenuClick).
+ *  - Desktop: collapse-to-rail toggle flips `isCollapsed` (owned by
+ *    DashboardLayout, persisted there to localStorage).
+ *  - Breadcrumbs derived from the pathname + route→title map.
+ *  - ⌘K / Ctrl+K opens the <CommandPalette>.
+ *  - Theme toggle flips ThemeProvider between light/dark (persisted there).
  */
 
 import React, { useMemo, useState } from "react";
@@ -44,9 +37,7 @@ import styles from "./layout.module.css";
 export interface TopbarProps {
   /** "ADMIN" or "MEMBER" — controls breadcrumb root + command palette scope. */
   shell: "ADMIN" | "MEMBER";
-  /** Minimal user shape for <UserMenu>. We accept a partial to avoid coupling
-   *  Topbar to the full Session["user"] augmented type (id/nsuId are not
-   *  needed for the avatar menu). */
+  /** Minimal user shape for <UserMenu>. */
   user?: {
     name?: string | null;
     email?: string | null;
@@ -55,15 +46,18 @@ export interface TopbarProps {
   /** Mobile sidebar open state — toggle is hidden on desktop. */
   isSidebarOpen: boolean;
   onMenuClick: () => void;
+  /** Desktop icon-rail collapse state (Phase 4). */
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
-
-const COLLAPSE_KEY = "nsuone.sidebar.collapsed";
 
 export default function Topbar({
   shell,
   user,
   isSidebarOpen,
   onMenuClick,
+  isCollapsed,
+  onToggleCollapse,
 }: TopbarProps) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
@@ -78,13 +72,14 @@ export default function Topbar({
     [pathname, shell],
   );
 
-  // Command palette items — derived from the static route map so we don't
-  // duplicate the nav config here (Phase 4 will centralize it).
+  // Command palette items — derived from the static route map. Phase 9 will
+  // layer in per-page commands.
   const commandItems: CommandItem[] = useMemo(() => {
-    const prefix = shell === "ADMIN" ? "/admin" : "";
     const navItems: CommandItem[] = Object.entries(ROUTE_TITLES)
       .filter(([href]) =>
-        shell === "ADMIN" ? href.startsWith("/admin") : !href.startsWith("/admin"),
+        shell === "ADMIN"
+          ? href.startsWith("/admin")
+          : !href.startsWith("/admin"),
       )
       .map(([href, label]) => ({
         id: `nav-${href}`,
@@ -97,7 +92,8 @@ export default function Topbar({
     const actions: CommandItem[] = [
       {
         id: "action-toggle-theme",
-        label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
+        label:
+          theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
         group: "Actions",
         onSelect: toggleTheme,
       },
@@ -105,27 +101,12 @@ export default function Topbar({
         id: "action-sign-out",
         label: "Sign out",
         group: "Actions",
-        onSelect: () =>
-          router.push("/auth/force-signout?reason=manual"),
+        onSelect: () => router.push("/auth/force-signout?reason=manual"),
       },
     ];
 
     return [...navItems, ...actions];
   }, [shell, router, theme, toggleTheme]);
-
-  // Persist collapse intent for Phase 4. The desktop rail toggle is hidden
-  // on screens ≤ 1024 px (those use the off-canvas drawer instead).
-  const toggleCollapse = () => {
-    try {
-      const current = window.localStorage.getItem(COLLAPSE_KEY) === "1";
-      window.localStorage.setItem(COLLAPSE_KEY, current ? "0" : "1");
-      // Toggle a class on <html> so Phase 4's CSS can read it; today this
-      // is a no-op visually but keeps the contract stable.
-      document.documentElement.dataset.sidebarCollapsed = current ? "0" : "1";
-    } catch {
-      /* ignore */
-    }
-  };
 
   return (
     <>
@@ -142,16 +123,20 @@ export default function Topbar({
             <Menu size={20} aria-hidden="true" />
           </button>
 
-          {/* Desktop: collapse-to-rail toggle (Phase 4 will honor it visually). */}
+          {/* Desktop: collapse-to-rail toggle. Icon flips with state. */}
           <button
             type="button"
             className={`${styles.iconButton} ${styles.collapseToggle}`}
-            onClick={toggleCollapse}
-            aria-label="Toggle sidebar"
-            title="Collapse sidebar"
+            onClick={onToggleCollapse}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-pressed={isCollapsed}
           >
-            <PanelLeftOpen size={18} aria-hidden="true" data-icon="expand" />
-            <PanelLeftClose size={18} aria-hidden="true" data-icon="collapse" />
+            {isCollapsed ? (
+              <PanelLeftOpen size={18} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={18} aria-hidden="true" />
+            )}
           </button>
 
           <Breadcrumb items={crumbs} className={styles.breadcrumb} />
@@ -178,7 +163,9 @@ export default function Topbar({
             className={styles.iconButton}
             onClick={toggleTheme}
             aria-label={
-              theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme"
             }
             title="Toggle theme"
           >
@@ -191,8 +178,6 @@ export default function Topbar({
 
           {user && (
             // UserMenu only reads { name, email, role } — see UserMenu.tsx:47-49.
-            // Cast to the full Session["user"] type to satisfy its prop signature
-            // without forcing every caller to construct id/nsuId.
             <UserMenu user={user as any} variant="popover" />
           )}
         </div>

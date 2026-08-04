@@ -10,21 +10,30 @@
   background-color: var(--bg-color);
 }
 
-/* Sidebar */
+/* Sidebar — 240 px expanded, 56 px collapsed (Phase 4). */
 .sidebar {
-  width: 260px;
+  width: 240px;
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width var(--duration-base) var(--ease-standard);
   z-index: 50;
+  flex-shrink: 0;
+}
+
+/* Collapsed icon-rail (desktop only — the mobile drawer overrides below). */
+.sidebar[data-collapsed="1"] {
+  width: 56px;
 }
 
 .sidebarNav {
   flex: 1;
   padding: 0.75rem 0.75rem;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
@@ -49,6 +58,9 @@
   color: var(--text-muted);
   padding: 0.35rem 0.75rem 0.15rem;
   opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navItem {
@@ -63,6 +75,19 @@
   transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
+}
+
+/* Collapsed: center the icon, hide labels + badges (badges would overflow the rail). */
+.sidebar[data-collapsed="1"] .navItem {
+  justify-content: center;
+  padding: 0.5rem 0;
+  gap: 0;
+}
+
+.sidebar[data-collapsed="1"] .navItemLabel,
+.sidebar[data-collapsed="1"] .navBadge {
+  display: none;
 }
 
 .navItem:hover {
@@ -92,6 +117,74 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.navItemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* In-sidebar search input (Phase 4). Hidden when collapsed (controlled in JS). */
+.sidebarSearch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-3) var(--space-1);
+  padding: 0 var(--space-2);
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-1);
+  flex-shrink: 0;
+}
+
+.sidebarSearch:focus-within {
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+}
+
+.sidebarSearchIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sidebarSearchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: var(--text-sm);
+  font-family: inherit;
+}
+
+.sidebarSearchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.sidebarSearchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebarSearchClear:hover {
+  color: var(--text-main);
+  background-color: var(--surface-2);
+}
+
+.sidebarEmpty {
+  padding: var(--space-4) var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
 }
 
 /* Destructive action (e.g. Logout) — red treatment so it reads as irreversible. */
@@ -324,6 +417,19 @@
     left: 0;
     top: 0;
     transform: translateX(-100%);
+    /* Mobile drawer is always full-width, even if the desktop rail was
+       collapsed before the viewport shrank. */
+    width: 240px;
+  }
+
+  /* Force-expand the drawer regardless of data-collapsed. */
+  .sidebar[data-collapsed="1"] {
+    width: 240px;
+  }
+
+  .sidebar[data-collapsed="1"] .navItemLabel,
+  .sidebar[data-collapsed="1"] .navBadge {
+    display: revert;
   }
 
   .sidebar.open {

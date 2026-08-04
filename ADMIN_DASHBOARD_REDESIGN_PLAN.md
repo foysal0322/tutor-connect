@@ -795,32 +795,53 @@ today; Phase 4 will consume it).
 
 ---
 
-### Phase 4 — Sidebar config-driven + collapse + keyboard · 🟡
+### Phase 4 — Sidebar config-driven + collapse + keyboard · 🟡 ✅ DONE (2026-08-05)
 
 **Goal**: make the sidebar maintainable and bring it to parity with Linear.
 
-- Extract nav config to `src/components/layout/admin-nav.ts` and
-  `member-nav.ts`.
-- Refactor `Sidebar.tsx` to render from config.
-- Add icon-rail collapse mode (240 ↔ 56 px), persisted.
-- Add in-sidebar search input.
-- Add keyboard navigation (Arrow/Home/End/Enter).
-- Render count badges exactly as today (server data from layout, no
-  fetch changes).
+- ✅ Extracted nav config to `src/components/layout/admin-nav.ts` (groups:
+  Operations / Catalog / Growth / System) and `member-nav.ts`. Adding a
+  page = add one entry, no edits to Sidebar.tsx.
+- ✅ Refactored `Sidebar.tsx` to render from config. Badge logic preserved
+  verbatim (actionable keys show absolute pending count, non-actionable
+  show delta since last visit; `adminSeenCounts` / `studentSeenCounts`
+  localStorage schema unchanged). Mark-as-seen is now derived from config
+  (item.href === pathname && badgeKey not in actionableKeys), which
+  produces the exact same key set as the original hard-coded list.
+- ✅ Icon-rail collapse mode: 240 px ↔ 56 px, driven by
+  `data-collapsed="1"` on `<aside>`. Labels, headings, and search hide;
+  icons center; badges hide (would overflow the rail). Active-link
+  heuristic preserved (prefix match for ≥3-segment hrefs, exact otherwise).
+- ✅ In-sidebar search input (expanded only): case-insensitive label
+  filter; groups with no matches hide; clear button.
+- ✅ Keyboard navigation: Arrow Up/Down, Home, End over rendered links
+  (uses `offsetParent` check to skip hidden links).
+- ✅ Mobile drawer always renders full-width regardless of collapsed state
+  (CSS media-query override restores label/badge display).
 
-**Files likely affected**:
-- `src/components/layout/Sidebar.tsx`
-- `src/components/layout/{admin-nav,member-nav}.ts` (new)
-- `src/components/layout/layout.module.css`
+**Files touched**:
+- `src/components/layout/admin-nav.ts` (new)
+- `src/components/layout/member-nav.ts` (new)
+- `src/components/layout/Sidebar.tsx` (rewritten)
+- `src/components/layout/DashboardLayout.tsx` (owns `isCollapsed` state,
+  reads/persists `nsuone.sidebar.collapsed` on mount + toggle)
+- `src/components/layout/Topbar.tsx` (collapse toggle now uses props
+  `isCollapsed` + `onToggleCollapse`; icon flips PanelLeftClose/Open)
+- `src/components/layout/layout.module.css` (240/56 widths, collapsed
+  label hide, search input styles, mobile-drawer force-expand)
 
-**Components**: consumes `ShortcutProvider`, `useKeyboardShortcut`.
-**Dependencies**: Phase 1, Phase 3 (collapse toggle in Topbar).
-**Risk**: 🟡 — must not regress the existing count-badge / "new since
-last visit" behavior. Preserve `localStorage` key schema.
-**Testing checklist**: every admin nav item still navigates; counts still
-show; collapse persists; keyboard nav works; member sidebar unaffected.
+**Components**: consumes `useKeyboardShortcut` (Topbar); Sidebar uses
+no shortcut provider (keyboard handled inline on `<nav>`).
+**Dependencies**: Phase 1, Phase 3.
+**Risk**: 🟡 — count-badge / "new since last visit" behavior preserved;
+localStorage key schema unchanged.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
 **Rollback**: revert commit.
 **Estimated difficulty**: medium.
+**Note**: ShortcutProvider from Phase 1's primitive list is not needed —
+`useKeyboardShortcut` suffices for the Topbar's ⌘K binding, and the
+sidebar's arrow-key nav is local to the `<nav>` element.
 
 ---
 
@@ -1050,7 +1071,7 @@ Order of operations when executing this plan:
 2. ✅ Phase 1 — tokens + primitives on `main` behind no flag.
 3. ✅ Phase 2 — middleware + route-group reorg.
 4. ✅ Phase 3 — Topbar.
-5. ☐ Phase 4 — Sidebar refactor.
+5. ✅ Phase 4 — Sidebar refactor.
 6. ☐ Phase 5 — DataGrid upgrade.
 7. ☐ Phase 6 — page-by-page migration (one commit per page).
 8. ☐ Phase 7 — Dashboard/Visitors visual lift.
