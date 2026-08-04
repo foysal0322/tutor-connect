@@ -8,6 +8,7 @@ import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
 import { createNotification } from '@/lib/notification';
 import { getPlatformSettings } from '@/lib/cache';
+import { redeemCoupon } from '@/lib/coupon';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -75,6 +76,7 @@ export default async function ConsultancyPage() {
 
     const topicId = (formData.get('topicId') as string) || null;
     const details = (formData.get('details') as string)?.trim();
+    const couponCode = ((formData.get('couponCode') as string) || '').trim();
 
     // Resolve the linked topic (or fall back to legacy free-text behavior).
     const topic = topicId
@@ -106,53 +108,83 @@ export default async function ConsultancyPage() {
     // inside a transaction so two concurrent bookings can't drain a wallet.
     try {
       const result = await prisma.$transaction(async (tx) => {
-        if (!isFree && topic) {
+        let chargeAmount = topic?.price ?? 0;
+        let couponDiscount = 0;
+
+        // Optional CONSULTANCY coupon — redeem inside the transaction so
+        // the discount + debit + booking are atomic. Coupon errors throw
+        // user-facing messages caught below.
+        if (couponCode && chargeAmount > 0) {
+          couponDiscount = await redeemCoupon(tx, {
+            code: couponCode,
+            scope: 'CONSULTANCY',
+            amount: chargeAmount,
+            userId: student.id,
+          });
+          chargeAmount = Math.max(0, chargeAmount - couponDiscount);
+        }
+
+        if (chargeAmount > 0 && topic) {
           const fresh = await tx.user.findUnique({
             where: { id: student.id },
             select: { balance: true },
           });
-          if (!fresh || fresh.balance < topic.price) {
+          if (!fresh || fresh.balance < chargeAmount) {
             throw new Error(
-              `INSUFFICIENT:${fresh?.balance ?? 0}:${topic.price}`,
+              `INSUFFICIENT:${fresh?.balance ?? 0}:${chargeAmount}`,
             );
           }
           await tx.user.update({
             where: { id: student.id },
-            data: { balance: { decrement: topic.price } },
+            data: { balance: { decrement: chargeAmount } },
           });
           await tx.walletTransaction.create({
             data: {
               userId: student.id,
-              amount: -topic.price,
+              amount: -chargeAmount,
               type: 'CONSULTANCY_PAYMENT',
-              description: `Consultancy booking: ${topic.title}`,
+              description: `Consultancy booking: ${topic.title}${couponDiscount > 0 ? ` (coupon saved ${couponDiscount} BDT)` : ''}`,
               referenceId: topic.id,
             },
           });
         }
 
-        return tx.consultancyRequest.create({
+        const request = await tx.consultancyRequest.create({
           data: {
             studentId: student.id,
             topic: topic?.title ?? 'General Consultancy',
             details,
             topicId: topic?.id ?? null,
-            pricePaid: topic?.price ?? null,
+            pricePaid: chargeAmount > 0 ? chargeAmount : null,
           },
         });
+
+        // Stamp the redemption with the consultancy request id.
+        if (couponCode && couponDiscount > 0) {
+          await tx.couponRedemption.updateMany({
+            where: {
+              coupon: { code: couponCode.toUpperCase() },
+              userId: student.id,
+              reference: null,
+            },
+            data: { reference: request.id },
+          });
+        }
+
+        return { request, chargeAmount, couponDiscount };
       });
 
       // Booking confirmation email (fire-and-forget).
       try {
         await sendSupportEmail({
           to: student.email,
-          subject: `Consultancy Request Confirmed: ${result.topic} - NSUone`,
+          subject: `Consultancy Request Confirmed: ${result.request.topic} - NSUone`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
               <h2 style="color: #4f46e5;">We Received Your Consultancy Request!</h2>
               <p>Hello ${student.name},</p>
-              <p>We have received your request for ${topic?.price ? 'a paid' : 'a free'} consultation on <strong>${result.topic}</strong>.</p>
-              ${topic?.price ? `<p><strong>Amount paid:</strong> ${formatBDT(topic.price)} BDT (debited from your Campus Wallet).</p>` : ''}
+              <p>We have received your request for ${result.chargeAmount > 0 ? 'a paid' : 'a free'} consultation on <strong>${result.request.topic}</strong>.</p>
+              ${result.chargeAmount > 0 ? `<p><strong>Amount paid:</strong> ${formatBDT(result.chargeAmount)} BDT (debited from your Campus Wallet).${result.couponDiscount > 0 ? ` Coupon saved ${formatBDT(result.couponDiscount)} BDT.` : ''}</p>` : ''}
               <p style="background: #f8fafc; padding: 12px; border-left: 4px solid #4f46e5; border-radius: 4px;"><em>"${details}"</em></p>
               <p>One of our senior mentors will review your request and contact you shortly via email or phone.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
@@ -168,7 +200,7 @@ export default async function ConsultancyPage() {
         await createNotification(
           student.id,
           'Consultancy Booked',
-          `Your ${isFree ? 'free' : 'paid'} consultancy request for "${result.topic}" was received.`,
+          `Your ${isFree ? 'free' : 'paid'} consultancy request for "${result.request.topic}" was received.`,
           '/consultancy',
         );
       } catch (err) {
@@ -300,6 +332,13 @@ export default async function ConsultancyPage() {
               required
               rows={4}
               placeholder="Briefly describe what you need help with..."
+            />
+            <Input
+              containerClassName={`${fieldClass} ${gridFullClass}`}
+              name="couponCode"
+              type="text"
+              label="Coupon Code (optional, paid topics only)"
+              placeholder="e.g. WELCOME50"
             />
           </FormSection>
 

@@ -436,6 +436,15 @@ export default function EarningsClient({
               onChange={(e) => setAmount(e.target.value)}
             />
 
+            <Input
+              containerClassName={fieldClass}
+              name="couponCode"
+              type="text"
+              label="Commission Coupon (optional)"
+              placeholder="e.g. WELCOME50"
+              hint="Reduces the platform fee on this withdrawal."
+            />
+
             {method === "MFS" ? (
               <>
                 <div className={`form-group mb-0 ${fieldClass}`}>

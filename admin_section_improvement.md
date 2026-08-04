@@ -8,5 +8,5 @@
 ~~8 Admin dashboard > fix all counts - remove the dummy data~~ ✅ (totalBudget now excludes CANCELLED/PENDING; "Active Learners" relabeled → "Registered Students"; "Last refreshed" pill added)
 ~~9 Admin > make a new section name "settings"~~ ✅ (new /admin/settings page; commission + quotas)
 ~~10 Admin can change platform commission with discount facilities~~ ✅ (PlatformSetting singleton; withdrawalFee / paymentFee / promoDiscount / consultancyFreeQuota all configurable; new transactions read from cached config)
-11 Make a new section name coupon
+~~11 Make a new section name coupon~~ ✅ (new /admin/coupons CRUD page; Coupon + CouponRedemption models; generic scope COMMISSION/TUITION/CONSULTANCY; PERCENT/FLAT with optional cap; usage limits; validity windows; redemption hooks live in withdrawal + consultancy + tuition)
 12 

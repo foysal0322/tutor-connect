@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { notifyWithdrawRequest } from '@/lib/discord';
 import { parseFormData, submitWithdrawalSchema } from '@/lib/validation';
 import { getPlatformSettings } from '@/lib/cache';
+import { redeemCoupon } from '@/lib/coupon';
 
 export async function submitWithdrawalRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,10 @@ export async function submitWithdrawalRequest(formData: FormData) {
     return { error: parsed.error };
   }
   const { amount, method } = parsed.data;
+
+  // Optional coupon code (COMMISSION scope). Validated + redeemed inside
+  // the transaction below; ignored entirely if blank.
+  const couponCode = ((formData.get('couponCode') as string) || '').trim();
 
   // Validate destination fields per method (cross-field rules).
   let mfsType: string | null = null;
@@ -93,10 +98,23 @@ export async function submitWithdrawalRequest(formData: FormData) {
       // change applies to withdrawals submitted after the cache TTL (60s).
       // Keep this calc server-side, never trust the client.
       const settings = await getPlatformSettings();
-      const platformFee = amount * (settings.withdrawalFeePercent / 100);
+      let platformFee = amount * (settings.withdrawalFeePercent / 100);
+
+      // 3b. Optional COMMISSION coupon. Redeems atomically inside this
+      // transaction and reduces the platform fee (floored at 0).
+      let couponDiscount = 0;
+      if (couponCode) {
+        couponDiscount = await redeemCoupon(tx, {
+          code: couponCode,
+          scope: 'COMMISSION',
+          amount: platformFee, // discount is computed against the fee, not gross
+          userId: tutorId,
+        });
+        platformFee = Math.max(0, platformFee - couponDiscount);
+      }
       const netAmount = amount - platformFee;
 
-      return tx.withdrawalRequest.create({
+      const withdrawal = await tx.withdrawalRequest.create({
         data: {
           tutorId,
           amount,
@@ -114,6 +132,21 @@ export async function submitWithdrawalRequest(formData: FormData) {
           status: 'PENDING',
         },
       });
+
+      // Stamp the redemption with the withdrawal id now that we have it,
+      // so re-submitting the same withdrawal can't double-redeem.
+      if (couponCode && couponDiscount > 0) {
+        await tx.couponRedemption.updateMany({
+          where: {
+            coupon: { code: couponCode.toUpperCase() },
+            userId: tutorId,
+            reference: null,
+          },
+          data: { reference: withdrawal.id },
+        });
+      }
+
+      return withdrawal;
     });
 
     try {
@@ -134,6 +167,10 @@ export async function submitWithdrawalRequest(formData: FormData) {
     if (err instanceof Error && err.message.startsWith('INSUFFICIENT:')) {
       const available = err.message.split(':')[1];
       return { error: `Insufficient balance. Your available balance is ${available} BDT.` };
+    }
+    // Coupon errors carry a user-facing message from redeemCoupon.
+    if (err instanceof Error && err.message) {
+      return { error: err.message };
     }
     console.error('Withdrawal request error:', err);
     return { error: 'Failed to submit withdrawal request.' };

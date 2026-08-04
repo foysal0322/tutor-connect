@@ -603,3 +603,119 @@ export async function getAdminPlatformSettings() {
   const row = await prisma.platformSetting.findUnique({ where: { id: 'default' } });
   return row ?? { id: 'default', ...DEFAULT_SETTINGS, updatedAt: new Date() };
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Coupons
+// ──────────────────────────────────────────────────────────────────────────
+
+import { COUPON_SCOPES, type CouponScope } from '@/lib/coupon';
+
+function parseCouponFormData(formData: FormData) {
+  const code = ((formData.get('code') as string) || '').trim().toUpperCase();
+  const scope = (formData.get('scope') as string) as CouponScope;
+  const discountType = formData.get('discountType') as 'PERCENT' | 'FLAT';
+  const value = parseFloat(formData.get('value') as string);
+  const minAmount = parseFloat((formData.get('minAmount') as string) || '0') || 0;
+  const maxDiscountRaw = formData.get('maxDiscount') as string;
+  const maxDiscount = maxDiscountRaw ? parseFloat(maxDiscountRaw) : null;
+  const usageLimitRaw = formData.get('usageLimit') as string;
+  const usageLimit = usageLimitRaw ? parseInt(usageLimitRaw, 10) : null;
+  const validUntilRaw = formData.get('validUntil') as string;
+  const validUntil = validUntilRaw ? new Date(validUntilRaw) : null;
+  const isActive = formData.get('isActive') === 'on';
+
+  return { code, scope, discountType, value, minAmount, maxDiscount, usageLimit, validUntil, isActive };
+}
+
+function validateCoupon(parsed: ReturnType<typeof parseCouponFormData>): string | null {
+  if (!parsed.code) return 'Coupon code is required.';
+  if (!/^[A-Z0-9_-]{3,30}$/.test(parsed.code)) {
+    return 'Code must be 3-30 chars, uppercase letters, digits, dash, or underscore.';
+  }
+  if (!COUPON_SCOPES.includes(parsed.scope)) return 'Invalid scope.';
+  if (parsed.discountType !== 'PERCENT' && parsed.discountType !== 'FLAT') {
+    return 'Invalid discount type.';
+  }
+  if (Number.isNaN(parsed.value) || parsed.value <= 0) return 'Value must be positive.';
+  if (parsed.discountType === 'PERCENT' && parsed.value > 100) {
+    return 'Percent value cannot exceed 100.';
+  }
+  if (parsed.minAmount < 0) return 'Minimum amount cannot be negative.';
+  if (parsed.maxDiscount !== null && parsed.maxDiscount < 0) {
+    return 'Max discount cannot be negative.';
+  }
+  if (parsed.usageLimit !== null && (Number.isNaN(parsed.usageLimit) || parsed.usageLimit < 1)) {
+    return 'Usage limit must be a positive integer.';
+  }
+  return null;
+}
+
+export async function addCoupon(formData: FormData) {
+  await requireAdmin();
+  const parsed = parseCouponFormData(formData);
+  const validationError = validateCoupon(parsed);
+  if (validationError) return { error: validationError };
+
+  try {
+    await prisma.coupon.create({
+      data: {
+        code: parsed.code,
+        scope: parsed.scope,
+        discountType: parsed.discountType,
+        value: parsed.value,
+        minAmount: parsed.minAmount,
+        maxDiscount: parsed.maxDiscount,
+        usageLimit: parsed.usageLimit,
+        validUntil: parsed.validUntil,
+        isActive: parsed.isActive,
+      },
+    });
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (err: any) {
+    if (err?.code === 'P2002') return { error: 'Coupon code already exists.' };
+    return { error: 'Failed to create coupon.' };
+  }
+}
+
+export async function updateCoupon(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get('id') as string;
+  if (!id) return { error: 'ID is required.' };
+  const parsed = parseCouponFormData(formData);
+  const validationError = validateCoupon(parsed);
+  if (validationError) return { error: validationError };
+
+  try {
+    await prisma.coupon.update({
+      where: { id },
+      data: {
+        code: parsed.code,
+        scope: parsed.scope,
+        discountType: parsed.discountType,
+        value: parsed.value,
+        minAmount: parsed.minAmount,
+        maxDiscount: parsed.maxDiscount,
+        usageLimit: parsed.usageLimit,
+        validUntil: parsed.validUntil,
+        isActive: parsed.isActive,
+      },
+    });
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (err: any) {
+    if (err?.code === 'P2002') return { error: 'Coupon code already exists.' };
+    return { error: 'Failed to update coupon.' };
+  }
+}
+
+export async function deleteCoupon(id: string) {
+  await requireAdmin();
+  try {
+    await prisma.coupon.delete({ where: { id } });
+    revalidatePath('/admin/coupons');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to delete coupon. It may have redemptions.' };
+  }
+}

@@ -11,6 +11,7 @@ import {
   submitPaymentSchema,
   submitRefundRequestSchema,
 } from '@/lib/validation';
+import { redeemCoupon } from '@/lib/coupon';
 
 export async function submitTutorRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -176,6 +177,10 @@ export async function submitPayment(formData: FormData) {
   if (!transactionId) transactionId = `WLT-${Date.now()}`;
   if (!walletAmount) walletAmount = 0;
 
+  // Optional TUITION coupon code. Validated + redeemed inside the
+  // transaction below; ignored if blank.
+  const couponCode = ((formData.get('couponCode') as string) || '').trim();
+
   const studentId = (session.user as any).id;
 
   try {
@@ -220,8 +225,14 @@ export async function submitPayment(formData: FormData) {
     const sanitizedAccountNumber = accountNumber.trim();
     const sanitizedTransactionId = transactionId.trim();
 
-    await prisma.$transaction([
-      prisma.payment.upsert({
+    // Interactive transaction — converted from array form so the TUITION
+    // coupon can be redeemed atomically with the payment record. Coupon
+    // is applied as cashback: the student pays the full displayed total,
+    // then the coupon discount is credited back to their wallet inside
+    // the same transaction. Coupon errors bubble up and abort the payment.
+    let couponDiscount = 0;
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.upsert({
         where: { requestId },
         update: {
           mfsType: finalMfsType,
@@ -236,12 +247,37 @@ export async function submitPayment(formData: FormData) {
           amount: totalPaid,
           transactionId: sanitizedTransactionId
         }
-      }),
-      prisma.tutorRequest.update({
+      });
+      await tx.tutorRequest.update({
         where: { id: requestId },
         data: { status: newStatus }
-      }),
-    ]);
+      });
+
+      if (couponCode && totalPaid > 0) {
+        couponDiscount = await redeemCoupon(tx, {
+          code: couponCode,
+          scope: 'TUITION',
+          amount: totalPaid,
+          userId: studentId,
+          reference: requestId,
+        });
+        if (couponDiscount > 0) {
+          await tx.user.update({
+            where: { id: studentId },
+            data: { balance: { increment: couponDiscount } },
+          });
+          await tx.walletTransaction.create({
+            data: {
+              userId: studentId,
+              amount: couponDiscount,
+              type: 'COUPON_DISCOUNT',
+              description: `Coupon ${couponCode.toUpperCase()} cashback on tuition payment #${requestId.slice(-6)}`,
+              referenceId: requestId,
+            },
+          });
+        }
+      }
+    });
 
     try {
       const studentName = session.user?.name || 'A student';
@@ -259,8 +295,18 @@ export async function submitPayment(formData: FormData) {
     revalidatePath('/wallet');
     revalidatePath('/dashboard');        // refresh the sidebar Payments badge
     revalidatePath('/student/payments'); // refresh Pending Payments + History sections
-    return { success: true };
+    return {
+      success: true,
+      couponDiscount:
+        couponDiscount > 0
+          ? `${couponDiscount} BDT cashback credited to your wallet from coupon ${couponCode.toUpperCase()}.`
+          : undefined,
+    };
   } catch (err) {
+    // Coupon errors carry a user-facing message.
+    if (err instanceof Error && err.message) {
+      return { error: err.message };
+    }
     console.error('Submit payment error:', err);
     return { error: 'Failed to submit payment details.' };
   }

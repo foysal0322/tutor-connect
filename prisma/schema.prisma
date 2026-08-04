@@ -48,6 +48,7 @@ model User {
   createdAt      DateTime  @default(now())
 
   department Department? @relation(fields: [departmentId], references: [id])
+  couponRedemptions CouponRedemption[]
 
   expertises       TutorExpertise[]
   studentRequests  TutorRequest[]   @relation("StudentRequests")
@@ -354,5 +355,42 @@ model PlatformSetting {
   promoDiscountPercent Float    @default(50)  // promo applied on paymentFeePercent, %
   consultancyFreeQuota Int      @default(2)   // free consultancy sessions per student
   updatedAt            DateTime @updatedAt
+}
+
+model Coupon {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  scope        String    // COMMISSION | TUITION | CONSULTANCY
+  discountType String    // PERCENT | FLAT
+  value        Float     // percent (0-100) for PERCENT, BDT amount for FLAT
+  minAmount    Float     @default(0) // minimum base amount required to apply
+  maxDiscount  Float?    // cap for PERCENT; null = uncapped
+  usageLimit   Int?      // null = unlimited
+  usedCount    Int       @default(0)
+  validFrom    DateTime  @default(now())
+  validUntil   DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  redemptions CouponRedemption[]
+
+  @@index([scope])
+  @@index([isActive])
+}
+
+model CouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  userId     String
+  reference  String?  // e.g. WithdrawalRequest.id / TutorRequest.id / ConsultancyRequest.id
+  discount   Float    // snapshot of the discount amount applied (BDT)
+  createdAt  DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId, reference])
+  @@index([couponId])
+  @@index([userId])
 }
 

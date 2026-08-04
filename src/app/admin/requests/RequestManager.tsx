@@ -28,6 +28,26 @@ export default function RequestManager({
 }) {
   const [requests, setRequests] = useState(initialRequests);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Config-driven platform fee (admin-set via /admin/settings). Falls back
+  // to 5% on first paint or if the fetch fails. Used for the "platform
+  // keeps" display in the refund-approve flow.
+  const [refundFeePercent, setRefundFeePercent] = useState(5);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/settings/fees')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        // The refund flow uses the withdrawal-side fee (the cut the platform
+        // retains when crediting a refund back through the tutor side).
+        if (typeof data.withdrawalFeePercent === 'number') {
+          setRefundFeePercent(data.withdrawalFeePercent);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const [statusFilter, setStatusFilter] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
@@ -538,12 +558,12 @@ export default function RequestManager({
                             <div className='bg-white p-2 rounded border border-color'>
                               <div className='text-xs text-muted'>Platform keeps</div>
                               <div className='font-semibold text-muted'>
-                                {(req.budget * 0.05).toLocaleString()} BDT
+                                {(req.budget * refundFeePercent / 100).toLocaleString()} BDT
                               </div>
                             </div>
                           </div>
                           <div className='text-xs text-muted mb-3'>
-                            Approving credits <strong>{req.budget.toLocaleString()} BDT</strong> to the student&rsquo;s wallet. The 5% platform fee is retained.
+                            Approving credits <strong>{req.budget.toLocaleString()} BDT</strong> to the student&rsquo;s wallet. The {refundFeePercent}% platform fee is retained.
                           </div>
 
                           <div className='flex gap-2 flex-wrap items-center'>
@@ -859,7 +879,7 @@ export default function RequestManager({
                           &quot;{pendingRefund.details}&quot;
                         </div>
                         <div className='text-xs text-muted mb-3'>
-                          Credit <strong className='text-success'>{req.budget.toLocaleString()} BDT</strong> to wallet · platform keeps {(req.budget * 0.05).toLocaleString()} BDT.
+                          Credit <strong className='text-success'>{req.budget.toLocaleString()} BDT</strong> to wallet · platform keeps {(req.budget * refundFeePercent / 100).toLocaleString()} BDT.
                         </div>
 
                         <div className='flex gap-2'>

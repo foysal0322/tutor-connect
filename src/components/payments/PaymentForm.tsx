@@ -46,6 +46,7 @@ export default function PaymentForm({
   const [accountNumber, setAccountNumber] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [useWallet, setUseWallet] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
 
   // Fee config — fetched from /api/settings/fees so admins can change
   // rates without code changes. Falls back to the schema defaults during
@@ -88,6 +89,9 @@ export default function PaymentForm({
 
     const formData = new FormData();
     formData.append('requestId', requestId);
+    if (couponCode.trim()) {
+      formData.append('couponCode', couponCode.trim());
+    }
     if (walletCovered > 0) {
       formData.append('walletAmount', walletCovered.toString());
     }
@@ -119,11 +123,10 @@ export default function PaymentForm({
         toast.error(res.error);
       } else {
         const newStatus = remainingMfs === 0 ? 'ACCEPTED' : 'PAYMENT_PENDING';
-        toast.success(
-          remainingMfs === 0
-            ? 'Paid 100% with Campus Wallet! Session is automatically verified & active.'
-            : 'Payment details submitted! Verification pending.',
-        );
+        const baseMsg = remainingMfs === 0
+          ? 'Paid 100% with Campus Wallet! Session is automatically verified & active.'
+          : 'Payment details submitted! Verification pending.';
+        toast.success(res.couponDiscount ? `${baseMsg} ${res.couponDiscount}` : baseMsg);
         onPaid(newStatus, {
           mfsType:
             remainingMfs === 0
@@ -138,6 +141,7 @@ export default function PaymentForm({
         setAccountNumber('');
         setTransactionId('');
         setUseWallet(false);
+        setCouponCode('');
       }
     });
   };
@@ -206,6 +210,19 @@ export default function PaymentForm({
           <span>Total Payable (including {(paymentFeePercent * (1 - promoPercent / 100)).toFixed(1)}% Platform Fee):</span>
           <span>{totalPayable.toFixed(2)} BDT</span>
         </p>
+      </div>
+
+      {/* Coupon (TUITION scope, optional) — applied as cashback after payment */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem', alignItems: 'end' }}>
+        <Input
+          containerClassName={fieldClass}
+          name="couponCode"
+          type="text"
+          label="Coupon Code (optional)"
+          placeholder="e.g. WELCOME50"
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value)}
+        />
       </div>
 
       {userBalance > 0 && (
