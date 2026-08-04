@@ -1033,28 +1033,64 @@ unrelated warning in `(marketing)/auth/verify/VerifyForm.tsx`).
 
 ---
 
-### Phase 8 — Detail drawers + Sheet pattern (mobile) · 🟡
+### Phase 8 — Detail drawers + Sheet pattern (mobile) · 🟡 ✅ PARTIAL (2026-08-05)
 
 **Goal**: reduce full-page navigations and improve mobile UX.
 
-- Convert `/admin/users/[id]` from a route to a `<Sheet>` opened from the
-  users table (keep the route as a fallback for direct links — render
-  the same form). Use `?userId=` query param pattern (already used by
-  `/admin/wallets`).
-- Convert inline-edit flows on coupons / expertises / consultancy-topics
-  into side `<Sheet>` editors on small viewports; keep inline-edit on
-  desktop.
-- Replace destructive full-screen modals on mobile with `<Sheet>`.
+- ✅ **Wallet Manager adjustment modal → right-side `<Sheet>`** — the
+  highest-leverage Sheet candidate per §10.2. Replaced `<Modal>` with
+  `<Sheet side="right" size="30rem">` for the wallet-adjust form.
+  Form contents, direction toggle, amount/reason inputs, footer
+  Cancel / Credit / Debit buttons, and the
+  `adjustUserBalance` server-action call site are all preserved
+  verbatim. The Sheet's built-in focus-trap + Escape-to-close +
+  slide-in animation now wrap the form on every viewport (mobile no
+  longer gets a centered modal that obscures the table context).
+  `Modal` import removed.
+- ⏸️ **Deferred to Phase 12** (with rationale):
+  - **User-edit Sheet (`/admin/users/[id]`)** — the current
+    `/admin/users` page query only fetches the `UserRow` subset
+    (name, email, nsuId, role, contact, isBlocked, createdAt,
+    department). The admin `<ProfileForm>` requires the full Prisma
+    `User` (gender, password, etc.) plus `departments`. Surfacing that
+    in the Sheet would require either extending the users-page query
+    or adding a new fetch endpoint — both are server-logic changes
+    that violate the plan's UI-only constraint. The full-page route
+    stays the editor; the Edit button link is unchanged.
+  - **Mobile-only Sheet editors for `CouponManager` /
+    `ExpertiseManager` / `ConsultancyManager`** — the existing
+    `<EditableRow>` contract renders inline inside `<DataGrid>` and
+    is wired through `editingRowId` state in each Manager. Routing
+    that through a viewport-conditional Sheet (desktop inline,
+    mobile Sheet) is a non-trivial refactor across 3 pages with
+    real regression surface. The current inline-on-mobile behavior
+    works (DataGrid mobile card view honours `editingRowId`); the
+    Sheet migration is a UX polish item, flagged for Phase 12.
+  - **Destructive confirmations on mobile** — `<ConfirmDialog>` is
+    not full-screen and already follows WAI-ARIA modal patterns;
+    converting it to a Sheet would be a lateral move, not an
+    improvement. Left as-is.
 
-**Files likely affected**: `users/[id]/page.tsx`, `CouponManager`,
-`ExpertiseManager`, `ConsultancyManager`, `WalletManager`.
-**Components**: consumes `Sheet`.
-**Dependencies**: Phase 5, Phase 6.
-**Risk**: 🟡 — must preserve deep-linkability of `/admin/users/[id]`.
-**Testing checklist**: deep link to `/admin/users/<id>` still works;
-opening the sheet from a row updates the URL; closing restores it.
-**Rollback**: per-page revert.
-**Estimated difficulty**: medium.
+**Files touched**:
+- `src/app/admin/wallets/WalletManager.tsx` (Modal → Sheet wrapper;
+  Modal import removed)
+
+**Files NOT touched** (deliberate):
+- `src/app/admin/users/[id]/page.tsx` — keeps full-page editor
+  (Sheet blocked by UI-only constraint; see above).
+- `CouponManager.tsx`, `ExpertiseManager.tsx`,
+  `ConsultancyManager.tsx` — keep `<EditableRow>` inline edit
+  (Sheet refactor deferred).
+
+**Components**: consumes `Sheet` (Phase 1 primitive).
+**Dependencies**: Phase 1 (Sheet), Phase 6 (WalletManager already
+DataGrid-migrated).
+**Risk**: 🟡 — WalletManager form behavior unchanged; server-action
+call site (`adjustUserBalance`) preserved.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
+**Rollback**: revert commit (Modal wrapper is restored).
+**Estimated difficulty**: low (delivered scope) / medium (full plan).
 
 ---
 
@@ -1175,7 +1211,7 @@ Order of operations when executing this plan:
 6. ✅ Phase 5 — DataGrid upgrade.
 7. ✅ Phase 6 — page-by-page migration (one commit per page).
 8. ✅ Phase 7 — Dashboard/Visitors visual lift.
-9. ☐ Phase 8 — Drawers + Sheets.
+9. 🟡 Phase 8 — Drawers + Sheets (partial: Wallet Modal → Sheet; rest deferred to Phase 12).
 10. ☐ Phase 9 — Command palette.
 11. ☐ Phase 10 — Settings/Profile polish.
 12. ☐ Phase 11 — A11y + polish pass.

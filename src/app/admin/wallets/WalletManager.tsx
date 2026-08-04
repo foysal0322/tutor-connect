@@ -18,7 +18,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import LoadingButton from '@/components/ui/LoadingButton';
-import { Modal } from '@/components/ui/Modal';
+import { Sheet } from '@/components/ui/Sheet';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { KPI } from '@/components/ui/KPI';
@@ -756,12 +756,13 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
         </div>
       </section>
 
-      {/* Adjust balance modal */}
-      <Modal
+      {/* Adjust balance sheet (Phase 8: was Modal, now right-side Sheet). */}
+      <Sheet
         open={!!activeUser}
         onClose={closeModal}
         title={activeUser ? 'Adjust Wallet' : ''}
-        maxWidth='30rem'
+        side='right'
+        size='30rem'
         footer={
           <>
             <button
@@ -943,7 +944,7 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
             />
           </form>
         )}
-      </Modal>
+      </Sheet>
     </div>
   );
 }
