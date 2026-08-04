@@ -9,7 +9,7 @@ import { formatBDT } from '@/lib/format';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { KPI } from '@/components/ui/KPI';
-import EmptyState from '@/components/ui/EmptyState';
+import DataGrid, { type ColumnDef, type RowAction } from '@/components/ui/DataGrid';
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Pencil, Trash2, Layers, Eye, EyeOff, Search } from 'lucide-react';
@@ -74,7 +74,6 @@ export default function ExpertiseManager({
     return result;
   }, [expertises, debouncedSearch, statusFilter]);
 
-  // KPIs (cheap, client-side)
   const total = expertises.length;
   const activeCount = expertises.filter((e) => e.isActive).length;
   const hiddenCount = total - activeCount;
@@ -114,16 +113,119 @@ export default function ExpertiseManager({
 
   const courseOptions = courses.map((c) => ({ value: c.id, label: c.name }));
 
-  function renderEditForm(exp: Expertise, layout: 'grid' | 'stacked') {
+  const columns: ColumnDef<Expertise>[] = [
+    {
+      header: 'Tutor',
+      accessorKey: 'tutor',
+      cell: (exp) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <span
+            aria-hidden='true'
+            style={{
+              flexShrink: 0,
+              width: 28,
+              height: 28,
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--primary-light)',
+              color: 'var(--primary)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 10,
+              fontWeight: 700,
+            }}
+          >
+            {initials(exp.tutor.name)}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{exp.tutor.name}</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{exp.tutor.nsuId}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Course',
+      accessorKey: 'course',
+      cell: (exp) => <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{exp.course.name}</span>,
+    },
+    {
+      header: 'Faculty / Grade',
+      accessorKey: 'facultyName',
+      cell: (exp) => (
+        <div>
+          <div style={{ fontSize: 'var(--text-sm)' }}>{exp.facultyName}</div>
+          <span className={`badge badge-primary ${exp.hideGrade ? 'opacity-50' : ''}`} style={{ fontSize: 10 }}>
+            {exp.courseGrade}
+            {exp.hideGrade ? ' · hidden' : ''}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Availability',
+      accessorKey: 'availability',
+      cell: (exp) => (
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+          {exp.availability || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Fee',
+      accessorKey: 'sessionFee',
+      align: 'right',
+      cell: (exp) => (
+        <span
+          style={{
+            fontWeight: 600,
+            color: 'var(--primary)',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {formatBDT(exp.sessionFee)}
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}> BDT</span>
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'isActive',
+      cell: (exp) => (
+        <span className={`badge ${exp.isActive ? 'badge-success' : 'badge-warning'}`}>
+          {exp.isActive ? 'Active' : 'Hidden'}
+        </span>
+      ),
+    },
+  ];
+
+  const actions = (exp: Expertise): RowAction<Expertise>[] => [
+    {
+      label: 'Edit',
+      icon: <Pencil size={14} />,
+      onSelect: () => setEditingId(exp.id),
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} />,
+      onSelect: () => handleDelete(exp),
+      danger: true,
+    },
+  ];
+
+  function renderEditForm(exp: Expertise) {
     return (
-      <form action={handleEdit} style={layout === 'grid' ? {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 'var(--space-3)',
-        padding: 'var(--space-2)',
-      } : { display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <form
+        action={handleEdit}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 'var(--space-3)',
+          padding: 'var(--space-3) 0',
+        }}
+      >
         <input type='hidden' name='id' value={exp.id} />
-        <div style={layout === 'grid' ? { gridColumn: 'span 2' } : undefined}>
+        <div style={{ gridColumn: 'span 2' }}>
           <Select
             containerClassName={fieldClass}
             name='courseId'
@@ -170,7 +272,7 @@ export default function ExpertiseManager({
         />
         <div
           style={{
-            gridColumn: layout === 'grid' ? 'span 3' : undefined,
+            gridColumn: '1 / -1',
             display: 'flex',
             gap: 'var(--space-4)',
             alignItems: 'center',
@@ -186,7 +288,7 @@ export default function ExpertiseManager({
             Active
           </label>
         </div>
-        <div style={{ gridColumn: layout === 'grid' ? 'span 3' : undefined, display: 'flex', gap: 'var(--space-2)' }}>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 'var(--space-2)' }}>
           <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
             Save
           </FormSubmit>
@@ -351,232 +453,27 @@ export default function ExpertiseManager({
           }
         />
 
-        <div className='data-grid-container'>
-          {filteredExpertises.length === 0 ? (
-            <EmptyState
-              icon={<Layers size={32} aria-hidden='true' />}
-              title={searchQuery || statusFilter !== 'ALL' ? 'No expertises match your filters' : 'No expertises yet'}
-              description={
-                searchQuery || statusFilter !== 'ALL'
-                  ? 'Try a different search or clear the status filter.'
-                  : 'When tutors claim course expertises they will appear here.'
-              }
-            />
-          ) : (
-            <>
-              {/* Desktop / tablet table */}
-              <table className='data-grid' style={{ display: 'table' }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: '22%' }}>Tutor</th>
-                    <th style={{ width: '22%' }}>Course</th>
-                    <th style={{ width: '16%' }}>Faculty / Grade</th>
-                    <th style={{ width: '14%' }}>Availability</th>
-                    <th style={{ width: '10%', textAlign: 'right' }}>Fee</th>
-                    <th style={{ width: '8%' }}>Status</th>
-                    <th style={{ width: 100, textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredExpertises.map((exp) => {
-                    const isEditing = editingId === exp.id;
-                    return (
-                      <tr key={exp.id} style={{ opacity: exp.isActive ? 1 : 0.6 }}>
-                        {isEditing ? (
-                          <td colSpan={7}>{renderEditForm(exp, 'grid')}</td>
-                        ) : (
-                          <>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                                <span
-                                  aria-hidden='true'
-                                  style={{
-                                    flexShrink: 0,
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: 'var(--radius-full)',
-                                    background: 'var(--primary-light)',
-                                    color: 'var(--primary)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  {initials(exp.tutor.name)}
-                                </span>
-                                <div style={{ minWidth: 0 }}>
-                                  <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{exp.tutor.name}</div>
-                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{exp.tutor.nsuId}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{exp.course.name}</td>
-                            <td>
-                              <div style={{ fontSize: 'var(--text-sm)' }}>{exp.facultyName}</div>
-                              <span
-                                className={`badge badge-primary ${exp.hideGrade ? 'opacity-50' : ''}`}
-                                style={{ fontSize: 10 }}
-                              >
-                                {exp.courseGrade}
-                                {exp.hideGrade ? ' · hidden' : ''}
-                              </span>
-                            </td>
-                            <td style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                              {exp.availability || '—'}
-                            </td>
-                            <td
-                              style={{
-                                textAlign: 'right',
-                                fontWeight: 600,
-                                color: 'var(--primary)',
-                                fontVariantNumeric: 'tabular-nums',
-                              }}
-                            >
-                              {formatBDT(exp.sessionFee)}
-                              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}> BDT</span>
-                            </td>
-                            <td>
-                              <span className={`badge ${exp.isActive ? 'badge-success' : 'badge-warning'}`}>
-                                {exp.isActive ? 'Active' : 'Hidden'}
-                              </span>
-                            </td>
-                            <td>
-                              <div style={{ display: 'flex', gap: 'var(--space-1)', justifyContent: 'flex-end' }}>
-                                <button
-                                  type='button'
-                                  onClick={() => setEditingId(exp.id)}
-                                  disabled={loading}
-                                  className='btn btn-secondary btn-sm'
-                                  aria-label={`Edit ${exp.tutor.name}'s expertise`}
-                                  title='Edit'
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                                >
-                                  <Pencil size={12} aria-hidden='true' />
-                                  Edit
-                                </button>
-                                <button
-                                  type='button'
-                                  onClick={() => handleDelete(exp)}
-                                  disabled={loading}
-                                  className='btn btn-danger btn-sm'
-                                  aria-label={`Delete ${exp.tutor.name}'s expertise`}
-                                  title='Delete'
-                                >
-                                  <Trash2 size={12} aria-hidden='true' />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* Mobile cards */}
-              <div
-                className='md:hidden'
-                style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--border-color)' }}
-              >
-                {filteredExpertises.map((exp) => {
-                  const isEditing = editingId === exp.id;
-                  return (
-                    <div
-                      key={exp.id}
-                      style={{
-                        background: 'var(--card-bg)',
-                        padding: 'var(--space-3)',
-                        opacity: exp.isActive ? 1 : 0.7,
-                      }}
-                    >
-                      {isEditing ? (
-                        renderEditForm(exp, 'stacked')
-                      ) : (
-                        <>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
-                            <span
-                              aria-hidden='true'
-                              style={{
-                                flexShrink: 0,
-                                width: 32,
-                                height: 32,
-                                borderRadius: 'var(--radius-full)',
-                                background: 'var(--primary-light)',
-                                color: 'var(--primary)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 11,
-                                fontWeight: 700,
-                              }}
-                            >
-                              {initials(exp.tutor.name)}
-                            </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{exp.tutor.name}</span>
-                                <span className={`badge ${exp.isActive ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: 10, padding: '1px 6px' }}>
-                                  {exp.isActive ? 'Active' : 'Hidden'}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                                {exp.tutor.nsuId}
-                              </div>
-                              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-main)', marginTop: 'var(--space-1)', fontWeight: 500 }}>
-                                {exp.course.name}
-                              </div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                                {exp.facultyName} · Grade {exp.courseGrade}
-                                {exp.hideGrade ? ' (hidden)' : ''}
-                                {exp.availability ? ` · ${exp.availability}` : ''}
-                              </div>
-                              <div
-                                style={{
-                                  marginTop: 'var(--space-2)',
-                                  fontSize: 'var(--text-base)',
-                                  fontWeight: 700,
-                                  color: 'var(--primary)',
-                                  fontVariantNumeric: 'tabular-nums',
-                                }}
-                              >
-                                {formatBDT(exp.sessionFee)} <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>BDT</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-3)' }}>
-                            <button
-                              type='button'
-                              onClick={() => setEditingId(exp.id)}
-                              disabled={loading}
-                              className='btn btn-secondary btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}
-                            >
-                              <Pencil size={12} aria-hidden='true' />
-                              Edit
-                            </button>
-                            <button
-                              type='button'
-                              onClick={() => handleDelete(exp)}
-                              disabled={loading}
-                              className='btn btn-danger btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}
-                            >
-                              <Trash2 size={12} aria-hidden='true' />
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+        <DataGrid
+          data={filteredExpertises}
+          columns={columns}
+          searchable={false}
+          itemsPerPage={20}
+          getRowId={(exp) => exp.id}
+          rowActions={actions}
+          editingRowId={editingId}
+          renderEditableRow={renderEditForm}
+          emptyState={{
+            icon: <Layers size={32} aria-hidden='true' />,
+            title:
+              searchQuery || statusFilter !== 'ALL'
+                ? 'No expertises match your filters'
+                : 'No expertises yet',
+            description:
+              searchQuery || statusFilter !== 'ALL'
+                ? 'Try a different search or clear the status filter.'
+                : 'When tutors claim course expertises they will appear here.',
+          }}
+        />
       </section>
     </div>
   );

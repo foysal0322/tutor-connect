@@ -433,6 +433,8 @@ interface DataRowProps<T> {
   rowId: string;
   hasActions: boolean;
   getRowActions?: (item: T) => RowAction<T>[];
+  /** Total column count (data cols + selection + actions) for edit-row colSpan. */
+  totalCols: number;
 }
 
 function DataRowImpl<T>({
@@ -448,11 +450,12 @@ function DataRowImpl<T>({
   rowId,
   hasActions,
   getRowActions,
+  totalCols,
 }: DataRowProps<T>) {
   if (isEditing && renderEditableRow) {
     return (
       <tr className={styles.editingRow} data-row-id={rowId}>
-        {renderEditableRow(item)}
+        <td colSpan={totalCols}>{renderEditableRow(item)}</td>
       </tr>
     );
   }
@@ -678,6 +681,8 @@ export default function DataGrid<T extends Record<string, any>>({
 
   const hasActions = !!rowActions;
   const showActionsColumn = selectable || hasActions;
+  const totalCols =
+    columns.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0);
   const pageIds = paginatedData.map((item, i) => rowIdFn(item, i));
   const allOnPageSelected =
     pageIds.length > 0 &&
@@ -791,6 +796,7 @@ export default function DataGrid<T extends Record<string, any>>({
                     rowId={rowId}
                     hasActions={hasActions}
                     getRowActions={rowActions}
+                    totalCols={totalCols}
                   />
                 );
               })
@@ -824,10 +830,13 @@ export default function DataGrid<T extends Record<string, any>>({
           {paginatedData.length > 0 ? (
             paginatedData.map((item, rowIndex) => {
               const rowId = rowIdFn(item, rowIndex);
+              const isEditing = editingRowId === rowId;
               return (
                 <div
                   key={rowId}
-                  className="card p-4 border border-color rounded-md bg-white shadow-sm flex flex-col gap-2"
+                  className={`card p-4 border border-color rounded-md bg-white shadow-sm flex flex-col gap-2 ${
+                    isEditing ? styles.editingRow : ""
+                  }`}
                 >
                   {selectable && (
                     <div className="flex items-center gap-2">
@@ -843,22 +852,28 @@ export default function DataGrid<T extends Record<string, any>>({
                       </span>
                     </div>
                   )}
-                  {columns.map((col, colIndex) => (
-                    <div
-                      key={colIndex}
-                      className="flex justify-between items-start gap-4 border-b border-color pb-2 last:border-0 last:pb-0"
-                    >
-                      <span className="text-xs font-medium text-muted uppercase">
-                        {col.header}
-                      </span>
-                      <div className="text-sm text-right font-medium">
-                        {col.cell
-                          ? col.cell(item)
-                          : String(readField(item, col.accessorKey) ?? "")}
-                      </div>
+                  {isEditing && renderEditableRow ? (
+                    <div className="flex flex-col gap-2">
+                      {renderEditableRow(item)}
                     </div>
-                  ))}
-                  {hasActions && rowActions && (
+                  ) : (
+                    columns.map((col, colIndex) => (
+                      <div
+                        key={colIndex}
+                        className="flex justify-between items-start gap-4 border-b border-color pb-2 last:border-0 last:pb-0"
+                      >
+                        <span className="text-xs font-medium text-muted uppercase">
+                          {col.header}
+                        </span>
+                        <div className="text-sm text-right font-medium">
+                          {col.cell
+                            ? col.cell(item)
+                            : String(readField(item, col.accessorKey) ?? "")}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {!isEditing && hasActions && rowActions && (
                     <div className="flex justify-end pt-2 border-t border-color">
                       <RowActionsCell item={item} getActions={rowActions} />
                     </div>

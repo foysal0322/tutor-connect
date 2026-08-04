@@ -102,34 +102,32 @@ export default function DepartmentManager({ departments }: { departments: Depart
           rowActions={actions}
           editingRowId={editingId}
           renderEditableRow={(dept) => (
-            <td colSpan={2}>
-              <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
-                <input type="hidden" name="id" value={dept.id} />
-                <div className="flex-1">
-                  <Input
-                    containerClassName={fieldClass}
-                    name="name"
-                    type="text"
-                    defaultValue={dept.name}
-                    label="Department Name"
-                    required
-                  />
-                </div>
-                <div className="flex gap-2 items-center">
-                  <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
-                    Save
-                  </FormSubmit>
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(null)}
-                    className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors"
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </td>
+            <form action={handleEdit} className="flex flex-col sm:flex-row gap-4 w-full">
+              <input type="hidden" name="id" value={dept.id} />
+              <div className="flex-1">
+                <Input
+                  containerClassName={fieldClass}
+                  name="name"
+                  type="text"
+                  defaultValue={dept.name}
+                  label="Department Name"
+                  required
+                />
+              </div>
+              <div className="flex gap-2 items-center">
+                <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
+                  Save
+                </FormSubmit>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           )}
           emptyState={{ title: 'No departments yet' }}
         />

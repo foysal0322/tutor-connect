@@ -430,37 +430,35 @@ export default function CourseManager({ courses }: { courses: Course[] }) {
           rowActions={actions}
           editingRowId={editingId}
           renderEditableRow={(course) => (
-            <td colSpan={3}>
-              <form
-                action={handleEdit}
-                style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'flex-end', padding: 'var(--space-3) 0' }}
-              >
-                <input type='hidden' name='id' value={course.id} />
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <Input
-                    containerClassName={fieldClass}
-                    name='name'
-                    type='text'
-                    defaultValue={course.name}
-                    label='Course Name'
-                    required
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
-                    Save
-                  </FormSubmit>
-                  <button
-                    type='button'
-                    onClick={() => setEditingId(null)}
-                    className='btn btn-secondary'
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </td>
+            <form
+              action={handleEdit}
+              style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'flex-end', padding: 'var(--space-3) 0' }}
+            >
+              <input type='hidden' name='id' value={course.id} />
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <Input
+                  containerClassName={fieldClass}
+                  name='name'
+                  type='text'
+                  defaultValue={course.name}
+                  label='Course Name'
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
+                  Save
+                </FormSubmit>
+                <button
+                  type='button'
+                  onClick={() => setEditingId(null)}
+                  className='btn btn-secondary'
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           )}
           emptyState={{
             icon: <BookOpen size={32} aria-hidden='true' />,
