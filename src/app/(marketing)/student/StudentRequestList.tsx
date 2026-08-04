@@ -7,7 +7,7 @@ import { useToast } from '@/components/ToastProvider';
 import PaymentForm from '@/components/payments/PaymentForm';
 import { Textarea } from '@/components/ui/Textarea';
 import { fieldClass } from '@/components/forms';
-import styles from '../dashboard.module.css';
+import styles from '@/app/dashboard.module.css';
 
 interface RequestListProps {
   initialRequests: any[];

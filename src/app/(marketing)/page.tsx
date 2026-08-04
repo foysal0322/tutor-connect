@@ -1,15 +1,15 @@
 import { prisma } from '@/lib/prisma';
-import HeroSection from './components/home/HeroSection';
-import TrustStats from './components/home/TrustStats';
-import CoreFeatures from './components/home/CoreFeatures';
-import HowItWorks from './components/home/HowItWorks';
-import RequestedCoursesPreview from './components/home/RequestedCoursesPreview';
-import FeaturedTutorsPreview from './components/home/FeaturedTutorsPreview';
-import Testimonials from './components/home/Testimonials';
-import FaqSection from './components/home/FaqSection';
-import FinalCta from './components/home/FinalCta';
-import SupportForm from './components/SupportForm';
-import styles from './components/home/home.module.css';
+import HeroSection from '@/app/components/home/HeroSection';
+import TrustStats from '@/app/components/home/TrustStats';
+import CoreFeatures from '@/app/components/home/CoreFeatures';
+import HowItWorks from '@/app/components/home/HowItWorks';
+import RequestedCoursesPreview from '@/app/components/home/RequestedCoursesPreview';
+import FeaturedTutorsPreview from '@/app/components/home/FeaturedTutorsPreview';
+import Testimonials from '@/app/components/home/Testimonials';
+import FaqSection from '@/app/components/home/FaqSection';
+import FinalCta from '@/app/components/home/FinalCta';
+import SupportForm from '@/app/components/SupportForm';
+import styles from '@/app/components/home/home.module.css';
 
 // Cache homepage data for 5 minutes — stats don't need to be real-time
 export const revalidate = 300;

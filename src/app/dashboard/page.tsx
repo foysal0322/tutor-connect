@@ -14,7 +14,7 @@ import {
 import StatCard from '@/components/ui/StatCard';
 import DashboardContent, { type DashboardData } from './DashboardContent';
 import OnboardingGuide from './OnboardingGuide';
-import StudentRequestList from '@/app/student/StudentRequestList';
+import StudentRequestList from '@/app/(marketing)/student/StudentRequestList';
 
 /**
  * Unified member dashboard.

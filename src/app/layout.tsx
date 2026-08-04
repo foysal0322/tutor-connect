@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import NextTopLoader from "nextjs-toploader";
 import { ToastProvider } from "@/components/ToastProvider";
 import VisitorTracker from "@/components/VisitorTracker";
@@ -51,11 +49,9 @@ export default function RootLayout({
             <ToastProvider>
               <VisitorTracker />
               <NextTopLoader color='var(--primary)' showSpinner={false} />
-              <Navbar />
               <main id='main' className='site-main'>
                 {children}
               </main>
-              <Footer />
             </ToastProvider>
           </ThemeProvider>
         </ErrorBoundary>

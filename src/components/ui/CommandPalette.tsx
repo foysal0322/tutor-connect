@@ -54,7 +54,10 @@ export function CommandPalette({
   const listRef = useRef<HTMLUListElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useFocusTrap(panelRef, open, { initialFocus: inputRef.current });
+  // useFocusTrap auto-focuses the first focusable element (the search input)
+  // when the palette opens. Passing inputRef.current during render would
+  // violate react-hooks/refs; let the hook discover the input itself.
+  useFocusTrap(panelRef, open);
 
   // Reset query + selection each time the palette opens.
   useEffect(() => {
