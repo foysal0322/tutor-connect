@@ -897,34 +897,74 @@ follow-ups; client-side pagination is unchanged from the original.
 
 ---
 
-### Phase 6 — Migrate list pages to DataGrid + standardize confirms · 🔴
+### Phase 6 — Migrate list pages to DataGrid + standardize confirms · 🔴 ✅ DONE (2026-08-05)
 
 **Goal**: one table, one confirm dialog across the whole admin app.
 
-Migrate (order = lowest-risk first):
-1. `departments` (simplest CRUD)
-2. `courses` (has bulk delete — preserve)
-3. `expertises`
-4. `consultancy` (both tabs)
-5. `coupons`
-6. `users`
-7. `requests` — **also decompose the 558-line `RequestManager.tsx`** into
-   `RequestsTable`, `AssignTutorForm` (already exists), `PaymentVerifyRow`,
-   `RefundVerifyRow`. Keep all server-action calls verbatim.
+All 7 pages migrated, one commit each (lowest-risk first):
 
-Replace every `window.confirm()` with `useConfirmDialog()`.
+1. ✅ **departments** — DataGrid + rowActions (Edit/Delete overflow) +
+   EditableRow. `window.confirm` → `useConfirmDialog`.
+2. ✅ **courses** — DataGrid + controlled bulk selection (`string[]`) +
+   EditableRow. KPIs/Toolbar/Add/Import panels preserved. `-244 net lines`.
+3. ✅ **expertises** — DataGrid + 7-field inline edit (EditableRow) +
+   status filter + debounced search. Server actions
+   (updateTutorExpertise/deleteTutorExpertise) called identically.
+4. ✅ **consultancy** — both tabs (Requests + Topics) on DataGrid.
+   Conditional rowActions on Requests (Complete/Cancel based on status).
+   Topics uses EditableRow. `window.confirm` → `useConfirmDialog`.
+5. ✅ **coupons** — DataGrid + EditableRow (CouponFields shared with Add
+   form). `window.confirm` → `useConfirmDialog`.
+6. ✅ **users** — DataGrid; inline action buttons (Edit/Wallet/Block/Delete)
+   kept as a rendered Actions cell instead of overflow ⋯ — admins use them
+   constantly and hiding them would regress scannability. DeleteUserButton
+   unchanged (already ConfirmDialog-based). `-142 net lines`.
+7. ✅ **requests** — decomposed the 1012-line monolith into 4 new files:
+   `status.ts` (pure helpers + types), `PaymentVerifyRow.tsx`,
+   `RefundVerifyRow.tsx`, `RequestsTable.tsx` (DataGrid wrapper). Slim
+   `RequestManager.tsx` now just owns state + action handlers. Bespoke
+   two-step "Approve? / Yes Approve" inline confirms replaced with shared
+   `<ConfirmDialog>` (one per row component). All server-action call sites
+   preserved verbatim. `-179 net lines`.
 
-**Files likely affected**: every `*Manager.tsx` listed in §1.1 plus
-`src/app/admin/requests/RequestManager.tsx` (decompose).
-**Components**: consumes upgraded `DataGrid`, `EditableRow`,
-`ConfirmDialog`, `useConfirmDialog`.
+**DataGrid contract improvement shipped during 6.3**: `renderEditableRow`
+now returns raw content (no `<td>` wrapper); DataGrid wraps it for desktop
+(`<td colSpan>`) and mobile (`<div>`). Mobile card view honors
+`editingRowId` so inline edit works on small viewports across all migrated
+pages. Departments + courses updated to the new contract.
+
+**`window.confirm` elimination**: every `confirm()` / `window.confirm()`
+across the admin app is gone. All destructive actions now flow through
+`useConfirmDialog()` or `<ConfirmDialog>` (controlled).
+
+**Server-action call sites — all preserved**:
+- addDepartment / updateDepartment / deleteDepartment
+- addCourse / updateCourse / deleteCourse / importCourses / deleteBulkCourses
+- updateTutorExpertise / deleteTutorExpertise
+- addConsultancyTopic / updateConsultancyTopic / deleteConsultancyTopic / setConsultancyRequestStatus
+- addCoupon / updateCoupon / deleteCoupon
+- toggleBlockUser / deleteUser
+- assignTutorToRequest / verifyPaymentAction / verifyRefundAction
+
+**Files touched**:
+- `src/app/admin/departments/DepartmentManager.tsx`
+- `src/app/admin/courses/CourseManager.tsx`
+- `src/app/admin/expertises/ExpertiseManager.tsx`
+- `src/app/admin/consultancy/ConsultancyManager.tsx`
+- `src/app/admin/coupons/CouponManager.tsx`
+- `src/app/admin/users/UserManager.tsx`
+- `src/app/admin/requests/{RequestManager,RequestsTable,PaymentVerifyRow,RefundVerifyRow,status}.{tsx,ts}` (decompose)
+- `src/components/ui/DataGrid.tsx` (EditableRow contract + mobile-edit fix)
+
+**Components**: consumes upgraded `DataGrid` (rowActions, EditableRow,
+selectable, controlled selection), `ConfirmDialog`/`useConfirmDialog`.
 **Dependencies**: Phase 5.
-**Risk**: 🔴 — large surface area; ship one page per commit.
-**Testing checklist** per page: every server action still called with the
-same arguments; every status badge still correct; mobile card view intact;
-empty state intact; loading skeleton intact.
-**Rollback**: per-page revert.
-**Estimated difficulty**: high (mostly volume, not complexity).
+**Risk**: 🔴 — large surface area; mitigated by one-commit-per-page +
+per-page server-action call-site verification.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
+**Rollback**: per-page revert (each page is its own commit).
+**Estimated difficulty**: high (volume).
 
 ---
 
@@ -1099,7 +1139,7 @@ Order of operations when executing this plan:
 4. ✅ Phase 3 — Topbar.
 5. ✅ Phase 4 — Sidebar refactor.
 6. ✅ Phase 5 — DataGrid upgrade.
-7. ☐ Phase 6 — page-by-page migration (one commit per page).
+7. ✅ Phase 6 — page-by-page migration (one commit per page).
 8. ☐ Phase 7 — Dashboard/Visitors visual lift.
 9. ☐ Phase 8 — Drawers + Sheets.
 10. ☐ Phase 9 — Command palette.
