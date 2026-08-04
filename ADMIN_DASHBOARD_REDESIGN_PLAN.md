@@ -845,29 +845,55 @@ sidebar's arrow-key nav is local to the `<nav>` element.
 
 ---
 
-### Phase 5 — DataGrid upgrade + bulk actions + row actions · 🔴
+### Phase 5 — DataGrid upgrade + bulk actions + row actions · 🔴 ✅ DONE (2026-08-05)
 
 **Goal**: make `<DataGrid>` the only table implementation in the admin app.
 
-- Extend `<DataGrid>` with: column resizing, multi-sort, per-column
-  filter menu, row overflow `⋯` menu, `EditableRow` render-prop, bulk
-  selection (already partial), client-side pagination.
-- Add memoization (row `React.memo`, dataset `useMemo`).
-- Document the prop surface in a header comment.
+- ✅ Extended `ColumnDef<T>` with optional `id`, `width`, `resizable`,
+  `filterable`, `filterOptions`, `filterFn`, `align`. Existing fields
+  (`header`, `accessorKey`, `cell`, `sortable`) unchanged.
+- ✅ Extended `DataGridProps<T>` with optional `getRowId`, `selectable`,
+  `selectedIds` + `onSelectionChange` (controlled or internal), `rowActions`
+  (overflow ⋯ menu), `onRowClick`, `editingRowId` + `renderEditableRow`.
+- ✅ Multi-sort: single click cycles asc → desc → none (replaces stack);
+  Shift+click toggles/adds/removes within the stack.
+- ✅ Column resize handles (mouse-drag on right edge; reads th width from
+  DOM on first gesture, min 60 px).
+- ✅ Per-column filter menu (popover with options + clear; closes on
+  outside-click). Default matcher compares `accessorKey` field; `filterFn`
+  overrides.
+- ✅ Row overflow ⋯ menu (`rowActions(item) => RowAction[]`; danger items
+  render red). Clicks stop propagation so row-click + selection don't fire.
+- ✅ Bulk selection: header "select all on page", per-row checkboxes, sticky
+  selection bar showing count + Clear. Controlled (`selectedIds`/
+  `onSelectionChange`) or internal state.
+- ✅ Inline edit: when `editingRowId === rowId`, the row renders
+  `renderEditableRow(item)` inside a highlighted `<tr>` instead of cells.
+- ✅ Memoization: `DataRow` wrapped in `React.memo`; filtered/sorted/
+  paginated datasets useMemo'd.
+- ✅ Bug fix: `safePage = Math.min(currentPage, totalPages)` prevents
+  landing on an empty page when filters shrink the result set.
+- ✅ Header comment documents the full prop surface (backward-compat vs new).
+- ✅ Mobile card view extended: renders selection checkbox + row actions
+  when those features are on.
 
-**Files likely affected**:
-- `src/components/ui/DataGrid.tsx`
-- `src/components/ui/DataGrid.module.css` (if exists; else add)
+**Files touched**:
+- `src/components/ui/DataGrid.tsx` (rewritten; backward-compatible defaults)
+- `src/components/ui/DataGrid.module.css` (new — resize handle, filter menu,
+  actions menu, selection bar, editing-row highlight)
 
 **Components**: `DataGrid`.
 **Dependencies**: Phase 1.
-**Risk**: 🔴 — touched by every list page; must ship without changing
-the two pages that already use it (`withdrawals`, `support`). Keep the
-existing prop surface backward-compatible.
-**Testing checklist**: `withdrawals` and `support` render unchanged; new
-capabilities opt-in via new optional props.
+**Risk**: 🔴 — backward-compat verified: `withdrawals` + `support` use only
+the original props (`data`, `columns`, `searchable={false}`, `emptyMessage`),
+all new features default off, so they render unchanged.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning). Manual inspection confirms both consumers use no
+opt-in features (no `sortable` columns, no `rowActions`, no `selectable`).
 **Rollback**: revert commit.
 **Estimated difficulty**: high.
+**Note**: server-side pagination + virtual scrolling remain Phase 12
+follow-ups; client-side pagination is unchanged from the original.
 
 ---
 
@@ -1072,7 +1098,7 @@ Order of operations when executing this plan:
 3. ✅ Phase 2 — middleware + route-group reorg.
 4. ✅ Phase 3 — Topbar.
 5. ✅ Phase 4 — Sidebar refactor.
-6. ☐ Phase 5 — DataGrid upgrade.
+6. ✅ Phase 5 — DataGrid upgrade.
 7. ☐ Phase 6 — page-by-page migration (one commit per page).
 8. ☐ Phase 7 — Dashboard/Visitors visual lift.
 9. ☐ Phase 8 — Drawers + Sheets.
