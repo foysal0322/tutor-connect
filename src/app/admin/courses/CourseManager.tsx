@@ -7,28 +7,23 @@ import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Toolbar } from '@/components/ui/Toolbar';
 import { KPI } from '@/components/ui/KPI';
-import EmptyState from '@/components/ui/EmptyState';
+import DataGrid, { type ColumnDef, type RowAction } from '@/components/ui/DataGrid';
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Upload, Trash2, Search, BookOpen, Layers, CheckSquare, Plus, Pencil } from 'lucide-react';
 
-// NOTE: This table is not migrated to <DataGrid>. It needs (a) row-level
-// multi-select with a "select all on page" affordance, (b) inline row editing,
-// and (c) bulk-delete on the selection. None of these are expressible through
-// DataGrid's current column/cell API without substantial new features.
+type Course = { id: string; name: string };
 
-export default function CourseManager({ courses }: { courses: any[] }) {
+export default function CourseManager({ courses }: { courses: Course[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Search and Pagination
+  // Search (external Toolbar drives the filter; DataGrid consumes the result).
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
 
-  // Bulk selection
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Bulk selection — controlled string[] to match DataGrid's API.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Add/Import toggles
   const [showAdd, setShowAdd] = useState(false);
@@ -41,12 +36,6 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     if (!searchQuery.trim()) return courses;
     return courses.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [courses, searchQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / itemsPerPage));
-  const currentCourses = filteredCourses.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
 
   async function handleAdd(formData: FormData) {
     setLoading(true);
@@ -90,22 +79,19 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     if (res?.error) setError(res.error);
     else {
       setSuccess('Course deleted.');
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+      setSelectedIds((prev) => prev.filter((x) => x !== id));
     }
     setLoading(false);
   }
 
   async function handleBulkDelete() {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.length === 0) return;
+    const count = selectedIds.length;
     const ok = await confirm({
-      title: `Delete ${selectedIds.size} courses?`,
+      title: `Delete ${count} courses?`,
       description:
         'All selected courses will be removed permanently. Tutors who listed any of these as an expertise will need to pick new ones.',
-      confirmLabel: `Delete ${selectedIds.size}`,
+      confirmLabel: `Delete ${count}`,
       tone: 'danger',
     });
     if (!ok) return;
@@ -114,11 +100,11 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     setError('');
     setSuccess('');
 
-    const res = await deleteBulkCourses(Array.from(selectedIds));
+    const res = await deleteBulkCourses(selectedIds);
     if (res?.error) setError(res.error);
     else {
-      setSuccess(`Deleted ${selectedIds.size} courses.`);
-      setSelectedIds(new Set());
+      setSuccess(`Deleted ${count} courses.`);
+      setSelectedIds([]);
     }
     setLoading(false);
   }
@@ -166,28 +152,29 @@ export default function CourseManager({ courses }: { courses: any[] }) {
     reader.readAsText(file);
   }
 
-  function handleSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.checked) {
-      const next = new Set(selectedIds);
-      currentCourses.forEach((c) => next.add(c.id));
-      setSelectedIds(next);
-    } else {
-      const next = new Set(selectedIds);
-      currentCourses.forEach((c) => next.delete(c.id));
-      setSelectedIds(next);
-    }
-  }
+  const columns: ColumnDef<Course>[] = [
+    {
+      header: 'Course Name',
+      accessorKey: 'name',
+      cell: (c) => <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{c.name}</span>,
+    },
+  ];
 
-  function handleSelectOne(id: string, checked: boolean) {
-    const next = new Set(selectedIds);
-    if (checked) next.add(id);
-    else next.delete(id);
-    setSelectedIds(next);
-  }
+  const actions = (course: Course): RowAction<Course>[] => [
+    {
+      label: 'Edit',
+      icon: <Pencil size={14} />,
+      onSelect: () => setEditingId(course.id),
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} />,
+      onSelect: () => handleDelete(course.id, course.name),
+      danger: true,
+    },
+  ];
 
-  const isAllCurrentSelected =
-    currentCourses.length > 0 && currentCourses.every((c) => selectedIds.has(c.id));
-  const someCurrentSelected = currentCourses.some((c) => selectedIds.has(c.id));
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / 20));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -256,19 +243,19 @@ export default function CourseManager({ courses }: { courses: any[] }) {
         />
         <KPI
           label='Selected'
-          value={selectedIds.size.toLocaleString()}
+          value={selectedIds.length.toLocaleString()}
           icon={<CheckSquare size={16} aria-hidden='true' />}
-          tone={selectedIds.size > 0 ? 'danger' : 'neutral'}
+          tone={selectedIds.length > 0 ? 'danger' : 'neutral'}
           variant='accent'
-          hint={selectedIds.size > 0 ? 'Ready for bulk delete' : 'Nothing selected'}
+          hint={selectedIds.length > 0 ? 'Ready for bulk delete' : 'Nothing selected'}
         />
         <KPI
           label='Pages'
-          value={`${currentPage} / ${totalPages}`}
+          value={`${totalPages}`}
           icon={<Layers size={16} aria-hidden='true' />}
           tone='neutral'
           variant='accent'
-          hint={`${itemsPerPage} per page`}
+          hint='20 per page'
         />
       </div>
 
@@ -398,10 +385,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                 aria-label='Search courses'
                 placeholder='Search courses…'
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
                   paddingLeft: 'calc(var(--space-3) + 20px)',
@@ -419,7 +403,7 @@ export default function CourseManager({ courses }: { courses: any[] }) {
             </div>
           }
           actions={
-            selectedIds.size > 0 ? (
+            selectedIds.length > 0 ? (
               <button
                 type='button'
                 onClick={handleBulkDelete}
@@ -428,292 +412,64 @@ export default function CourseManager({ courses }: { courses: any[] }) {
                 disabled={loading}
               >
                 <Trash2 size={14} aria-hidden='true' />
-                Delete Selected ({selectedIds.size})
+                Delete Selected ({selectedIds.length})
               </button>
             ) : null
           }
         />
 
-        <div className='data-grid-container'>
-          {currentCourses.length === 0 ? (
-            <EmptyState
-              icon={<BookOpen size={32} aria-hidden='true' />}
-              title={searchQuery ? 'No courses match your search' : 'No courses yet'}
-              description={
-                searchQuery
-                  ? 'Try a different course code or name.'
-                  : 'Click "Add Course" above to create the first one.'
-              }
-            />
-          ) : (
-            <>
-              {/* Desktop / tablet table */}
-              <table className='data-grid' style={{ display: 'table' }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: 48, textAlign: 'center' }}>
-                      <input
-                        type='checkbox'
-                        checked={isAllCurrentSelected}
-                        ref={(el) => {
-                          if (el) el.indeterminate = !isAllCurrentSelected && someCurrentSelected;
-                        }}
-                        onChange={handleSelectAll}
-                        disabled={currentCourses.length === 0}
-                        aria-label='Select all on page'
-                        style={{ cursor: 'pointer', width: 16, height: 16 }}
-                      />
-                    </th>
-                    <th>Course Name</th>
-                    <th style={{ width: 160, textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentCourses.map((course) => (
-                    <tr
-                      key={course.id}
-                      style={{
-                        background: selectedIds.has(course.id) ? 'var(--primary-light)' : undefined,
-                      }}
-                    >
-                      <td style={{ textAlign: 'center' }}>
-                        <input
-                          type='checkbox'
-                          checked={selectedIds.has(course.id)}
-                          onChange={(e) => handleSelectOne(course.id, e.target.checked)}
-                          aria-label={`Select ${course.name}`}
-                          style={{ cursor: 'pointer', width: 16, height: 16 }}
-                        />
-                      </td>
-                      <td colSpan={editingId === course.id ? 2 : 1}>
-                        {editingId === course.id ? (
-                          <form action={handleEdit} style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                            <input type='hidden' name='id' value={course.id} />
-                            <div style={{ flex: 1, minWidth: 220 }}>
-                              <Input
-                                containerClassName={fieldClass}
-                                name='name'
-                                type='text'
-                                defaultValue={course.name}
-                                label='Course Name'
-                                required
-                              />
-                            </div>
-                            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                              <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
-                                Save
-                              </FormSubmit>
-                              <button
-                                type='button'
-                                onClick={() => setEditingId(null)}
-                                className='btn btn-secondary'
-                                disabled={loading}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </form>
-                        ) : (
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
-                            {course.name}
-                          </div>
-                        )}
-                      </td>
-                      {editingId !== course.id && (
-                        <td>
-                          <div style={{ display: 'flex', gap: 'var(--space-1)', justifyContent: 'flex-end' }}>
-                            <button
-                              type='button'
-                              onClick={() => setEditingId(course.id)}
-                              className='btn btn-secondary btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                              disabled={loading}
-                              aria-label={`Edit ${course.name}`}
-                            >
-                              <Pencil size={12} aria-hidden='true' />
-                              Edit
-                            </button>
-                            <button
-                              type='button'
-                              onClick={() => handleDelete(course.id, course.name)}
-                              className='btn btn-danger btn-sm'
-                              disabled={loading}
-                              aria-label={`Delete ${course.name}`}
-                            >
-                              <Trash2 size={12} aria-hidden='true' />
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Mobile cards */}
-              <div
-                className='md:hidden'
-                style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--border-color)' }}
+        <DataGrid
+          data={filteredCourses}
+          columns={columns}
+          searchable={false}
+          itemsPerPage={20}
+          getRowId={(c) => c.id}
+          selectable
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          rowActions={actions}
+          editingRowId={editingId}
+          renderEditableRow={(course) => (
+            <td colSpan={3}>
+              <form
+                action={handleEdit}
+                style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'flex-end', padding: 'var(--space-3) 0' }}
               >
-                <div
-                  style={{
-                    background: 'var(--card-bg)',
-                    padding: 'var(--space-2) var(--space-3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                  }}
-                >
-                  <input
-                    type='checkbox'
-                    checked={isAllCurrentSelected}
-                    onChange={handleSelectAll}
-                    aria-label='Select all on page'
-                    style={{ cursor: 'pointer', width: 18, height: 18 }}
+                <input type='hidden' name='id' value={course.id} />
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <Input
+                    containerClassName={fieldClass}
+                    name='name'
+                    type='text'
+                    defaultValue={course.name}
+                    label='Course Name'
+                    required
                   />
-                  <label
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      fontWeight: 600,
-                      color: 'var(--text-muted)',
-                      flex: 1,
-                    }}
-                  >
-                    Select All on Page
-                  </label>
-                  {selectedIds.size > 0 && (
-                    <button
-                      type='button'
-                      onClick={handleBulkDelete}
-                      className='btn btn-danger btn-sm'
-                      disabled={loading}
-                      style={{ fontSize: 11 }}
-                    >
-                      <Trash2 size={12} aria-hidden='true' /> {selectedIds.size}
-                    </button>
-                  )}
                 </div>
-                {currentCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    style={{
-                      background: selectedIds.has(course.id) ? 'var(--primary-light)' : 'var(--card-bg)',
-                      padding: 'var(--space-3)',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 'var(--space-3)',
-                    }}
-                  >
-                    <input
-                      type='checkbox'
-                      checked={selectedIds.has(course.id)}
-                      onChange={(e) => handleSelectOne(course.id, e.target.checked)}
-                      aria-label={`Select ${course.name}`}
-                      style={{ cursor: 'pointer', width: 18, height: 18, marginTop: 2 }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {editingId === course.id ? (
-                        <form action={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                          <input type='hidden' name='id' value={course.id} />
-                          <Input
-                            containerClassName={fieldClass}
-                            name='name'
-                            type='text'
-                            defaultValue={course.name}
-                            label='Course Name'
-                            required
-                          />
-                          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                            <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
-                              Save
-                            </FormSubmit>
-                            <button
-                              type='button'
-                              onClick={() => setEditingId(null)}
-                              className='btn btn-secondary'
-                              disabled={loading}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <>
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: 'var(--text-sm)' }}>
-                            {course.name}
-                          </div>
-                          <div style={{ display: 'flex', gap: 'var(--space-1)', marginTop: 'var(--space-2)' }}>
-                            <button
-                              type='button'
-                              onClick={() => setEditingId(course.id)}
-                              className='btn btn-secondary btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}
-                              disabled={loading}
-                            >
-                              <Pencil size={12} aria-hidden='true' />
-                              Edit
-                            </button>
-                            <button
-                              type='button'
-                              onClick={() => handleDelete(course.id, course.name)}
-                              className='btn btn-danger btn-sm'
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}
-                              disabled={loading}
-                            >
-                              <Trash2 size={12} aria-hidden='true' />
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    padding: 'var(--space-3)',
-                    borderTop: '1px solid var(--border-color)',
-                  }}
-                >
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <FormSubmit fullWidth={false} loading={loading} loadingText='Saving…'>
+                    Save
+                  </FormSubmit>
                   <button
                     type='button'
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className='btn btn-secondary btn-sm'
+                    onClick={() => setEditingId(null)}
+                    className='btn btn-secondary'
+                    disabled={loading}
                   >
-                    Previous
-                  </button>
-                  <span
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      color: 'var(--text-muted)',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    type='button'
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className='btn btn-secondary btn-sm'
-                  >
-                    Next
+                    Cancel
                   </button>
                 </div>
-              )}
-            </>
+              </form>
+            </td>
           )}
-        </div>
+          emptyState={{
+            icon: <BookOpen size={32} aria-hidden='true' />,
+            title: searchQuery ? 'No courses match your search' : 'No courses yet',
+            description: searchQuery
+              ? 'Try a different course code or name.'
+              : 'Click "Add Course" above to create the first one.',
+          }}
+        />
       </section>
     </div>
   );
