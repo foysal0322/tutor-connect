@@ -4,7 +4,7 @@
 ~~4 Admin can set consultancy topic with price~~ ✅ (ConsultancyTopic.price; 0 = free, >0 = paid debited from wallet)
 ~~5 Admin can add, edit and remove a consultancy topic~~ ✅ (add/update/delete actions + UI; delete blocked if bookings reference the topic)
 ~~6 Write a consultancy policy~~ ✅ (new /consultancy-policy page)
-7 Admin > course expertises > can edit a course
+~~7 Admin > course expertises > can edit a course~~ ✅ (admin can edit a TutorExpertise row inline: course, fee, faculty, grade, semester, availability, hideGrade, isActive; plus delete)
 ~~8 Admin dashboard > fix all counts - remove the dummy data~~ ✅ (totalBudget now excludes CANCELLED/PENDING; "Active Learners" relabeled → "Registered Students"; "Last refreshed" pill added)
 9 Admin > make a new section name "settings"
 10 Admin can change platform commission with discount facilities

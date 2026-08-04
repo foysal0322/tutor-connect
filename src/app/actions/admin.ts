@@ -485,3 +485,61 @@ export async function setConsultancyRequestStatus(id: string, status: string) {
     return { error: 'Failed to update request status.' };
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Tutor expertise (admin edit)
+// ──────────────────────────────────────────────────────────────────────────
+
+export async function updateTutorExpertise(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get('id') as string;
+  if (!id) return { error: 'ID is required.' };
+
+  const courseId = formData.get('courseId') as string;
+  const semesterCompleted = (formData.get('semesterCompleted') as string)?.trim();
+  const facultyName = (formData.get('facultyName') as string)?.trim();
+  const courseGrade = (formData.get('courseGrade') as string)?.trim();
+  const availability = (formData.get('availability') as string)?.trim();
+  const sessionFeeRaw = formData.get('sessionFee') as string;
+  const hideGrade = formData.get('hideGrade') === 'on';
+  const isActive = formData.get('isActive') === 'on';
+
+  if (!courseId || !facultyName || !courseGrade) {
+    return { error: 'Course, faculty, and grade are required.' };
+  }
+  const sessionFee = parseFloat(sessionFeeRaw);
+  if (Number.isNaN(sessionFee) || sessionFee < 0) {
+    return { error: 'Session fee must be a non-negative number.' };
+  }
+
+  try {
+    await prisma.tutorExpertise.update({
+      where: { id },
+      data: {
+        courseId,
+        semesterCompleted,
+        facultyName,
+        courseGrade,
+        availability,
+        sessionFee,
+        hideGrade,
+        isActive,
+      },
+    });
+    revalidatePath('/admin/expertises');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to update expertise.' };
+  }
+}
+
+export async function deleteTutorExpertise(id: string) {
+  await requireAdmin();
+  try {
+    await prisma.tutorExpertise.delete({ where: { id } });
+    revalidatePath('/admin/expertises');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to delete expertise.' };
+  }
+}

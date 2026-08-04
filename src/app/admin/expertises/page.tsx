@@ -1,31 +1,29 @@
 import { prisma } from '@/lib/prisma';
 import ExpertiseManager from './ExpertiseManager';
 
+export const revalidate = 0;
+
 export default async function AdminExpertisesPage() {
-  const expertises = await prisma.tutorExpertise.findMany({
-    where: {
-      isActive: true
-    },
-    include: {
-      tutor: {
-        select: {
-          name: true,
-          nsuId: true
-        }
+  // Load ALL expertises (not just isActive=true) so the admin can edit or
+  // reactivate hidden ones. Active rows are surfaced first.
+  const [expertises, courses] = await Promise.all([
+    prisma.tutorExpertise.findMany({
+      include: {
+        tutor: { select: { name: true, nsuId: true } },
+        course: { select: { name: true } },
       },
-      course: {
-        select: {
-          name: true
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
+    }),
+    prisma.course.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
 
   return (
     <div className="max-w-full">
-      <h1 className="mb-6">Offered Courses</h1>
-      <ExpertiseManager expertises={expertises} />
+      <h1 className="mb-6">Course Expertises</h1>
+      <ExpertiseManager expertises={expertises} courses={courses} />
     </div>
   );
 }
