@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { submitPayment } from '@/app/student/actions';
 import { useToast } from '@/components/ToastProvider';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 import { Input } from '@/components/ui/Input';
 import { fieldClass } from '@/components/forms';
 import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
+
+// Default fee values — used until /api/settings/fees responds. Mirror the
+// schema defaults so first paint matches the canonical numbers.
+const DEFAULT_PAYMENT_FEE_PERCENT = 10;
+const DEFAULT_PROMO_PERCENT = 50;
 
 // Shape of the optimistic payment record handed back to the parent so it can
 // update its own list without waiting for revalidation.
@@ -28,7 +33,8 @@ interface PaymentFormProps {
 // Shared MFS payment form. Extracted from StudentRequestList so both the
 // dashboard "Recent Requests" list and the payments page "Pending Payments"
 // section use one source of truth for the payment procedure.
-// The visible total is always budget * 1.05 (10% platform fee, 50% promo).
+// The visible total derives from /api/settings/fees (paymentFeePercent +
+// promoDiscountPercent). Falls back to 10%/50% (effective 5%) on first paint.
 export default function PaymentForm({
   requestId,
   budget,
@@ -41,10 +47,38 @@ export default function PaymentForm({
   const [transactionId, setTransactionId] = useState('');
   const [useWallet, setUseWallet] = useState(false);
 
+  // Fee config — fetched from /api/settings/fees so admins can change
+  // rates without code changes. Falls back to the schema defaults during
+  // the first paint / if the fetch fails.
+  const [paymentFeePercent, setPaymentFeePercent] = useState(DEFAULT_PAYMENT_FEE_PERCENT);
+  const [promoPercent, setPromoPercent] = useState(DEFAULT_PROMO_PERCENT);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/settings/fees')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        if (typeof data.paymentFeePercent === 'number') setPaymentFeePercent(data.paymentFeePercent);
+        if (typeof data.promoDiscountPercent === 'number') setPromoPercent(data.promoDiscountPercent);
+      })
+      .catch(() => {
+        /* fall back to defaults */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
-  const totalPayable = parseFloat((budget * 1.05).toFixed(2));
+  // Effective fee multiplier: 1 + (paymentFee% * (1 - promo%)).
+  // e.g. paymentFee=10%, promo=50% → 1 + (0.10 * 0.50) = 1.05.
+  const feeMultiplier = 1 + (paymentFeePercent / 100) * (1 - promoPercent / 100);
+  const totalPayable = parseFloat((budget * feeMultiplier).toFixed(2));
+  const baseFee = parseFloat((budget * (paymentFeePercent / 100)).toFixed(2));
+  const promoCut = parseFloat((baseFee * (promoPercent / 100)).toFixed(2));
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,8 +178,8 @@ export default function PaymentForm({
             color: 'var(--text-muted)',
           }}
         >
-          <span>Platform Fee (10%):</span>
-          <span>+{(budget * 0.1).toFixed(2)} BDT</span>
+          <span>Platform Fee ({paymentFeePercent}%):</span>
+          <span>+{baseFee.toFixed(2)} BDT</span>
         </p>
         <p
           style={{
@@ -155,8 +189,8 @@ export default function PaymentForm({
             color: 'var(--success)',
           }}
         >
-          <span>Promo Discount (-50%):</span>
-          <span>-{(budget * 0.05).toFixed(2)} BDT</span>
+          <span>Promo Discount (-{promoPercent}%):</span>
+          <span>-{promoCut.toFixed(2)} BDT</span>
         </p>
         <hr style={{ border: '0', borderTop: '1px solid var(--border-color)', margin: '0.5rem 0' }} />
         <p
@@ -169,8 +203,8 @@ export default function PaymentForm({
             color: 'var(--text-main)',
           }}
         >
-          <span>Total Payable (including 5% Platform Fee):</span>
-          <span>{(budget * 1.05).toFixed(2)} BDT</span>
+          <span>Total Payable (including {(paymentFeePercent * (1 - promoPercent / 100)).toFixed(1)}% Platform Fee):</span>
+          <span>{totalPayable.toFixed(2)} BDT</span>
         </p>
       </div>
 
@@ -207,14 +241,14 @@ export default function PaymentForm({
           </label>
           {useWallet && (
             <div style={{ fontSize: '0.85rem', color: '#15803d', paddingLeft: '1.7rem' }}>
-              {userBalance >= budget * 1.05 ? (
+              {userBalance >= totalPayable ? (
                 <span>
                   Your wallet covers 100% of this tuition! <strong>No MFS transfer needed.</strong>
                 </span>
               ) : (
                 <span>
                   Wallet covers -{userBalance.toFixed(2)} BDT. You will pay the remaining{' '}
-                  <strong>{(budget * 1.05 - userBalance).toFixed(2)} BDT</strong> via MFS below.
+                  <strong>{(totalPayable - userBalance).toFixed(2)} BDT</strong> via MFS below.
                 </span>
               )}
             </div>
@@ -222,7 +256,7 @@ export default function PaymentForm({
         </div>
       )}
 
-      {!useWallet || userBalance < budget * 1.05 ? (
+      {!useWallet || userBalance < totalPayable ? (
         <>
           <div
             style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '1.25rem', borderRadius: '8px' }}
@@ -273,7 +307,7 @@ export default function PaymentForm({
             </p>
             <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: '0.5rem 0 0 0' }}>
               Step 2: Choose your service below and submit the transaction details for{' '}
-              {useWallet ? (budget * 1.05 - userBalance).toFixed(2) : (budget * 1.05).toFixed(2)} BDT.
+              {useWallet ? (totalPayable - userBalance).toFixed(2) : totalPayable.toFixed(2)} BDT.
             </p>
           </div>
 
@@ -305,8 +339,8 @@ export default function PaymentForm({
               readOnly
               value={
                 useWallet
-                  ? (budget * 1.05 - Math.min(userBalance, budget * 1.05)).toFixed(2)
-                  : (budget * 1.05).toFixed(2)
+                  ? (totalPayable - Math.min(userBalance, totalPayable)).toFixed(2)
+                  : totalPayable.toFixed(2)
               }
             />
             <Input
@@ -335,7 +369,7 @@ export default function PaymentForm({
             100% Wallet Payment Ready!
           </p>
           <p style={{ fontSize: '0.9rem', color: '#065f46', margin: '0.5rem 0 0 0' }}>
-            Click the button below to deduct {(budget * 1.05).toFixed(2)} BDT from your Campus Wallet
+            Click the button below to deduct {totalPayable.toFixed(2)} BDT from your Campus Wallet
             and activate this tutoring session instantly.
           </p>
         </div>
@@ -356,7 +390,7 @@ export default function PaymentForm({
         <button type="submit" disabled={isPending} className="btn-primary" style={{ padding: '0.5rem 1.25rem' }}>
           {isPending
             ? 'Submitting...'
-            : useWallet && userBalance >= budget * 1.05
+            : useWallet && userBalance >= totalPayable
               ? 'Pay with Wallet (1-Click Verify)'
               : 'Submit Payment'}
         </button>

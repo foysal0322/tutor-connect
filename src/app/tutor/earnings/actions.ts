@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notifyWithdrawRequest } from '@/lib/discord';
 import { parseFormData, submitWithdrawalSchema } from '@/lib/validation';
+import { getPlatformSettings } from '@/lib/cache';
 
 export async function submitWithdrawalRequest(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -87,11 +88,13 @@ export async function submitWithdrawalRequest(formData: FormData) {
         );
       }
 
-      // 3. Platform fee: 5% (effective rate after the 50% promo discount on
-      // the standard 10% fee). Keep this calc server-side, never trust the
-      // client.
-      const platformFee = amount * 0.05;
-      const netAmount = amount * 0.95;
+      // 3. Platform fee — configurable via /admin/settings. The withdrawal
+      // action reads the cached config inside the transaction so a settings
+      // change applies to withdrawals submitted after the cache TTL (60s).
+      // Keep this calc server-side, never trust the client.
+      const settings = await getPlatformSettings();
+      const platformFee = amount * (settings.withdrawalFeePercent / 100);
+      const netAmount = amount - platformFee;
 
       return tx.withdrawalRequest.create({
         data: {

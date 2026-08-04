@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { revalidatePath, updateTag } from 'next/cache';
 import { createNotification } from '@/lib/notification';
+import { DEFAULT_SETTINGS } from '@/lib/cache';
 import { sendNoReplyEmail } from '@/lib/mail';
 import { parseFormData, adjustWalletSchema } from '@/lib/validation';
 
@@ -542,4 +543,63 @@ export async function deleteTutorExpertise(id: string) {
   } catch (err: any) {
     return { error: 'Failed to delete expertise.' };
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Platform settings (commission + quotas)
+// ──────────────────────────────────────────────────────────────────────────
+
+const clampPercent = (label: string, v: number, min = 0, max = 100) => {
+  if (Number.isNaN(v) || v < min || v > max) {
+    return { error: `${label} must be between ${min} and ${max}.` };
+  }
+  return null;
+};
+
+export async function updatePlatformSettings(formData: FormData) {
+  await requireAdmin();
+
+  const withdrawalFeePercent = parseFloat(formData.get('withdrawalFeePercent') as string);
+  const paymentFeePercent = parseFloat(formData.get('paymentFeePercent') as string);
+  const promoDiscountPercent = parseFloat(formData.get('promoDiscountPercent') as string);
+  const consultancyFreeQuota = parseInt(formData.get('consultancyFreeQuota') as string, 10);
+
+  const err =
+    clampPercent('Withdrawal fee', withdrawalFeePercent) ||
+    clampPercent('Payment fee', paymentFeePercent) ||
+    clampPercent('Promo discount', promoDiscountPercent);
+  if (err) return err;
+  if (Number.isNaN(consultancyFreeQuota) || consultancyFreeQuota < 0 || consultancyFreeQuota > 100) {
+    return { error: 'Free quota must be a whole number between 0 and 100.' };
+  }
+
+  try {
+    await prisma.platformSetting.upsert({
+      where: { id: 'default' },
+      update: {
+        withdrawalFeePercent,
+        paymentFeePercent,
+        promoDiscountPercent,
+        consultancyFreeQuota,
+      },
+      create: {
+        id: 'default',
+        withdrawalFeePercent,
+        paymentFeePercent,
+        promoDiscountPercent,
+        consultancyFreeQuota,
+      },
+    });
+    revalidatePath('/admin/settings');
+    updateTag('platform-settings');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to update settings.' };
+  }
+}
+
+export async function getAdminPlatformSettings() {
+  await requireAdmin();
+  const row = await prisma.platformSetting.findUnique({ where: { id: 'default' } });
+  return row ?? { id: 'default', ...DEFAULT_SETTINGS, updatedAt: new Date() };
 }

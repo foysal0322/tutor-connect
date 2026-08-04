@@ -333,7 +333,7 @@ model WalletTransaction {
   id          String   @id @default(cuid())
   userId      String
   amount      Float    // Positive for credit/recharge, negative for payment/withdrawal
-  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT
+  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT, CONSULTANCY_PAYMENT
   description String
   referenceId String?  // MFS transaction ID or TutorRequest ID
   createdAt   DateTime @default(now())
@@ -343,5 +343,16 @@ model WalletTransaction {
   @@index([userId])
   @@index([type])
   @@index([createdAt])
+}
+
+// Singleton configuration row. App reads the row whose id = 'default'.
+// Seed happens lazily on first getPlatformSettings() call.
+model PlatformSetting {
+  id                   String   @id
+  withdrawalFeePercent Float    @default(5)   // tutor-side withdrawal commission, %
+  paymentFeePercent    Float    @default(10)  // student-side payment fee, %
+  promoDiscountPercent Float    @default(50)  // promo applied on paymentFeePercent, %
+  consultancyFreeQuota Int      @default(2)   // free consultancy sessions per student
+  updatedAt            DateTime @updatedAt
 }
 

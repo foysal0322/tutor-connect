@@ -6,7 +6,7 @@
 ~~6 Write a consultancy policy~~ ✅ (new /consultancy-policy page)
 ~~7 Admin > course expertises > can edit a course~~ ✅ (admin can edit a TutorExpertise row inline: course, fee, faculty, grade, semester, availability, hideGrade, isActive; plus delete)
 ~~8 Admin dashboard > fix all counts - remove the dummy data~~ ✅ (totalBudget now excludes CANCELLED/PENDING; "Active Learners" relabeled → "Registered Students"; "Last refreshed" pill added)
-9 Admin > make a new section name "settings"
-10 Admin can change platform commission with discount facilities
+~~9 Admin > make a new section name "settings"~~ ✅ (new /admin/settings page; commission + quotas)
+~~10 Admin can change platform commission with discount facilities~~ ✅ (PlatformSetting singleton; withdrawalFee / paymentFee / promoDiscount / consultancyFreeQuota all configurable; new transactions read from cached config)
 11 Make a new section name coupon
 12 

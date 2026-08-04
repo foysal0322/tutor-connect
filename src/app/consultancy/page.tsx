@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
 import { createNotification } from '@/lib/notification';
+import { getPlatformSettings } from '@/lib/cache';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -21,10 +22,8 @@ import {
 import ConsultancySuccessToast from './ConsultancySuccessToast';
 import { formatBDT } from '@/lib/format';
 
-/** Each student is allowed at most this many FREE consultancy sessions.
- *  Hardcoded fallback if PlatformSetting row is absent (Stream E will
- *  override this with a configurable value). */
-const DEFAULT_FREE_QUOTA = 2;
+/** Fallback free-quota if PlatformSetting row is missing. */
+const FALLBACK_FREE_QUOTA = 2;
 
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
@@ -43,6 +42,10 @@ export default async function ConsultancyPage() {
     orderBy: [{ price: 'asc' }, { title: 'asc' }],
   });
 
+  // Configurable free quota (admin-set via /admin/settings).
+  const settings = await getPlatformSettings();
+  const freeQuota = settings.consultancyFreeQuota ?? FALLBACK_FREE_QUOTA;
+
   // Free quota is computed against the student's history of FREE bookings
   // only (pricePaid == null or 0). Paid bookings don't consume the quota.
   const usedFreeCount = sessionUser?.id
@@ -53,7 +56,6 @@ export default async function ConsultancyPage() {
         },
       })
     : 0;
-  const freeQuota = DEFAULT_FREE_QUOTA;
   const remainingFree = Math.max(0, freeQuota - usedFreeCount);
 
   async function submitConsultancy(formData: FormData) {
@@ -86,14 +88,16 @@ export default async function ConsultancyPage() {
 
     // Free-path: enforce quota. Paid-path: enforce wallet balance.
     if (isFree) {
+      const settings = await getPlatformSettings();
+      const quota = settings.consultancyFreeQuota ?? FALLBACK_FREE_QUOTA;
       const usedFree = await prisma.consultancyRequest.count({
         where: {
           studentId: student.id,
           OR: [{ pricePaid: null }, { pricePaid: 0 }],
         },
       });
-      if (usedFree >= DEFAULT_FREE_QUOTA) {
-        throw new Error(`You have already used your ${DEFAULT_FREE_QUOTA} free consultancy sessions.`);
+      if (usedFree >= quota) {
+        throw new Error(`You have already used your ${quota} free consultancy sessions.`);
       }
     }
 
