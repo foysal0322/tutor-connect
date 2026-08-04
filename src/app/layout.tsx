@@ -6,6 +6,7 @@ import NextTopLoader from "nextjs-toploader";
 import { ToastProvider } from "@/components/ToastProvider";
 import VisitorTracker from "@/components/VisitorTracker";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "nsuOne",
@@ -46,15 +47,17 @@ export default function RootLayout({
           Skip to content
         </a>
         <ErrorBoundary context='Root Layout'>
-          <ToastProvider>
-            <VisitorTracker />
-            <NextTopLoader color='var(--primary)' showSpinner={false} />
-            <Navbar />
-            <main id='main' className='site-main'>
-              {children}
-            </main>
-            <Footer />
-          </ToastProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <VisitorTracker />
+              <NextTopLoader color='var(--primary)' showSpinner={false} />
+              <Navbar />
+              <main id='main' className='site-main'>
+                {children}
+              </main>
+              <Footer />
+            </ToastProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>
