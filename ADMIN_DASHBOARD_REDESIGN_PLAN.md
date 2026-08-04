@@ -755,32 +755,43 @@ public route at a time and build between each.
 
 ---
 
-### Phase 3 — Topbar + Breadcrumbs + Theme toggle · 🟡
+### Phase 3 — Topbar + Breadcrumbs + Theme toggle · 🟡 ✅ DONE (2026-08-05)
 
 **Goal**: replace the empty `TopNav` with a real top bar.
 
-- Rewrite `src/components/layout/TopNav.tsx` (rename to `Topbar.tsx`,
-  keep `TopNav` as a re-export during transition to avoid breaking
-  imports) to render: collapse toggle, `<Breadcrumb/>`, `⌘K` button,
-  `<NotificationBell/>`, theme toggle, `<UserMenu/>`.
-- Wire `⌘K` to open `<CommandPalette/>` (Phase 1 primitive).
-- Build the route→title map for breadcrumbs.
-- Persist sidebar collapse state + theme in `localStorage`.
+- ✅ Rewrote `TopNav.tsx` → `Topbar.tsx` (kept `TopNav` as a re-export for
+  backwards compatibility). Topbar renders: collapse toggle, `<Breadcrumb/>`,
+  `⌘K` button, `<NotificationBell/>`, theme toggle, `<UserMenu/>`.
+- ✅ Wired `⌘K` / `Ctrl+K` to open `<CommandPalette/>` via `useKeyboardShortcut`.
+  Palette items are derived from `ROUTE_TITLES` + quick actions (toggle theme,
+  sign out); richer per-page commands deferred to Phase 9.
+- ✅ Built `src/components/layout/breadcrumb-map.ts` — route→title map for
+  admin + member shells + `buildBreadcrumbs()` walker that handles dynamic
+  `[id]` segments.
+- ✅ Theme toggle persists via `ThemeProvider` (`nsuone.theme`); sidebar
+  collapse intent persists via `nsuone.sidebar.collapsed` (read by Phase 4).
 
-**Files likely affected**:
-- `src/components/layout/TopNav.tsx` / `Topbar.tsx`
-- `src/components/layout/DashboardLayout.tsx` (use `Topbar`)
-- `src/components/layout/layout.module.css`
-- new file `src/components/layout/breadcrumb-map.ts`
+**Files touched**:
+- `src/components/layout/Topbar.tsx` (new)
+- `src/components/layout/TopNav.tsx` (now a re-export shim)
+- `src/components/layout/DashboardLayout.tsx` (uses Topbar; passes `user`)
+- `src/components/layout/layout.module.css` (48 px sticky `.topbar`, mobile
+  hamburger shown, desktop collapse-toggle shown)
+- `src/components/layout/breadcrumb-map.ts` (new)
+- `src/app/dashboard/layout.tsx` (passes `userName`/`userEmail` to the shell)
 
-**Components**: consumes `Breadcrumb`, `CommandPalette`, `ThemeProvider`.
+**Components**: consumes `Breadcrumb`, `CommandPalette`, `ThemeProvider`,
+`useKeyboardShortcut`, `NotificationBell`, `UserMenu`.
 **Dependencies**: Phase 1.
-**Risk**: 🟡 — affects both admin and member shells; test both.
-**Testing checklist**: keyboard `Cmd/Ctrl+K` opens palette; breadcrumbs
-correct on every admin route; theme toggle persists across reload; mobile
-hamburger still toggles sidebar.
+**Risk**: 🟡 — affects both admin and member shells; both tested.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
 **Rollback**: revert commit; old `TopNav` is restored.
 **Estimated difficulty**: medium.
+**Note**: the desktop collapse-toggle button is wired and its intent is
+persisted to `localStorage`, but the actual sidebar icon-rail collapse
+ships in Phase 4 (the `<html data-sidebar-collapsed>` attribute is set
+today; Phase 4 will consume it).
 
 ---
 
@@ -1035,10 +1046,10 @@ Each phase must pass before the next begins:
 
 Order of operations when executing this plan:
 
-1. ☐ Phase 0 spike — write findings to an internal note.
-2. ☐ Phase 1 — tokens + primitives on `main` behind no flag.
-3. ☐ Phase 2 — middleware + route-group reorg.
-4. ☐ Phase 3 — Topbar.
+1. ✅ Phase 0 spike — write findings to an internal note.
+2. ✅ Phase 1 — tokens + primitives on `main` behind no flag.
+3. ✅ Phase 2 — middleware + route-group reorg.
+4. ✅ Phase 3 — Topbar.
 5. ☐ Phase 4 — Sidebar refactor.
 6. ☐ Phase 5 — DataGrid upgrade.
 7. ☐ Phase 6 — page-by-page migration (one commit per page).

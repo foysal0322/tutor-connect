@@ -15,6 +15,8 @@ export default async function DashboardRootLayout({ children }: { children: Reac
   return (
     <DashboardLayout
       role={(session.user as { role: 'STUDENT' | 'TUTOR' }).role}
+      userName={session.user?.name ?? null}
+      userEmail={session.user?.email ?? null}
       currentCounts={currentCounts}
     >
       {children}

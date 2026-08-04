@@ -141,24 +141,118 @@
   overflow: hidden;
 }
 
-/* Top Nav — mobile/tablet only. On desktop the sidebar is persistent, so
-   this bar would render empty (the menu toggle is hidden > 1024px) and just
-   waste a 64px strip above the page content. */
-.topNav {
-  display: none;
-  height: 64px;
-  background-color: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  z-index: 40;
-}
-
-.topNavLeft, .topNavRight {
+/* Topbar — always visible 48 px sticky bar. Replaces the old mobile-only
+   .topNav. Holds the collapse toggle, breadcrumbs, ⌘K trigger, notification
+   bell, theme toggle, and user menu (Phase 3). */
+.topbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 48px;
+  padding: 0 var(--space-4);
+  background-color: color-mix(in srgb, var(--card-bg) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-shrink: 0;
+}
+
+.topbarLeft,
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.topbarRight {
+  flex-shrink: 0;
+}
+
+/* Generic square icon button used by the Topbar (menu, collapse, ⌘K, theme). */
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: 32px;
+  min-width: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.iconButton:hover {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.iconButton:active {
+  transform: scale(0.98);
+}
+
+/* ⌘K trigger — wider, shows kbd hint. */
+.kbutton {
+  padding: 0 var(--space-2) 0 var(--space-3);
+}
+
+.kbd {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  line-height: 1;
+}
+
+.topbarDivider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-color);
+  margin: 0 var(--space-1);
+}
+
+.breadcrumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Collapse-to-rail toggle — desktop only. The off-canvas drawer handles
+   mobile, so hide this control below the desktop breakpoint. */
+.collapseToggle {
+  display: inline-flex;
+  position: relative;
+}
+
+.collapseToggle [data-icon] {
+  display: none;
+}
+
+/* Default state: show "expand" affordance (sidebar is expanded by default,
+   so the icon hints at the action that collapses). We flip via CSS once
+   Phase 4 reads the persisted state. For now, always show the collapse icon. */
+.collapseToggle [data-icon="collapse"] {
+  display: inline-flex;
 }
 
 .searchBar {
@@ -231,21 +325,29 @@
     top: 0;
     transform: translateX(-100%);
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
 
-  .topNav {
-    display: flex;
+  /* Mobile: hamburger shows, desktop collapse toggle hides. */
+  .menuToggle {
+    display: inline-flex;
   }
 
-  .menuToggle {
-    display: block;
+  .collapseToggle {
+    display: none;
   }
-  
+
   .overlay.open {
     display: block;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Desktop: hamburger hidden (sidebar is persistent), collapse toggle visible. */
+  .menuToggle {
+    display: none;
   }
 }
 
