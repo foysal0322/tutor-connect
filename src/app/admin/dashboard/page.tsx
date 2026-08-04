@@ -38,7 +38,14 @@ export default async function AdminDashboard() {
     prisma.withdrawalRequest.aggregate({ where: { status: 'PENDING' }, _sum: { amount: true } }),
     prisma.supportTicket.count({ where: { status: 'PENDING' } }),
     prisma.refundRequest.count({ where: { status: 'PENDING' } }),
-    prisma.tutorRequest.aggregate({ _sum: { budget: true } }),
+    // "Tuition Volume" should reflect actual marketplace value — exclude
+    // CANCELLED and bare PENDING (not yet accepted) requests so the KPI does
+    // not inflate with requests that will never convert. Counts MATCHED,
+    // ACCEPTED, PAYMENT_PENDING, and COMPLETED budgets.
+    prisma.tutorRequest.aggregate({
+      where: { status: { in: ['MATCHED', 'ACCEPTED', 'PAYMENT_PENDING', 'COMPLETED'] } },
+      _sum: { budget: true },
+    }),
     prisma.course.findMany({
       take: 20,
       include: {
@@ -82,5 +89,5 @@ export default async function AdminDashboard() {
     topCourses
   };
 
-  return <DashboardContent data={dashboardData} />;
+  return <DashboardContent data={dashboardData} refreshedAt={new Date().toISOString()} />;
 }

@@ -55,7 +55,7 @@ interface DashboardData {
   }[];
 }
 
-export default function DashboardContent({ data }: { data: DashboardData }) {
+export default function DashboardContent({ data, refreshedAt }: { data: DashboardData; refreshedAt: string }) {
   const { stats, topCourses } = data;
 
   // Format courses so labels don't overlap on chart X-axis
@@ -102,6 +102,10 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
           <span className={styles.datePill}>
             <Calendar size={14} aria-hidden="true" />
             {format(new Date(), 'MMMM d, yyyy')}
+          </span>
+          <span className={styles.datePill} title={refreshedAt}>
+            <RefreshCw size={14} aria-hidden="true" />
+            Last refreshed {format(new Date(refreshedAt), 'h:mm a')}
           </span>
         </div>
       </header>
@@ -163,7 +167,7 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
           <div className={styles.kpiFoot}>
             <span className={styles.kpiFootStat}>
               <UserCheck size={13} className="text-success flex-shrink-0" aria-hidden="true" />
-              Active Learners
+              Registered Students
             </span>
             <Link href="/admin/users" className={`${styles.kpiLink} ${styles.kpiLinkPrimary}`}>
               View <ArrowRight size={12} aria-hidden="true" />

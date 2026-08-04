@@ -50,7 +50,7 @@ export default function RootLayout({
             <VisitorTracker />
             <NextTopLoader color='var(--primary)' showSpinner={false} />
             <Navbar />
-            <main id='main' style={{ minHeight: "calc(100vh - 400px)" }}>
+            <main id='main' className='site-main'>
               {children}
             </main>
             <Footer />

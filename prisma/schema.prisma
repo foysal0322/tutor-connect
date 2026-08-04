@@ -121,19 +121,42 @@ model TutorRequest {
   @@index([studentId, status])
 }
 
+model ConsultancyTopic {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  description String?
+  price       Float    @default(0) // 0 = free, > 0 = paid (debited from wallet at booking)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests ConsultancyRequest[]
+
+  @@index([isActive])
+}
+
 model ConsultancyRequest {
   id        String   @id @default(cuid())
   studentId String
-  topic     String
+  topic     String   // Free-text topic — kept for legacy rows + ad-hoc requests
   details   String
-  status    String   @default("PENDING") // PENDING, ASSIGNED, COMPLETED
+  status    String   @default("PENDING") // PENDING, ASSIGNED, COMPLETED, CANCELLED
+  // Linked admin-curated topic. Nullable for back-compat with rows created
+  // before ConsultancyTopic existed (and for any future ad-hoc requests).
+  topicId   String?
+  // Snapshot of ConsultancyTopic.price at booking time. Null on legacy/free
+  // rows. Stored (not joined) so historical bookings keep their original price
+  // even if the topic's price changes later.
+  pricePaid Float?
   createdAt DateTime @default(now())
 
-  student User @relation(fields: [studentId], references: [id])
+  student User              @relation(fields: [studentId], references: [id])
+  consultancyTopic ConsultancyTopic? @relation(fields: [topicId], references: [id])
 
   @@index([studentId])
   @@index([status])
   @@index([createdAt])
+  @@index([topicId])
 }
 
 model RefundRequest {

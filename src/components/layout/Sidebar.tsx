@@ -18,6 +18,8 @@ import {
   Eye,
   LifeBuoy,
   Wallet,
+  Settings,
+  TicketPercent,
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -116,10 +118,13 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
             { name: 'Users', href: '/admin/users', icon: Users, badgeKey: 'users' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: DollarSign, badgeKey: 'withdrawals' },
             { name: 'Wallets', href: '/admin/wallets', icon: CreditCard },
+            { name: 'Consultancy', href: '/admin/consultancy', icon: MessageSquare, badgeKey: 'consultancy' },
             { name: 'Course Expertises', href: '/admin/expertises', icon: Briefcase, badgeKey: 'expertises' },
             { name: 'Support Tickets', href: '/admin/support', icon: LifeBuoy, badgeKey: 'support' },
             { name: 'Manage Departments', href: '/admin/departments', icon: GraduationCap, badgeKey: 'departments' },
             { name: 'Manage Courses', href: '/admin/courses', icon: BookOpen, badgeKey: 'courses' },
+            { name: 'Coupons', href: '/admin/coupons', icon: TicketPercent },
+            { name: 'Settings', href: '/admin/settings', icon: Settings },
             { name: 'Visitors', href: '/admin/visitors', icon: Eye },
             { name: 'Profile', href: '/admin/profile', icon: User },
             { name: 'Logout', href: '/auth/force-signout?reason=manual', icon: LogOut },

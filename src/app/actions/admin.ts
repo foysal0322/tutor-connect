@@ -388,3 +388,100 @@ export async function adjustUserBalance(formData: FormData) {
     return { error: 'Failed to adjust wallet balance.' };
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Consultancy topics + requests
+// ──────────────────────────────────────────────────────────────────────────
+
+async function requireAdmin() {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'ADMIN') {
+    throw new Error('Not authorized');
+  }
+  return session;
+}
+
+export async function addConsultancyTopic(formData: FormData) {
+  await requireAdmin();
+  const title = (formData.get('title') as string)?.trim();
+  const description = (formData.get('description') as string)?.trim() || null;
+  const priceRaw = formData.get('price') as string;
+  const isActive = formData.get('isActive') === 'on';
+
+  if (!title) return { error: 'Title is required.' };
+  const price = priceRaw ? parseFloat(priceRaw) : 0;
+  if (Number.isNaN(price) || price < 0) return { error: 'Price must be a non-negative number.' };
+
+  try {
+    await prisma.consultancyTopic.create({
+      data: { title, description, price, isActive },
+    });
+    revalidatePath('/admin/consultancy');
+    revalidatePath('/consultancy');
+    return { success: true };
+  } catch (err: any) {
+    if (err.code === 'P2002') return { error: 'A topic with this title already exists.' };
+    return { error: 'Failed to add topic.' };
+  }
+}
+
+export async function updateConsultancyTopic(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get('id') as string;
+  const title = (formData.get('title') as string)?.trim();
+  const description = (formData.get('description') as string)?.trim() || null;
+  const priceRaw = formData.get('price') as string;
+  const isActive = formData.get('isActive') === 'on';
+
+  if (!id || !title) return { error: 'ID and title are required.' };
+  const price = priceRaw ? parseFloat(priceRaw) : 0;
+  if (Number.isNaN(price) || price < 0) return { error: 'Price must be a non-negative number.' };
+
+  try {
+    await prisma.consultancyTopic.update({
+      where: { id },
+      data: { title, description, price, isActive },
+    });
+    revalidatePath('/admin/consultancy');
+    revalidatePath('/consultancy');
+    return { success: true };
+  } catch (err: any) {
+    if (err.code === 'P2002') return { error: 'A topic with this title already exists.' };
+    return { error: 'Failed to update topic.' };
+  }
+}
+
+export async function deleteConsultancyTopic(id: string) {
+  await requireAdmin();
+  try {
+    // Soft check — if any request references this topic, refuse so the
+    // historical booking keeps its link. Admin can mark isActive=false to
+    // hide it from the public page instead.
+    const inUse = await prisma.consultancyRequest.count({ where: { topicId: id } });
+    if (inUse > 0) {
+      return {
+        error: `${inUse} booking(s) reference this topic. Deactivate it instead of deleting.`,
+      };
+    }
+    await prisma.consultancyTopic.delete({ where: { id } });
+    revalidatePath('/admin/consultancy');
+    revalidatePath('/consultancy');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to delete topic.' };
+  }
+}
+
+export async function setConsultancyRequestStatus(id: string, status: string) {
+  await requireAdmin();
+  if (!['PENDING', 'ASSIGNED', 'COMPLETED', 'CANCELLED'].includes(status)) {
+    return { error: 'Invalid status.' };
+  }
+  try {
+    await prisma.consultancyRequest.update({ where: { id }, data: { status } });
+    revalidatePath('/admin/consultancy');
+    return { success: true };
+  } catch (err: any) {
+    return { error: 'Failed to update request status.' };
+  }
+}

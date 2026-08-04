@@ -65,22 +65,6 @@ export default function ProfileForm({
       {success && <FormAlert tone="success">Profile updated successfully!</FormAlert>}
 
       <form action={handleSubmit} noValidate>
-        {isAdmin && (
-          <FormSection label="Role" icon={<UserCircle size={14} />} columns={1}>
-            <Select
-              containerClassName={fieldClass}
-              name="role"
-              label="Role"
-              defaultValue={user.role}
-              options={[
-                { value: 'STUDENT', label: 'Student' },
-                { value: 'TUTOR', label: 'Tutor' },
-                { value: 'ADMIN', label: 'Admin' },
-              ]}
-            />
-          </FormSection>
-        )}
-
         <FormSection label="Personal Information" icon={<User size={14} />}>
           <Input
             containerClassName={fieldClass}

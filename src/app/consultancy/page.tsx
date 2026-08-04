@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { MessageSquareText, LogIn, CheckCircle2, IdCard, Tags } from 'lucide-react';
+import { MessageSquareText, LogIn, CheckCircle2, IdCard, Tags, Wallet } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
+import { createNotification } from '@/lib/notification';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -18,9 +19,12 @@ import {
   gridFullClass,
 } from '@/components/forms';
 import ConsultancySuccessToast from './ConsultancySuccessToast';
+import { formatBDT } from '@/lib/format';
 
-/** Each student is allowed at most this many free consultancy sessions. */
-const MAX_FREE_CONSULTANCY = 2;
+/** Each student is allowed at most this many FREE consultancy sessions.
+ *  Hardcoded fallback if PlatformSetting row is absent (Stream E will
+ *  override this with a configurable value). */
+const DEFAULT_FREE_QUOTA = 2;
 
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
@@ -33,13 +37,24 @@ export default async function ConsultancyPage() {
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; nsuId?: string; name?: string | null } | undefined;
 
-  // Precompute usage so the UI can show remaining slots (guests default to 2/2).
-  const usedCount = sessionUser?.id
+  // Active topics shown on the public page.
+  const topics = await prisma.consultancyTopic.findMany({
+    where: { isActive: true },
+    orderBy: [{ price: 'asc' }, { title: 'asc' }],
+  });
+
+  // Free quota is computed against the student's history of FREE bookings
+  // only (pricePaid == null or 0). Paid bookings don't consume the quota.
+  const usedFreeCount = sessionUser?.id
     ? await prisma.consultancyRequest.count({
-        where: { studentId: sessionUser.id },
+        where: {
+          studentId: sessionUser.id,
+          OR: [{ pricePaid: null }, { pricePaid: 0 }],
+        },
       })
     : 0;
-  const remaining = Math.max(0, MAX_FREE_CONSULTANCY - usedCount);
+  const freeQuota = DEFAULT_FREE_QUOTA;
+  const remainingFree = Math.max(0, freeQuota - usedFreeCount);
 
   async function submitConsultancy(formData: FormData) {
     'use server';
@@ -47,71 +62,130 @@ export default async function ConsultancyPage() {
     const submittingSession = await getServerSession(authOptions);
     const user = submittingSession?.user as { id?: string } | undefined;
     if (!user?.id) {
-      // Not logged in — bounce to sign-in, then back here.
       redirect('/auth/signin?callbackUrl=/consultancy');
     }
 
     const student = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, name: true, nsuId: true, email: true },
+      select: { id: true, name: true, nsuId: true, email: true, balance: true },
     });
+    if (!student) throw new Error('Account not found. Please register first.');
 
-    if (!student) {
-      throw new Error('Account not found. Please register first.');
-    }
+    const topicId = (formData.get('topicId') as string) || null;
+    const details = (formData.get('details') as string)?.trim();
 
-    // Enforce the free-quota cap.
-    const existing = await prisma.consultancyRequest.count({
-      where: { studentId: student.id },
-    });
-    if (existing >= MAX_FREE_CONSULTANCY) {
-      throw new Error(
-        `You have already used your ${MAX_FREE_CONSULTANCY} free consultancy sessions.`,
-      );
-    }
+    // Resolve the linked topic (or fall back to legacy free-text behavior).
+    const topic = topicId
+      ? await prisma.consultancyTopic.findUnique({ where: { id: topicId } })
+      : null;
 
-    const topic = formData.get('topic') as string;
-    const details = formData.get('details') as string;
+    if (topicId && !topic) throw new Error('Selected topic no longer exists.');
+    if (!details) throw new Error('Please describe what you need help with.');
 
-    await prisma.consultancyRequest.create({
-      data: {
-        studentId: student.id,
-        topic,
-        details,
-      },
-    });
+    const isFree = !topic || topic.price === 0;
 
-    try {
-      const { notifyConsultancyRequest } = await import('@/lib/discord');
-      await notifyConsultancyRequest({
-        studentName: student.name,
-        topic,
+    // Free-path: enforce quota. Paid-path: enforce wallet balance.
+    if (isFree) {
+      const usedFree = await prisma.consultancyRequest.count({
+        where: {
+          studentId: student.id,
+          OR: [{ pricePaid: null }, { pricePaid: 0 }],
+        },
       });
-    } catch (err) {
-      console.error('Failed to send consultancy discord notification', err);
+      if (usedFree >= DEFAULT_FREE_QUOTA) {
+        throw new Error(`You have already used your ${DEFAULT_FREE_QUOTA} free consultancy sessions.`);
+      }
     }
 
+    // Atomically: debit wallet (if paid) + create the request. Reuses the
+    // pattern from adjustUserBalance — server-authoritative balance check
+    // inside a transaction so two concurrent bookings can't drain a wallet.
     try {
-      await sendSupportEmail({
-        to: student.email,
-        subject: `Consultancy Request Confirmed: ${topic} - NSUone`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #4f46e5;">We Received Your Consultancy Request!</h2>
-            <p>Hello ${student.name},</p>
-            <p>We have received your request for a free consultation session on <strong>${topic}</strong>.</p>
-            <p style="background: #f8fafc; padding: 12px; border-left: 4px solid #4f46e5; border-radius: 4px;"><em>"${details}"</em></p>
-            <p>One of our senior mentors will review your request and contact you shortly via email or phone. If you have any questions before the session, reply directly to this email!</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-            <p style="color: #64748b; font-size: 0.9em;">NSUone Mentorship & Consultancy Team</p>
-          </div>
-        `,
-      });
-    } catch (mailErr) {
-      console.error('Failed to send consultancy confirmation email:', mailErr);
-    }
+      const result = await prisma.$transaction(async (tx) => {
+        if (!isFree && topic) {
+          const fresh = await tx.user.findUnique({
+            where: { id: student.id },
+            select: { balance: true },
+          });
+          if (!fresh || fresh.balance < topic.price) {
+            throw new Error(
+              `INSUFFICIENT:${fresh?.balance ?? 0}:${topic.price}`,
+            );
+          }
+          await tx.user.update({
+            where: { id: student.id },
+            data: { balance: { decrement: topic.price } },
+          });
+          await tx.walletTransaction.create({
+            data: {
+              userId: student.id,
+              amount: -topic.price,
+              type: 'CONSULTANCY_PAYMENT',
+              description: `Consultancy booking: ${topic.title}`,
+              referenceId: topic.id,
+            },
+          });
+        }
 
-    redirect('/consultancy?success=true');
+        return tx.consultancyRequest.create({
+          data: {
+            studentId: student.id,
+            topic: topic?.title ?? 'General Consultancy',
+            details,
+            topicId: topic?.id ?? null,
+            pricePaid: topic?.price ?? null,
+          },
+        });
+      });
+
+      // Booking confirmation email (fire-and-forget).
+      try {
+        await sendSupportEmail({
+          to: student.email,
+          subject: `Consultancy Request Confirmed: ${result.topic} - NSUone`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #4f46e5;">We Received Your Consultancy Request!</h2>
+              <p>Hello ${student.name},</p>
+              <p>We have received your request for ${topic?.price ? 'a paid' : 'a free'} consultation on <strong>${result.topic}</strong>.</p>
+              ${topic?.price ? `<p><strong>Amount paid:</strong> ${formatBDT(topic.price)} BDT (debited from your Campus Wallet).</p>` : ''}
+              <p style="background: #f8fafc; padding: 12px; border-left: 4px solid #4f46e5; border-radius: 4px;"><em>"${details}"</em></p>
+              <p>One of our senior mentors will review your request and contact you shortly via email or phone.</p>
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+              <p style="color: #64748b; font-size: 0.9em;">NSUone Mentorship & Consultancy Team</p>
+            </div>
+          `,
+        });
+      } catch (mailErr) {
+        console.error('Failed to send consultancy confirmation email:', mailErr);
+      }
+
+      try {
+        await createNotification(
+          student.id,
+          'Consultancy Booked',
+          `Your ${isFree ? 'free' : 'paid'} consultancy request for "${result.topic}" was received.`,
+          '/consultancy',
+        );
+      } catch (err) {
+        console.error('Failed to notify user of consultancy booking:', err);
+      }
+
+      redirect('/consultancy?success=true');
+    } catch (err: any) {
+      if (err?.message?.startsWith('INSUFFICIENT:')) {
+        const [, balance, price] = err.message.split(':');
+        throw new Error(
+          `Insufficient wallet balance. You need ${price} BDT but have ${balance} BDT. Recharge your wallet first.`,
+        );
+      }
+      // Next.js uses redirect() by throwing a digest — rethrow non-INSUFFICIENT errors.
+      if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
+        throw err;
+      }
+      console.error('Consultancy booking error:', err);
+      throw new Error('Failed to submit consultancy request.');
+    }
   }
 
   // -------- Guest state: gate behind login --------
@@ -134,13 +208,13 @@ export default async function ConsultancyPage() {
             }}
           >
             <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
-              Please log in first to claim your {MAX_FREE_CONSULTANCY} free consultancy sessions.
+              Please log in first to claim your {freeQuota} free consultancy sessions or book a premium topic.
             </p>
             <Link
               href={`/auth/signin?callbackUrl=${encodeURIComponent('/consultancy')}`}
               className="btn-primary"
             >
-              <LogIn size={18} /> Login to get free consultancy
+              <LogIn size={18} /> Login to continue
             </Link>
           </div>
         </FormCard>
@@ -158,57 +232,34 @@ export default async function ConsultancyPage() {
     fontSize: '0.85rem',
     fontWeight: 600,
     background:
-      remaining > 0 ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-    color: remaining > 0 ? 'var(--primary)' : 'var(--danger)',
+      remainingFree > 0 ? 'rgba(79, 70, 229, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+    color: remainingFree > 0 ? 'var(--primary)' : 'var(--danger)',
   };
 
-  // -------- Quota exhausted --------
-  if (remaining === 0) {
-    return (
-      <FormPage>
-        <FormCard
-          icon={<MessageSquareText size={28} />}
-          title="Free Consultancy Quota Used"
-          subtitle="You've used all your complimentary consultancy sessions."
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              padding: '2rem 1rem',
-              textAlign: 'center',
-            }}
-          >
-            <CheckCircle2 size={40} style={{ color: 'var(--primary)' }} />
-            <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
-              You&apos;ve used all {MAX_FREE_CONSULTANCY} of your free consultancy sessions.
-              Our team will reach out about your pending requests.
-            </p>
-          </div>
-        </FormCard>
-      </FormPage>
-    );
-  }
+  const hasUsableTopics = topics.length > 0;
 
-  // -------- Logged in with remaining slots --------
   return (
     <FormPage>
       <FormCard
         icon={<MessageSquareText size={28} />}
-        title="Get Free Consultancy"
-        subtitle="Book a one-on-one session with a senior mentor for course selection, semester planning, or career guidance."
+        title="Book a Consultancy Session"
+        subtitle="Free topics count against your complimentary quota. Premium topics are paid from your Campus Wallet."
       >
         <ConsultancySuccessToast />
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <span style={quotaBadgeStyle}>
             <MessageSquareText size={14} />
-            {remaining} of {MAX_FREE_CONSULTANCY} free sessions remaining
+            {remainingFree} of {freeQuota} free sessions remaining
           </span>
         </div>
+
+        {!hasUsableTopics && (
+          <p className="text-muted text-center text-sm" style={{ marginBottom: '1rem' }}>
+            No consultancy topics are available right now. Please check back soon.
+          </p>
+        )}
+
         <form action={submitConsultancy} noValidate>
-          {/* Identity field (pre-filled, read-only) — title omitted per client request */}
           <FormSection columns={1}>
             <Input
               containerClassName={fieldClass}
@@ -222,23 +273,21 @@ export default async function ConsultancyPage() {
             />
           </FormSection>
 
-          {/* Consultancy details — title omitted per client request */}
           <FormSection>
-            <Select
-              containerClassName={fieldClass}
-              name="topic"
-              label="Topic"
-              labelIcon={<Tags size={14} />}
-              required
-              placeholderOption="Select a topic"
-              options={[
-                { value: 'Course Selection Advice', label: 'Course Selection Advice' },
-                { value: 'Semester Planning', label: 'Semester Planning' },
-                { value: 'Internship Guidance', label: 'Internship Guidance' },
-                { value: 'Career Advice', label: 'Career Advice' },
-                { value: 'Study Strategy', label: 'Study Strategy' },
-              ]}
-            />
+            {hasUsableTopics ? (
+              <Select
+                containerClassName={fieldClass}
+                name="topicId"
+                label="Topic"
+                labelIcon={<Tags size={14} />}
+                required
+                placeholderOption="Select a topic"
+                options={topics.map((t) => ({
+                  value: t.id,
+                  label: t.price > 0 ? `${t.title} — ${formatBDT(t.price)} BDT` : `${t.title} (Free)`,
+                }))}
+              />
+            ) : null}
             <Textarea
               containerClassName={`${fieldClass} ${gridFullClass}`}
               name="details"
@@ -250,7 +299,21 @@ export default async function ConsultancyPage() {
             />
           </FormSection>
 
-          <FormSubmit icon={<MessageSquareText size={18} />}>Submit Request</FormSubmit>
+          <div
+            className="text-xs text-muted"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '-0.5rem', marginBottom: '1rem' }}
+          >
+            <Wallet size={12} /> Paid topics are debited from your Campus Wallet at booking.
+            See our{' '}
+            <Link href="/consultancy-policy" className="text-primary font-semibold">
+              Consultancy Policy
+            </Link>
+            .
+          </div>
+
+          <FormSubmit icon={<MessageSquareText size={18} />} disabled={!hasUsableTopics}>
+            Submit Request
+          </FormSubmit>
         </form>
       </FormCard>
     </FormPage>
