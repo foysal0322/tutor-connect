@@ -10,8 +10,17 @@ import { useToast } from '@/components/ToastProvider';
 /**
  * Delete-user action with a proper confirmation dialog instead of the old
  * window.confirm() call. See FRONTEND_AUDIT.md G4.
+ *
+ * Optional `onDelete(userId)` callback lets the parent component update
+ * its local list state without needing a full router refresh.
  */
-export default function DeleteUserButton({ userId }: { userId: string }) {
+export default function DeleteUserButton({
+  userId,
+  onDelete,
+}: {
+  userId: string;
+  onDelete?: (userId: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -25,6 +34,7 @@ export default function DeleteUserButton({ userId }: { userId: string }) {
       toast.error(res.error);
     } else {
       toast.success('User deleted.');
+      onDelete?.(userId);
     }
   }
 
