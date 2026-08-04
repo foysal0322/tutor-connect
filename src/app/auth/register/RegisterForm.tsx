@@ -19,6 +19,11 @@ import {
   fieldClass,
   toggleClass,
   footerLinkClass,
+  consentClass,
+  consentCheckboxClass,
+  consentLabelClass,
+  consentErrorClass,
+  consentInvalidClass,
 } from "@/components/forms";
 
 export default function RegisterForm({ departments }: { departments: any[] }) {
@@ -29,10 +34,17 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [agreeError, setAgreeError] = useState("");
   const form = useZodForm(registerUserSchema);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!agreed) {
+      setAgreeError("You must agree to the Privacy Policy to create an account.");
+      return;
+    }
+    setAgreeError("");
     const formData = new FormData(e.currentTarget);
     if (!form.validateAll(formData)) return;
     setLoading(true);
@@ -205,6 +217,31 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               }
             />
           </FormSection>
+
+          {/* Consent */}
+          <div className={`${consentClass} ${agreeError ? consentInvalidClass : ""}`}>
+            <input
+              id="agreeToPolicy"
+              name="agreeToPolicy"
+              type="checkbox"
+              className={consentCheckboxClass}
+              checked={agreed}
+              onChange={(e) => {
+                setAgreed(e.target.checked);
+                if (e.target.checked) setAgreeError("");
+              }}
+            />
+            <div>
+              <label htmlFor="agreeToPolicy" className={consentLabelClass}>
+                I agree to the nsuOne{" "}
+                <Link href="/privacy-policy" className={footerLinkClass} target="_blank">
+                  Privacy Policy
+                </Link>{" "}
+                and Terms of Service.
+              </label>
+              {agreeError && <span className={consentErrorClass}>{agreeError}</span>}
+            </div>
+          </div>
 
           <FormSubmit
             loading={loading}

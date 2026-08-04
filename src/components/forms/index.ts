@@ -12,6 +12,12 @@ export const gridFullClass = s.gridFull;
 export const toggleClass = s.toggle;
 /** Violet link style used inside <FormCard footer>. */
 export const footerLinkClass = s.footerLink;
+/** Consent checkbox row (e.g. privacy policy agreement). */
+export const consentClass = s.consent;
+export const consentCheckboxClass = s.consentCheckbox;
+export const consentLabelClass = s.consentLabel;
+export const consentErrorClass = s.consentError;
+export const consentInvalidClass = s.consentInvalid;
 /** Gradient pill link for a primary post-form action (e.g. success "Sign In Now"). */
 export const homeLinkClass = s.homeLink;
 

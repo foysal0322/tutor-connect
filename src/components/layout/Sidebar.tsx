@@ -17,6 +17,7 @@ import {
   Users,
   Eye,
   LifeBuoy,
+  Wallet,
 } from 'lucide-react';
 import styles from './layout.module.css';
 
@@ -64,9 +65,9 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
       if (pathname === '/admin/courses') keyToUpdate = 'courses';
       if (pathname === '/admin/expertises') keyToUpdate = 'expertises';
     } else {
-      // Member (student or tutor): visiting the Payments page marks pending
-      // payments as seen.
-      if (pathname === '/student/payments') keyToUpdate = 'paymentsDue';
+      // Member (student or tutor): visiting the unified Money page marks
+      // pending payments as seen.
+      if (pathname === '/wallet') keyToUpdate = 'paymentsDue';
     }
 
     if (keyToUpdate) {
@@ -133,6 +134,10 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
         heading: null,
         links: [
           { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+          // Unified Money hub — replaces the three separate Payments /
+          // Earnings & Withdrawals / My Wallet entries (Policy #35). Carries
+          // the payments-due badge so members still get pinged about action.
+          { name: 'Money', href: '/wallet', icon: Wallet, badgeKey: 'paymentsDue' },
         ],
       },
       {
@@ -140,20 +145,17 @@ export default function Sidebar({ role, isOpen, onClose, currentCounts }: Sideba
         links: [
           { name: 'Find a Tutor', href: '/find-tutor', icon: BookOpen },
           { name: 'Tuition Requests', href: '/student/request-tutor', icon: Calendar },
-          { name: 'Payments', href: '/student/payments', icon: CreditCard, badgeKey: 'paymentsDue' },
         ],
       },
       {
         heading: 'Teaching',
         links: [
           { name: 'Offer Course', href: '/tutor/expertise', icon: GraduationCap },
-          { name: 'Earnings & Withdrawals', href: '/tutor/earnings', icon: DollarSign },
         ],
       },
       {
         heading: 'Account',
         links: [
-          { name: 'My Wallet', href: '/wallet', icon: CreditCard },
           { name: 'Consultancy', href: '/consultancy', icon: MessageSquare },
           { name: 'My Profile', href: '/profile', icon: User },
           { name: 'Logout', href: '/auth/force-signout?reason=manual', icon: LogOut },

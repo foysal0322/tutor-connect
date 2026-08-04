@@ -447,6 +447,82 @@
   background: var(--form-accent-soft);
 }
 
+/* ---------- Consent checkbox (privacy policy etc.) ---------- */
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  background: var(--form-field-bg);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.consent:hover {
+  border-color: var(--form-accent-hover-border);
+  background: var(--form-field-bg-hover);
+}
+
+.consentInvalid {
+  border-color: rgba(220, 38, 38, 0.45);
+  background: rgba(254, 242, 242, 0.6);
+}
+
+.consentCheckbox {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 1.5px solid rgba(15, 23, 42, 0.25);
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.consentCheckbox:checked {
+  background: linear-gradient(135deg, var(--form-accent, #7c3aed), var(--form-accent-2, #2563eb));
+  border-color: var(--form-accent-focus, #8b5cf6);
+}
+
+.consentCheckbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.consentCheckbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--form-accent-ring);
+}
+
+.consentLabel {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+  cursor: pointer;
+  user-select: none;
+}
+
+.consentError {
+  display: block;
+  color: #e11d48;
+  font-size: 0.78rem;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
 /* ---------- Success state ---------- */
 .success {
   text-align: center;
