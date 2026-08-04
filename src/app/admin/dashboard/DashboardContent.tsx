@@ -7,9 +7,10 @@ import { format } from 'date-fns';
 import {
   Users, GraduationCap, BookOpen, Clock, DollarSign, Activity,
   Briefcase, Building, CreditCard, LifeBuoy, RefreshCw,
-  Calendar, Sparkles, ArrowRight, AlertTriangle,
+  Calendar, Sparkles, AlertTriangle,
   TrendingUp, UserCheck
 } from 'lucide-react';
+import { KPI } from '@/components/ui/KPI';
 import styles from './admin-dashboard.module.css';
 
 // Recharts is the single biggest dependency in the admin bundle (~400KB).
@@ -112,7 +113,13 @@ export default function DashboardContent({ data, refreshedAt }: { data: Dashboar
 
       {/* ---------- ACTIONABLE ALERT BANNER ---------- */}
       {totalActionsNeeded > 0 && (
-        <div className={styles.banner} role="status">
+        <div
+          className={styles.banner}
+          role="status"
+          aria-live="polite"
+          aria-label={`${totalActionsNeeded} actionable items pending`}
+        >
+          <span className={styles.bannerAccentBar} aria-hidden="true" />
           <div className={styles.bannerLead}>
             <span className={styles.bannerIcon}>
               <AlertTriangle size={18} aria-hidden="true" />
@@ -151,152 +158,80 @@ export default function DashboardContent({ data, refreshedAt }: { data: Dashboar
         </div>
       )}
 
-      {/* ---------- PRIMARY KPI GRID ---------- */}
-      <div className={styles.kpiGrid}>
-        {/* Students */}
-        <div className={styles.kpi}>
-          <div className={styles.kpiHead}>
-            <div className={styles.kpiLabelBlock}>
-              <span className={styles.kpiLabel}>Student Community</span>
-              <div className={styles.kpiValue}>{stats.totalStudents.toLocaleString()}</div>
-            </div>
-            <span className={`${styles.kpiIcon} ${styles.kpiIconPrimary}`}>
-              <GraduationCap size={20} aria-hidden="true" />
-            </span>
-          </div>
-          <div className={styles.kpiFoot}>
-            <span className={styles.kpiFootStat}>
-              <UserCheck size={13} className="text-success flex-shrink-0" aria-hidden="true" />
-              Registered Students
-            </span>
-            <Link href="/admin/users" className={`${styles.kpiLink} ${styles.kpiLinkPrimary}`}>
-              View <ArrowRight size={12} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Tutors */}
-        <div className={`${styles.kpi} ${styles.kpiSuccess}`}>
-          <div className={styles.kpiHead}>
-            <div className={styles.kpiLabelBlock}>
-              <span className={styles.kpiLabel}>Verified Tutors</span>
-              <div className={styles.kpiValue}>{stats.totalTutors.toLocaleString()}</div>
-            </div>
-            <span className={`${styles.kpiIcon} ${styles.kpiIconSuccess}`}>
-              <Users size={20} aria-hidden="true" />
-            </span>
-          </div>
-          <div className={styles.kpiFoot}>
-            <span className={styles.kpiFootStat}>
-              <Briefcase size={13} className="text-success-hover flex-shrink-0" aria-hidden="true" />
-              {stats.totalExpertises} Offerings
-            </span>
-            <Link href="/admin/users" className={`${styles.kpiLink} ${styles.kpiLinkSuccess}`}>
-              View <ArrowRight size={12} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Marketplace Volume */}
-        <div className={`${styles.kpi} ${styles.kpiAccent}`}>
-          <div className={styles.kpiHead}>
-            <div className={styles.kpiLabelBlock}>
-              <span className={styles.kpiLabel}>Tuition Volume</span>
-              <div className={styles.kpiValue}>৳{stats.totalBudget.toLocaleString()}</div>
-            </div>
-            <span className={`${styles.kpiIcon} ${styles.kpiIconAccent}`}>
-              <DollarSign size={20} aria-hidden="true" />
-            </span>
-          </div>
-          <div className={styles.kpiFoot}>
-            <span className={styles.kpiFootStat}>
-              <TrendingUp size={13} className="text-accent-hover flex-shrink-0" aria-hidden="true" />
-              Total Budget Sum
-            </span>
-            <Link href="/admin/withdrawals" className={`${styles.kpiLink} ${styles.kpiLinkAccent}`}>
-              Payouts <ArrowRight size={12} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Requests */}
-        <div className={`${styles.kpi} ${styles.kpiInfo}`}>
-          <div className={styles.kpiHead}>
-            <div className={styles.kpiLabelBlock}>
-              <span className={styles.kpiLabel}>Tuition Requests</span>
-              <div className={styles.kpiValue}>{stats.totalRequests.toLocaleString()}</div>
-            </div>
-            <span className={`${styles.kpiIcon} ${styles.kpiIconInfo}`}>
-              <BookOpen size={20} aria-hidden="true" />
-            </span>
-          </div>
-          <div className={styles.kpiFoot}>
-            <span className={styles.kpiFootStat}>
-              <Clock size={13} className="text-accent-hover flex-shrink-0" aria-hidden="true" />
-              {stats.pendingRequests} Pending
-            </span>
-            <Link href="/admin/requests" className={`${styles.kpiLink} ${styles.kpiLinkInfo}`}>
-              Manage <ArrowRight size={12} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ---------- SECONDARY OPERATIONAL METRICS ROW ---------- */}
-      <div className={styles.metricGrid}>
-        <Link href="/admin/withdrawals" className={styles.metricTile}>
-          <div className={styles.metricTileLead}>
-            <span className={`${styles.metricTileIcon} ${styles.metricTileIconAccent}`}>
-              <CreditCard size={20} aria-hidden="true" />
-            </span>
-            <div className={styles.metricTileBody}>
-              <div className={styles.metricTileLabel}>Tutor Withdrawals</div>
-              <div className={styles.metricTileValue}>
-                {stats.pendingWithdrawalsCount} Pending <span className="text-muted font-medium">(৳{stats.pendingWithdrawalsAmount.toLocaleString()})</span>
-              </div>
-            </div>
-          </div>
-          <ArrowRight size={16} className={styles.metricTileArrow} aria-hidden="true" />
-        </Link>
-
-        <Link href="/admin/requests" className={styles.metricTile}>
-          <div className={styles.metricTileLead}>
-            <span className={`${styles.metricTileIcon} ${styles.metricTileIconDanger}`}>
-              <RefreshCw size={20} aria-hidden="true" />
-            </span>
-            <div className={styles.metricTileBody}>
-              <div className={styles.metricTileLabel}>Refund Requests</div>
-              <div className={styles.metricTileValue}>{stats.pendingRefunds} Pending Resolution</div>
-            </div>
-          </div>
-          <ArrowRight size={16} className={styles.metricTileArrow} aria-hidden="true" />
-        </Link>
-
-        <Link href="/admin/support" className={styles.metricTile}>
-          <div className={styles.metricTileLead}>
-            <span className={`${styles.metricTileIcon} ${styles.metricTileIconInfo}`}>
-              <LifeBuoy size={20} aria-hidden="true" />
-            </span>
-            <div className={styles.metricTileBody}>
-              <div className={styles.metricTileLabel}>Support Tickets</div>
-              <div className={styles.metricTileValue}>{stats.pendingSupportTickets} Open Tickets</div>
-            </div>
-          </div>
-          <ArrowRight size={16} className={styles.metricTileArrow} aria-hidden="true" />
-        </Link>
-
-        <Link href="/admin/courses" className={styles.metricTile}>
-          <div className={styles.metricTileLead}>
-            <span className={`${styles.metricTileIcon} ${styles.metricTileIconPrimary}`}>
-              <Building size={20} aria-hidden="true" />
-            </span>
-            <div className={styles.metricTileBody}>
-              <div className={styles.metricTileLabel}>Academic Catalog</div>
-              <div className={styles.metricTileValue}>{stats.totalDepartments} Depts • {stats.totalCourses} Courses</div>
-            </div>
-          </div>
-          <ArrowRight size={16} className={styles.metricTileArrow} aria-hidden="true" />
-        </Link>
+      {/* ---------- PRIMARY KPI GRID (compact tiles) ---------- */}
+      <div className={styles.compactKpiGrid}>
+        <KPI
+          label="Students"
+          value={stats.totalStudents.toLocaleString()}
+          icon={<GraduationCap size={16} aria-hidden="true" />}
+          tone="primary"
+          variant="accent"
+          hint={<><UserCheck size={11} aria-hidden="true" /> Registered</>}
+          href="/admin/users"
+        />
+        <KPI
+          label="Verified Tutors"
+          value={stats.totalTutors.toLocaleString()}
+          icon={<Users size={16} aria-hidden="true" />}
+          tone="success"
+          variant="accent"
+          hint={<><Briefcase size={11} aria-hidden="true" /> {stats.totalExpertises} offerings</>}
+          href="/admin/users"
+        />
+        <KPI
+          label="Tuition Volume"
+          value={`৳${stats.totalBudget.toLocaleString()}`}
+          icon={<DollarSign size={16} aria-hidden="true" />}
+          tone="accent"
+          variant="accent"
+          hint={<><TrendingUp size={11} aria-hidden="true" /> Total budget</>}
+          href="/admin/withdrawals"
+        />
+        <KPI
+          label="Tuition Requests"
+          value={stats.totalRequests.toLocaleString()}
+          icon={<BookOpen size={16} aria-hidden="true" />}
+          tone="info"
+          variant="accent"
+          hint={<><Clock size={11} aria-hidden="true" /> {stats.pendingRequests} pending</>}
+          href="/admin/requests"
+        />
+        <KPI
+          label="Pending Withdrawals"
+          value={stats.pendingWithdrawalsCount.toLocaleString()}
+          icon={<CreditCard size={16} aria-hidden="true" />}
+          tone="accent"
+          variant="accent"
+          hint={`৳${stats.pendingWithdrawalsAmount.toLocaleString()} queued`}
+          href="/admin/withdrawals"
+        />
+        <KPI
+          label="Pending Refunds"
+          value={stats.pendingRefunds.toLocaleString()}
+          icon={<RefreshCw size={16} aria-hidden="true" />}
+          tone="danger"
+          variant="accent"
+          hint="Requires resolution"
+          href="/admin/requests"
+        />
+        <KPI
+          label="Support Tickets"
+          value={stats.pendingSupportTickets.toLocaleString()}
+          icon={<LifeBuoy size={16} aria-hidden="true" />}
+          tone="info"
+          variant="accent"
+          hint="Open tickets"
+          href="/admin/support"
+        />
+        <KPI
+          label="Catalog"
+          value={`${stats.totalDepartments} / ${stats.totalCourses}`}
+          icon={<Building size={16} aria-hidden="true" />}
+          tone="primary"
+          variant="accent"
+          hint="Departments / Courses"
+          href="/admin/courses"
+        />
       </div>
 
       {/* ---------- ANALYTICAL VISUALIZATIONS ROW ---------- */}

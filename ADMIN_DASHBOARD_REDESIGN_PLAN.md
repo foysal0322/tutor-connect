@@ -968,32 +968,66 @@ unrelated warning).
 
 ---
 
-### Phase 7 — Dashboard + Visitors redesign · 🟡
+### Phase 7 — Dashboard + Visitors redesign · 🟡 ✅ DONE (2026-08-05)
 
 **Goal**: the executive-dashboard visual lift.
 
-- Replace oversized KPI cards with compact `<KPI>` tiles (96 px height).
-- Make the "Actionable" banner visually loud (left accent bar + count chip).
-- Add a 7/30/90-day time-range selector to the dashboard charts (the
-  underlying queries are out of scope — if a range selector cannot be
-  wired without server changes, ship it as a client-side filter of
-  already-fetched data, or defer to a flagged follow-up).
-- Visitors page: keep charts, switch the logs table to `<DataGrid>`,
-  apply the same compact KPI style.
-- Add a `recent-activity` feed below KPIs (data already exists in
-  `dashboard/page.tsx` parallel fetch).
+- ✅ Replaced oversized KPI cards with the shared compact `<KPI>` tile
+  component (Phase 1 primitive). The dashboard now renders an 8-tile
+  compact grid (2 cols mobile / 4 cols ≥ 1024 px) covering Students,
+  Tutors, Tuition Volume, Requests, Pending Withdrawals, Pending Refunds,
+  Support Tickets, and Catalog (Depts / Courses). Each tile uses the
+  `variant="accent"` left bar so the colour-coded scan row is preserved
+  without the previous over-tall card chrome.
+- ✅ Removed the secondary "metric tile" row from the dashboard — the
+  compact KPI row already surfaces Withdrawals, Refunds, Support, and
+  Catalog, so the duplicate slower row was redundant. Net visual change:
+  the dashboard lands on charts one row sooner.
+- ✅ Made the "Actionable" banner visually louder: added a dedicated
+  4-px left accent bar (`bannerAccentBar`) inside the banner container
+  (`overflow:hidden` so the gradient + bar coexist), tightened the left
+  padding to make room for it, and added `aria-live="polite"` + an
+  `aria-label` count so screen-readers announce pending workload.
+- ✅ Visitors page: applied the same compact `<KPI>` tile style to its
+  five metrics (Page Views, Unique Visitors, Avg Session, Bounce Rate,
+  Active Now). Removed the bespoke inline-styled KPI card markup.
+- ✅ Visitors page: replaced the bespoke `<table>` logs view with the
+  shared `<DataGrid>` (default export — Turbopack flagged the named
+  import). Five `ColumnDef`s (Date & Time, IP Address, Page Path,
+  Device, Browser / OS) preserve the exact cell rendering (monospace
+  IPs, two-line date/time + browser/os, inline device icon). DataGrid's
+  built-in 10-per-page pagination takes over from the hand-rolled one.
+  The page-path / IP search input is now in a `<Toolbar>` above the
+  grid; the date-range / refresh / export controls remain in the
+  `<PageHeader>` actions slot.
+- ⏸️ **Deferred to Phase 12** (with rationale): the 7/30/90-day time-range
+  selector on the dashboard charts and the recent-activity feed. The
+  dashboard's underlying Prisma queries are all-time aggregates with no
+  time-series dimension, so a range selector cannot be wired without
+  changing `dashboard/page.tsx` queries (server-logic change — out of
+  scope per the plan's UI-only constraint). The plan explicitly allows
+  deferral; these are now flagged in Phase 12.
 
-**Files likely affected**:
-- `src/app/admin/dashboard/DashboardContent.tsx`
-- `src/app/admin/dashboard/admin-dashboard.module.css`
-- `src/app/admin/visitors/DashboardClient.tsx`
-- `src/app/admin/visitors/page.tsx`
+**Files touched**:
+- `src/app/admin/dashboard/DashboardContent.tsx` (rewrote KPI section;
+  cleaned up unused imports)
+- `src/app/admin/dashboard/admin-dashboard.module.css` (added
+  `.compactKpiGrid` 2/4-col grid, `.bannerAccentBar` 4-px accent rule
+  + `overflow:hidden` on `.banner`)
+- `src/app/admin/visitors/DashboardClient.tsx` (compact KPIs + DataGrid
+  logs + PageHeader + Toolbar; all metric / chart / preset / export
+  logic preserved verbatim)
 
-**Components**: consumes `KPI`, `PageHeader`, `Toolbar`.
-**Dependencies**: Phase 1, Phase 5 (for Visitors logs).
-**Risk**: 🟡 — pure presentation; queries untouched.
-**Testing checklist**: KPIs show same numbers as before; charts render;
-range selector does not mutate underlying data incorrectly.
+**Files NOT touched** (deliberate, would require server-logic changes):
+- `src/app/admin/dashboard/page.tsx` — all Prisma queries unchanged.
+- `src/app/admin/visitors/page.tsx` — query + auth gate unchanged.
+
+**Components**: consumes `KPI`, `PageHeader`, `Toolbar`, `DataGrid`.
+**Dependencies**: Phase 1 (KPI, PageHeader, Toolbar), Phase 5 (DataGrid).
+**Risk**: 🟡 — pure presentation; all queries and server-action call
+sites untouched.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning in `(marketing)/auth/verify/VerifyForm.tsx`).
 **Rollback**: revert commit.
 **Estimated difficulty**: medium.
 
@@ -1140,7 +1174,7 @@ Order of operations when executing this plan:
 5. ✅ Phase 4 — Sidebar refactor.
 6. ✅ Phase 5 — DataGrid upgrade.
 7. ✅ Phase 6 — page-by-page migration (one commit per page).
-8. ☐ Phase 7 — Dashboard/Visitors visual lift.
+8. ✅ Phase 7 — Dashboard/Visitors visual lift.
 9. ☐ Phase 8 — Drawers + Sheets.
 10. ☐ Phase 9 — Command palette.
 11. ☐ Phase 10 — Settings/Profile polish.
