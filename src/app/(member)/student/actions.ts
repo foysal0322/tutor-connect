@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notifyNewCourseRequest, notifyPaymentSubmission, notifyRefundRequest } from '@/lib/discord';
+import { notifyAdmins } from '@/lib/notifications/admin';
 import {
   parseFormData,
   submitTutorRequestSchema,
@@ -81,6 +82,19 @@ export async function submitTutorRequest(formData: FormData) {
         topic: topic || 'General Help',
         budget: budget,
       });
+
+      // Phase 5: in-app admin notification (additive — Discord ping above is unchanged).
+      await notifyAdmins({
+        event: 'tutor_request.submitted',
+        title: 'New Tutor Request',
+        message: `${studentName} requested ${course.name} — "${topic || 'General Help'}" (${budget} BDT).`,
+        actionUrl: '/admin/requests',
+        type: 'ACTION_REQUIRED',
+        category: 'TUTOR_REQUEST',
+        priority: 'HIGH',
+        actorUserId: studentId,
+        metadata: { requestId: undefined, courseId, budget },
+      });
     }
   } catch (err) {
     console.error('Failed to send discord notification', err);
@@ -149,6 +163,20 @@ export async function cancelTutorRequest(id: string) {
           body: JSON.stringify(message)
         });
       }
+
+      // Phase 5: in-app admin notification (additive — Discord webhook above is unchanged).
+      const studentName = session.user?.name || 'A student';
+      await notifyAdmins({
+        event: 'tutor_request.cancelled',
+        title: 'Tutor Request Cancelled',
+        message: `${studentName} cancelled their request for ${existing.course.name} — "${existing.topic || 'General Help'}".`,
+        actionUrl: '/admin/requests',
+        type: 'INFO',
+        category: 'TUTOR_REQUEST',
+        priority: 'MEDIUM',
+        actorUserId: studentId,
+        metadata: { requestId: id },
+      });
     } catch (err) {
       console.error('Failed to send cancel discord notification', err);
     }
@@ -287,6 +315,19 @@ export async function submitPayment(formData: FormData) {
         transactionId: sanitizedTransactionId,
         studentName,
       });
+
+      // Phase 5: in-app admin notification (additive — Discord ping above is unchanged).
+      await notifyAdmins({
+        event: 'payment.submitted',
+        title: 'Payment Submitted',
+        message: `${studentName} submitted a ${totalPaid} BDT ${finalMfsType} payment (txn ${sanitizedTransactionId}).`,
+        actionUrl: '/admin/requests',
+        type: 'ACTION_REQUIRED',
+        category: 'PAYMENT',
+        priority: 'HIGH',
+        actorUserId: studentId,
+        metadata: { requestId, transactionId: sanitizedTransactionId, amount: totalPaid, method: finalMfsType },
+      });
     } catch (err) {
       console.error('Failed to send payment discord notification', err);
     }
@@ -415,6 +456,19 @@ export async function submitRefundRequest(formData: FormData) {
       await notifyRefundRequest({
         studentName,
         reason: details.trim(),
+      });
+
+      // Phase 5: in-app admin notification (additive — Discord ping above is unchanged).
+      await notifyAdmins({
+        event: 'refund.submitted',
+        title: 'Refund Request Submitted',
+        message: `${studentName} requested a refund: "${details.trim().slice(0, 140)}".`,
+        actionUrl: '/admin/requests',
+        type: 'ACTION_REQUIRED',
+        category: 'REFUND',
+        priority: 'HIGH',
+        actorUserId: studentId,
+        metadata: { requestId, refundRequestDetails: details.trim() },
       });
     } catch (err) {
       console.error('Failed to send refund discord notification', err);

@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notifyWithdrawRequest } from '@/lib/discord';
+import { notifyAdmins } from '@/lib/notifications/admin';
 import { parseFormData, submitWithdrawalSchema } from '@/lib/validation';
 import { getPlatformSettings } from '@/lib/cache';
 import { redeemCoupon } from '@/lib/coupon';
@@ -155,6 +156,20 @@ export async function submitWithdrawalRequest(formData: FormData) {
         tutorName,
         amount,
         method: method === 'BANK' ? `Bank (${bankName})` : (mfsType || 'MFS'),
+      });
+
+      // Phase 5: in-app admin notification (additive — Discord ping above is unchanged).
+      const methodLabel = method === 'BANK' ? `Bank (${bankName})` : (mfsType || 'MFS');
+      await notifyAdmins({
+        event: 'withdrawal.submitted',
+        title: 'Withdrawal Request',
+        message: `${tutorName} requested ${amount} BDT via ${methodLabel}.`,
+        actionUrl: '/admin/withdrawals',
+        type: 'ACTION_REQUIRED',
+        category: 'WITHDRAWAL',
+        priority: 'HIGH',
+        actorUserId: tutorId,
+        metadata: { withdrawalId: result.id, amount, method: methodLabel },
       });
     } catch (err) {
       console.error('Failed to send discord withdraw notification', err);

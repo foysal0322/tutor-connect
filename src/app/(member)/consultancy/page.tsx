@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
 import { createNotification } from '@/lib/notification';
+import { notifyAdmins } from '@/lib/notifications/admin';
 import { getPlatformSettings } from '@/lib/cache';
 import { redeemCoupon } from '@/lib/coupon';
 import { Input } from '@/components/ui/Input';
@@ -205,6 +206,24 @@ export default async function ConsultancyPage() {
         );
       } catch (err) {
         console.error('Failed to notify user of consultancy booking:', err);
+      }
+
+      // Phase 5: in-app admin notification (additive — student notification
+      // above and Discord ping from the parent try block are unchanged).
+      try {
+        await notifyAdmins({
+          event: 'consultancy.submitted',
+          title: 'New Consultancy Request',
+          message: `${student.name} booked a ${isFree ? 'free' : 'paid'} consultancy: "${result.request.topic}".`,
+          actionUrl: '/admin/consultancy',
+          type: 'ACTION_REQUIRED',
+          category: 'CONSULTANCY',
+          priority: 'HIGH',
+          actorUserId: student.id,
+          metadata: { requestId: result.request.id, topic: result.request.topic, paid: !isFree },
+        });
+      } catch (err) {
+        console.error('Failed to notify admins of consultancy booking:', err);
       }
 
       redirect('/consultancy?success=true');

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
+import { notifyAdmins } from '@/lib/notifications/admin';
 
 export async function submitSupportTicket(formData: FormData) {
   const name = formData.get('name') as string;
@@ -32,6 +33,23 @@ export async function submitSupportTicket(formData: FormData) {
       });
     } catch (e) {
       console.error('Failed to send discord webhook for support ticket');
+    }
+
+    // Phase 5: in-app admin notification (additive — Discord + email above are unchanged).
+    // Best-effort: never abort the ticket submission if this fails.
+    try {
+      await notifyAdmins({
+        event: 'support.submitted',
+        title: 'New Support Ticket',
+        message: `${name} (${email}) — ${type}: "${message.slice(0, 140)}".`,
+        actionUrl: '/admin/support',
+        type: 'INFO',
+        category: 'SUPPORT',
+        priority: 'MEDIUM',
+        metadata: { ticketEmail: email, ticketType: type },
+      });
+    } catch (e) {
+      console.error('Failed to notify admins of support ticket:', e);
     }
 
     try {
