@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "./find-tutor.module.css";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
 import {
   Search,
   Loader2,
@@ -20,6 +18,7 @@ import {
   HandHeart,
 } from "lucide-react";
 import { Select } from "@/components/ui/Select";
+import { Sheet } from "@/components/ui/Sheet";
 import { getMyTaughtCourseIds } from "@/app/actions/user";
 
 /* ------------------------------------------------------------------ */
@@ -120,23 +119,6 @@ export default function FindTutorClient({
         /* leave buttons enabled; the server guard still protects */
       });
   }, []);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const modalTitleId = useId();
-
-  // Trap focus inside the reviews modal while it is open. The hook also
-  // restores focus to the trigger button and locks body scroll on close.
-  useFocusTrap(panelRef, !!activeReviewsTutor);
-
-  // Escape to close the modal (the focus-trap hook intentionally leaves
-  // Escape handling to the caller).
-  useEffect(() => {
-    if (!activeReviewsTutor) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setActiveReviewsTutor(null);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [activeReviewsTutor]);
 
   // Searching state — true for the brief window between a keystroke and the
   // 300ms debounce settling. Drives the inline "updating" affordance.
@@ -515,116 +497,74 @@ export default function FindTutorClient({
       </div>
 
       {/* ============================================================ */}
-      {/* REVIEWS MODAL                                                */}
+      {/* REVIEWS SHEET                                                 */}
       {/* ============================================================ */}
-      {activeReviewsTutor &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className={styles.modalOverlay}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setActiveReviewsTutor(null);
-            }}
-          >
-            <div
-              ref={panelRef}
-              className={styles.modalPanel}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={modalTitleId}
-              tabIndex={-1}
-            >
-              <div className={styles.modalHeader}>
-                <div className={styles.modalAvatar} aria-hidden="true">
-                  {getInitials(activeReviewsTutor.name)}
-                </div>
-                <div className={styles.modalHeadInfo}>
-                  <h2 id={modalTitleId} className={styles.modalTitle}>
-                    {activeReviewsTutor.name}
-                  </h2>
-                  <span className={styles.modalSubtitle}>
-                    {activeReviewsTutor.averageRating ? (
-                      <>
+      <Sheet
+        open={!!activeReviewsTutor}
+        onClose={() => setActiveReviewsTutor(null)}
+        title={activeReviewsTutor?.name ?? "Reviews"}
+        side="right"
+        size="30rem"
+      >
+        {activeReviewsTutor && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Rating summary */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+              {activeReviewsTutor.averageRating ? (
+                <>
+                  <Star size={16} fill="currentColor" style={{ color: 'var(--accent)' }} />
+                  <strong>{activeReviewsTutor.averageRating}</strong>
+                  <span>·</span>
+                  <span>{reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
+                </>
+              ) : (
+                <span>{reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
+              )}
+            </div>
+
+            {/* Review list */}
+            {reviewCount > 0 ? (
+              activeReviewsTutor.reviews!.map((r) => (
+                <div key={r.id} className={styles.reviewItem}>
+                  <div className={styles.reviewHead}>
+                    <span className={styles.reviewAuthor}>
+                      {r.studentName}{' '}
+                      <span className={styles.reviewCourse}>· {r.courseName}</span>
+                    </span>
+                    <span className={styles.reviewStars} aria-label={`Rated ${r.rating} out of 5`}>
+                      {Array.from({ length: 5 }, (_, i) => (
                         <Star
-                          className={styles.modalSubtitleStar}
+                          key={i}
+                          size={14}
+                          className={`${styles.reviewStar} ${i < r.rating ? '' : styles.reviewStarEmpty}`}
                           aria-hidden="true"
                         />
-                        <strong>{activeReviewsTutor.averageRating}</strong>
-                        <span className={styles.trustDot} aria-hidden="true" />
-                        <span>
-                          {reviewCount} review{reviewCount !== 1 ? "s" : ""}
-                        </span>
-                      </>
-                    ) : (
-                      <span>
-                        {reviewCount} review{reviewCount !== 1 ? "s" : ""}
-                      </span>
-                    )}
+                      ))}
+                    </span>
+                  </div>
+                  {r.review && r.review.trim() !== '' ? (
+                    <p className={styles.reviewText}>&ldquo;{r.review}&rdquo;</p>
+                  ) : (
+                    <p className={styles.reviewTextEmpty}>No written review provided.</p>
+                  )}
+                  <span className={styles.reviewDate}>
+                    {new Date(r.date).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className={styles.modalClose}
-                  onClick={() => setActiveReviewsTutor(null)}
-                  aria-label="Close reviews"
-                >
-                  <X size={20} aria-hidden="true" />
-                </button>
+              ))
+            ) : (
+              <div className={styles.modalEmpty}>
+                <p className={styles.modalEmptyTitle}>No reviews yet</p>
+                <p>Be the first student to share your experience.</p>
               </div>
-
-              <div className={styles.modalBody}>
-                {reviewCount > 0 ? (
-                  activeReviewsTutor.reviews!.map((r) => (
-                    <div key={r.id} className={styles.reviewItem}>
-                      <div className={styles.reviewHead}>
-                        <span className={styles.reviewAuthor}>
-                          {r.studentName}{" "}
-                          <span className={styles.reviewCourse}>
-                            · {r.courseName}
-                          </span>
-                        </span>
-                        <span
-                          className={styles.reviewStars}
-                          aria-label={`Rated ${r.rating} out of 5`}
-                        >
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <Star
-                              key={i}
-                              className={`${styles.reviewStar} ${i < r.rating ? "" : styles.reviewStarEmpty}`}
-                              aria-hidden="true"
-                            />
-                          ))}
-                        </span>
-                      </div>
-                      {r.review && r.review.trim() !== "" ? (
-                        <p className={styles.reviewText}>
-                          &ldquo;{r.review}&rdquo;
-                        </p>
-                      ) : (
-                        <p className={styles.reviewTextEmpty}>
-                          No written review provided.
-                        </p>
-                      )}
-                      <span className={styles.reviewDate}>
-                        {new Date(r.date).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className={styles.modalEmpty}>
-                    <p className={styles.modalEmptyTitle}>No reviews yet</p>
-                    <p>Be the first student to share your experience.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body
+            )}
+          </div>
         )}
+      </Sheet>
     </div>
   );
 }

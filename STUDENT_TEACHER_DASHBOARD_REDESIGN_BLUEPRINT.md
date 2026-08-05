@@ -753,7 +753,7 @@ tree-shaken at build time) and can be cleaned up in a future hygiene pass.
 
 **Verification:** `npm run build` ✅.
 
-### Phase 5 — List pages → `DataGrid`
+### Phase 5 — List pages → `DataGrid` · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Migrate `StudentRequestList`, assigned-students table (Teaching tab), `/find-tutor` results (card mode or DataGrid) to the shared table primitive; row actions open `Sheet`.
 - **Files likely affected:** `src/app/(marketing)/student/StudentRequestList.tsx`, `src/app/dashboard/…/AssignedStudentsTable.*`, `src/app/(marketing)/find-tutor/FindTutorClient.tsx`.
 - **Dependencies:** Phase 1.
@@ -762,6 +762,47 @@ tree-shaken at build time) and can be cleaned up in a future hygiene pass.
 - **Rollback:** Revert per file.
 - **Complexity:** L.
 - **Acceptance:** Lists use `DataGrid`; actions unchanged.
+
+**Implementation notes (2026-08-05):**
+- ✅ **AssignedStudentsTable → `<DataGrid>`.** Replaced the bespoke
+  `<table>` + `md:hidden` mobile card split with a single `<DataGrid>`
+  that handles responsive rendering, search, and pagination internally.
+  Column defs: Student, Course, Topic, Mode, Time, Budget, Status.
+- ✅ **StudentRequestList → `<DataGrid>` + `<Sheet>`.** Converted the
+  card-based list to the admin Phase 6 pattern:
+  - **Grid** shows summary columns: Course, Status (same colour-coded
+    badge), Budget, Tutor, Date. Clicking a row opens the detail Sheet.
+  - **Sheet** (40rem right-drawer) shows the full request detail: status
+    badge, refund outcome banners, details grid (topic/faculty/mode/time/
+    budget), assigned-tutor info with contact details (status-gated),
+    and conditional action buttons.
+  - Actions (Cancel, Pay, Complete+Rate, Refund) expand inline within the
+    Sheet body via a `mode` state (`details` / `cancel` / `payment` /
+    `complete` / `refund`) — same handler functions as before, same
+    server actions, same toasts.
+  - Eliminates ~150 lines of inline card styling + duplicate layout code.
+- ✅ **FindTutorClient reviews modal → `<Sheet>`.** Replaced the custom
+  `createPortal` + `useFocusTrap` + manual Escape listener + overlay/panel
+  JSX with a single `<Sheet>` call. Eliminated imports: `createPortal`,
+  `useFocusTrap`, `useId`, `useRef` (all were only used by the manual
+  modal). Review items still use the existing `styles.review*` classes.
+
+**Dead CSS follow-up (not blocking):** `find-tutor.module.css` retains
+orphaned `.modalOverlay`, `.modalPanel`, `.modalHeader`, `.modalAvatar`,
+`.modalHeadInfo`, `.modalTitle`, `.modalSubtitle`, `.modalClose`,
+`.modalBody` classes. They're unused CSS module selectors (tree-shaken
+at build) and can be cleaned up in a future hygiene pass.
+
+**Behavior preservation contract:**
+- All server actions (`cancelTutorRequest`, `completeTutorRequest`,
+  `submitRefundRequest`, `rechargeWallet`, `submitWithdrawalRequest`)
+  are unchanged.
+- All toasts, confirm flows, and status-gated contact-reveal logic
+  are preserved.
+- The PaymentForm component is rendered inside the Sheet without
+  modification.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 6 — Forms standardization
 - **Objective:** Adopt `FormCard`/`FormSection`/`FormSubmit` with dirty tracking on `/profile`, `/student/request-tutor`, `/tutor/earnings` withdrawal form, `/consultancy`.
