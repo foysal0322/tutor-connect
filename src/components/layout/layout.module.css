@@ -444,6 +444,11 @@
   overflow-y: auto;
   padding: 1.5rem;
   background-color: var(--bg-color);
+  /* Inside the DashboardLayout shell there is no marketing Navbar — override
+     --navbar-height to 0 so child pages that use `top: var(--navbar-height)`
+     for sticky toolbars (e.g. /find-tutor) stick flush at the top of the
+     content area instead of leaving an 80px gap. */
+  --navbar-height: 0px;
 }
 
 /* Overlay for Mobile Sidebar */

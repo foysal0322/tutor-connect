@@ -1172,8 +1172,9 @@
     position: sticky;
     top: var(--navbar-height);
     z-index: 20;
-    padding: 0;
+    padding: var(--space-2) 0;
     background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
   }
 }
 
