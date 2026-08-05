@@ -1,46 +1,38 @@
 // NotificationService — single entry point for dispatching notifications.
 // See NOTIFICATION_SYSTEM_ARCHITECTURE_BLUEPRINT.md §III / §IV.
 //
-// Phase 3 scope:
-//   - typed NotificationEvent envelope
-//   - DB write (with Phase 2 columns populated from the event)
-//   - web push fan-out (extracted verbatim from the legacy createNotification)
-//   - NotificationDelivery rows are NOT written here — that lands in Phase 4
+// Phase 4 scope:
+//   - typed NotificationEvent envelope (Phase 3)
+//   - DB write (Phase 2 columns populated from event)
+//   - NotificationDelivery rows written in the SAME transaction as the
+//     Notification row (commit boundary respected)
+//   - Channel provider fan-out via the channels registry
+//   - Inline attempt #1 per channel; transient failures land in RETRYING
+//     and are picked up by the outbox sweeper (processOutbox)
 //
-// The legacy `createNotification(userId, title, message, actionUrl?)` API
-// lives in src/lib/notification.ts and delegates to dispatch() via a raw
-// event. Behavior is byte-identical: same DB row, same push payload shape
-// {title, body: message, url: actionUrl || '/'}, same 410/404 prune.
+// Legacy byte-identity preserved:
+//   - createNotification() delegates here via a raw event
+//   - default channel set is [IN_APP, PUSH]
+//   - push payload shape {title, body, url} unchanged
+//   - 410/404 subscription pruning unchanged
+//   - caller-visible control flow unchanged: push failures still don't
+//     surface to the caller (try/catch in callers continues to wrap silently)
 
-import webpush from "web-push";
 import { prisma } from "../prisma";
-import type { Notification } from "@prisma/client";
+import type { Notification, NotificationDelivery } from "@prisma/client";
 import { resolveFromTemplate } from "./templates";
+import { DEFAULT_DISPATCH_CHANNELS } from "./channels";
+import type { ChannelName } from "./channels";
+import { attemptDelivery } from "./delivery";
 import type {
   NotificationCategory,
+  NotificationChannel,
   NotificationEvent,
   NotificationMetadata,
   NotificationPriority,
   NotificationType,
   ResolvedNotification,
 } from "./types";
-
-// --- VAPID bootstrap (preserved verbatim from the legacy module) -----------
-// Runs at first import. If keys are missing, push is silently disabled and
-// the in-app row still writes successfully.
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  try {
-    webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || "mailto:support@nsuone.com",
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY,
-    );
-  } catch (error) {
-    console.error("Failed to set VAPID details:", error);
-  }
-} else {
-  console.warn("VAPID keys are missing. Web push notifications will be disabled.");
-}
 
 const DEFAULT_TYPE: NotificationType = "SYSTEM";
 const DEFAULT_CATEGORY: NotificationCategory = "SYSTEM";
@@ -92,79 +84,77 @@ function resolveEvent(event: NotificationEvent): ResolvedNotification {
   };
 }
 
-// Web push fan-out — extracted verbatim from the legacy createNotification.
-// Mutates nothing in the DB beyond pruning expired subscriptions (410/404).
-async function pushToUserDevices(
-  userId: string,
-  title: string,
-  message: string,
-  actionUrl: string | null,
-): Promise<void> {
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { userId },
-  });
-
-  if (subscriptions.length === 0) return;
-
-  const payload = JSON.stringify({
-    title,
-    body: message,
-    url: actionUrl || "/",
-  });
-
-  const pushPromises = subscriptions.map(async (sub) => {
-    const pushSubscription = {
-      endpoint: sub.endpoint,
-      keys: { p256dh: sub.p256dh, auth: sub.auth },
-    };
-    try {
-      await webpush.sendNotification(pushSubscription, payload);
-    } catch (error: any) {
-      // Same pruning rule as the legacy implementation.
-      if (error.statusCode === 410 || error.statusCode === 404) {
-        await prisma.pushSubscription.delete({ where: { id: sub.id } });
-      } else {
-        console.error("Error sending push notification:", error);
-      }
-    }
-  });
-
-  await Promise.all(pushPromises);
+function resolveChannels(event: NotificationEvent): ChannelName[] {
+  if (event.channels && event.channels.length > 0) {
+    return event.channels as ChannelName[];
+  }
+  return DEFAULT_DISPATCH_CHANNELS;
 }
 
 // The canonical dispatch entry point.
 //
-// Writes the Notification row with the Phase 2 columns populated from the
-// event, then fires push fan-out. Push failures never roll back the row —
-// this matches the legacy contract. Phase 4 will harden this with delivery
-// receipts + retry.
+// Step 1: write Notification + PENDING NotificationDelivery rows in a single
+//         transaction. If either write fails, neither lands.
+// Step 2: after commit, run attempt #1 per channel inline. Push/InApp behave
+//         exactly as the pre-Phase-4 path. Transient channel failures mark
+//         the delivery RETRYING and are left for the outbox sweeper.
 export async function dispatch(event: NotificationEvent): Promise<Notification> {
   const resolved = resolveEvent(event);
+  const channelNames = resolveChannels(event);
 
-  const notification = await prisma.notification.create({
-    data: {
-      userId: event.userId,
-      title: resolved.title,
-      message: resolved.message,
-      actionUrl: resolved.actionUrl,
-      type: resolved.type,
-      category: resolved.category,
-      priority: resolved.priority,
-      ...(event.actorUserId !== undefined && { actorUserId: event.actorUserId }),
-      ...(event.recipientRoleHint !== undefined && { recipientRoleHint: event.recipientRoleHint }),
-      ...(event.metadata !== undefined && { metadata: event.metadata as object }),
-      ...(event.dedupKey !== undefined && { dedupKey: event.dedupKey }),
-      ...(event.expiresAt !== undefined && { expiresAt: event.expiresAt }),
-    },
+  const { notification, deliveries } = await prisma.$transaction(async (tx) => {
+    const created = await tx.notification.create({
+      data: {
+        userId: event.userId,
+        title: resolved.title,
+        message: resolved.message,
+        actionUrl: resolved.actionUrl,
+        type: resolved.type,
+        category: resolved.category,
+        priority: resolved.priority,
+        ...(event.actorUserId !== undefined && { actorUserId: event.actorUserId }),
+        ...(event.recipientRoleHint !== undefined && { recipientRoleHint: event.recipientRoleHint }),
+        ...(event.metadata !== undefined && { metadata: event.metadata as object }),
+        ...(event.dedupKey !== undefined && { dedupKey: event.dedupKey }),
+        ...(event.expiresAt !== undefined && { expiresAt: event.expiresAt }),
+      },
+    });
+
+    let createdDeliveries: NotificationDelivery[] = [];
+    if (channelNames.length > 0) {
+      // createMany does not return rows in all Prisma versions; re-fetch.
+      await tx.notificationDelivery.createMany({
+        data: channelNames.map((name) => ({
+          notificationId: created.id,
+          channel: name,
+          status: "PENDING",
+        })),
+      });
+      createdDeliveries = await tx.notificationDelivery.findMany({
+        where: { notificationId: created.id },
+        orderBy: { channel: "asc" },
+      });
+    }
+
+    return { notification: created, deliveries: createdDeliveries };
   });
 
-  // Fire-and-forget push — preserved exactly as before. We do not await
-  // failure propagation into the caller; legacy callers wrap this in try/catch
-  // already and we must not change that control flow.
-  try {
-    await pushToUserDevices(event.userId, resolved.title, resolved.message, resolved.actionUrl);
-  } catch (error) {
-    console.error("Notification push fan-out failed:", error);
+  // After commit: attempt each channel inline (attempt #1 only). We swallow
+  // any error here — channel failures must not propagate into the caller's
+  // business-transaction control flow. The delivery row records the outcome.
+  if (deliveries.length > 0) {
+    await Promise.all(
+      deliveries.map(async (delivery) => {
+        try {
+          await attemptDelivery(delivery, notification);
+        } catch (err) {
+          // attemptDelivery already updates the row on channel errors. This
+          // outer catch only fires if the row-update itself threw (e.g. DB
+          // connectivity loss). Log and move on — do not surface.
+          console.error("[notifications] delivery attempt crashed:", err);
+        }
+      }),
+    );
   }
 
   return notification;
@@ -185,6 +175,7 @@ export async function dispatchRaw(params: {
   metadata?: NotificationMetadata;
   dedupKey?: string;
   expiresAt?: Date;
+  channels?: NotificationChannel[];
 }): Promise<Notification> {
   return dispatch({ event: "raw", ...params });
 }

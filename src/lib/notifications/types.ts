@@ -78,6 +78,10 @@ export interface NotificationEvent {
   metadata?: NotificationMetadata;
   dedupKey?: string;
   expiresAt?: Date;
+  // Phase 4: which channels to dispatch on. When omitted, the service uses
+  // DEFAULT_DISPATCH_CHANNELS (currently [IN_APP, PUSH]) — preserving the
+  // pre-Phase-4 behavior of createNotification.
+  channels?: NotificationChannel[];
 }
 
 // Result of resolving an event into the fields that actually get persisted.
