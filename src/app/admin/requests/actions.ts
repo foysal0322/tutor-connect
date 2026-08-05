@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from '@/lib/notification';
 import { sendNoReplyEmail } from '@/lib/mail';
+import { dispatch } from '@/lib/notifications/service';
 
 export async function assignTutorToRequest(requestId: string, tutorId: string) {
   const session = await getServerSession(authOptions);
@@ -84,12 +85,24 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
     // Send no-reply email and push notification to tutor
     if (tutor) {
       try {
-        await createNotification(
-          tutorId,
-          "New Tuition Allocation!",
-          `You have been assigned a new tuition request for ${request.topic} (${request.course.name}).`,
-          `/tutor`
-        );
+        await dispatch({
+          event: 'tutor.allocated',
+          userId: tutorId,
+          title: 'New Tuition Allocation!',
+          message: `You have been assigned a new tuition request for ${request.topic} (${request.course.name}). Session fee: ${finalFee} BDT.`,
+          actionUrl: '/tutor',
+          type: 'SUCCESS',
+          category: 'BOOKING',
+          priority: 'HIGH',
+          actorUserId: (session.user as any).id,
+          recipientRoleHint: 'TUTOR',
+          metadata: {
+            requestId: request.id,
+            courseId: request.courseId,
+            studentId: request.studentId,
+            sessionFee: finalFee,
+          },
+        });
       } catch (err) {
         console.error("Failed to notify tutor:", err);
       }
@@ -170,6 +183,48 @@ export async function verifyPaymentAction(requestId: string, approve: boolean) {
               `
             });
           }
+
+        // Phase 6/7: in-app + push notifications to student and tutor
+        // (additive — the emails above are unchanged). Previously these
+        // payment-verified events only went out via email; the bell never
+        // surfaced them.
+        try {
+          await dispatch({
+            event: 'payment.verified',
+            userId: request.studentId,
+            title: 'Payment Verified',
+            message: `Your payment for ${request.topic} (${request.course.name}) was verified. Your session is now active.`,
+            actionUrl: '/student',
+            type: 'SUCCESS',
+            category: 'PAYMENT',
+            priority: 'CRITICAL',
+            actorUserId: (session.user as any).id,
+            recipientRoleHint: 'STUDENT',
+            metadata: { requestId: request.id, courseId: request.courseId },
+          });
+        } catch (err) {
+          console.error('Failed to notify student of payment verification:', err);
+        }
+
+        if (request.assignedTutorId) {
+          try {
+            await dispatch({
+              event: 'tutor.payment_verified',
+              userId: request.assignedTutorId,
+              title: 'Student Payment Verified',
+              message: `${request.student.name}'s payment for ${request.topic} (${request.course.name}) was verified. You can start sessions now.`,
+              actionUrl: '/tutor',
+              type: 'SUCCESS',
+              category: 'PAYMENT',
+              priority: 'HIGH',
+              actorUserId: (session.user as any).id,
+              recipientRoleHint: 'TUTOR',
+              metadata: { requestId: request.id, courseId: request.courseId, studentId: request.studentId },
+            });
+          } catch (err) {
+            console.error('Failed to notify tutor of payment verification:', err);
+          }
+        }
         } catch (mailErr) {
           console.error("Failed to send payment verification emails:", mailErr);
         }
@@ -203,6 +258,25 @@ export async function verifyPaymentAction(requestId: string, approve: boolean) {
           });
         } catch (mailErr) {
           console.error("Failed to send payment failure email:", mailErr);
+        }
+
+        // Phase 7: in-app + push to student (additive — email above unchanged).
+        try {
+          await dispatch({
+            event: 'payment.rejected',
+            userId: request.studentId,
+            title: 'Payment Could Not Be Verified',
+            message: `We couldn't verify your payment for ${request.topic} (${request.course.name}). Please check your transaction ID and resubmit.`,
+            actionUrl: '/student/payments',
+            type: 'WARNING',
+            category: 'PAYMENT',
+            priority: 'HIGH',
+            actorUserId: (session.user as any).id,
+            recipientRoleHint: 'STUDENT',
+            metadata: { requestId: request.id, courseId: request.courseId },
+          });
+        } catch (err) {
+          console.error('Failed to notify student of payment rejection:', err);
         }
       }
     }
@@ -289,12 +363,24 @@ export async function verifyRefundAction(
 
       // Notify the student (push + email). Fire-and-forget.
       try {
-        await createNotification(
-          refundRequest.studentId,
-          'Refund Approved',
-          `${refundAmount} BDT has been credited to your wallet${note ? ` — ${note}` : '.'}`,
-          '/wallet',
-        );
+        await dispatch({
+          event: 'refund.approved',
+          userId: refundRequest.studentId,
+          title: 'Refund Approved',
+          message: `${refundAmount} BDT has been credited to your wallet${note ? ` — ${note}` : '.'}`,
+          actionUrl: '/wallet',
+          type: 'SUCCESS',
+          category: 'REFUND',
+          priority: 'CRITICAL',
+          actorUserId: adminId,
+          recipientRoleHint: 'STUDENT',
+          metadata: {
+            refundRequestId: refundRequest.id,
+            requestId: refundRequest.requestId,
+            amount: refundAmount,
+            reviewNote: note,
+          },
+        });
       } catch (err) {
         console.error('Failed to notify student of refund approval:', err);
       }
@@ -310,14 +396,25 @@ export async function verifyRefundAction(
       });
 
       try {
-        await createNotification(
-          refundRequest.studentId,
-          'Refund Request Rejected',
-          note
+        await dispatch({
+          event: 'refund.rejected',
+          userId: refundRequest.studentId,
+          title: 'Refund Request Rejected',
+          message: note
             ? `Your refund request was rejected — ${note}`
             : 'Your refund request was rejected. Please contact support if you have questions.',
-          '/student',
-        );
+          actionUrl: '/student',
+          type: 'REJECTION',
+          category: 'REFUND',
+          priority: 'HIGH',
+          actorUserId: adminId,
+          recipientRoleHint: 'STUDENT',
+          metadata: {
+            refundRequestId: refundRequest.id,
+            requestId: refundRequest.requestId,
+            reviewNote: note,
+          },
+        });
       } catch (err) {
         console.error('Failed to notify student of refund rejection:', err);
       }

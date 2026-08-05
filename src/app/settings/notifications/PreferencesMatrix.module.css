@@ -1,0 +1,298 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  padding-bottom: var(--space-8, 32px);
+}
+
+/* ── Banner ───────────────────────────────────────────────────────────── */
+
+.banner {
+  display: flex;
+  gap: var(--space-3, 12px);
+  align-items: flex-start;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.banner > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+/* ── Matrix table ─────────────────────────────────────────────────────── */
+
+.matrixWrapper {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.table thead th {
+  text-align: left;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: var(--surface-1);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.categoryHeader {
+  width: 50%;
+}
+
+.channelHeader {
+  text-align: center !important;
+  width: 16%;
+}
+
+.channelHint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover:not(.rowLocked) {
+  background-color: var(--surface-1);
+}
+
+.rowLocked {
+  background-color: var(--surface-1);
+}
+
+.categoryCell {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  text-align: left;
+  font-weight: 500;
+}
+
+.categoryLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.lockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: 999px;
+}
+
+.categoryHint {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.toggleCell {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  text-align: center;
+}
+
+/* ── Toggle switch ────────────────────────────────────────────────────── */
+
+.switch {
+  display: inline-flex;
+  cursor: pointer;
+  position: relative;
+}
+
+.switchDisabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.switchInput {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.switchInput:focus-visible + .switchTrack {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.switchTrack {
+  display: inline-flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  background-color: var(--surface-5, #cbd5e1);
+  border-radius: 999px;
+  padding: 2px;
+  transition: background-color 0.15s ease;
+}
+
+.switchTrackOn {
+  background-color: var(--primary);
+}
+
+.switchThumb {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  border-radius: 50%;
+  transform: translateX(0);
+  transition: transform 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.switchThumbOn {
+  transform: translateX(16px);
+}
+
+/* ── Action bar ───────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  flex-wrap: wrap;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+}
+
+.status {
+  min-height: 20px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+}
+
+.savedText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.errorText {
+  color: var(--danger, #dc2626);
+  font-weight: 500;
+}
+
+.dirtyText {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.buttons {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.resetButton,
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.resetButton {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.resetButton:hover:not(:disabled) {
+  background-color: var(--surface-1);
+  color: var(--text-main);
+}
+
+.saveButton {
+  background-color: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary);
+}
+
+.saveButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.resetButton:disabled,
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resetButton:focus-visible,
+.saveButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .channelHeader,
+  .toggleCell {
+    padding-left: var(--space-2, 8px);
+    padding-right: var(--space-2, 8px);
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .buttons {
+    justify-content: stretch;
+  }
+  .buttons button {
+    flex: 1;
+    justify-content: center;
+  }
+}

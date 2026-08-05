@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import {
+  useNotificationStream,
+  type NotificationStreamEvent,
+} from "@/hooks/useNotificationStream";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import {
+  fetchBadgeCount,
+  invalidateBadge,
+  decrementBadge,
+  setBadgeCount,
+} from "@/hooks/badgeCache";
 import styles from "./NotificationBell.module.css";
 
 type Notification = {
@@ -15,44 +25,146 @@ type Notification = {
   createdAt: string;
 };
 
+// Phase 8: the dropdown is now a 5-item preview. The full Notification Center
+// lives at /notifications — the bell just hints at what's new and links out.
+const PREVIEW_LIMIT = 5;
+// Phase 12: badge polling cadence when no realtime transport is active.
+// Cheap `/api/notifications/unread-count` round trips — bounded by HTTP
+// cache + in-memory dedupe so multiple tabs coalesce.
+const BADGE_POLL_MS = 30_000;
+
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  // Phase 11: aria-busy on the dropdown during fetches so screen readers
+  // announce "loading" rather than reading a stale list.
+  const [isReloading, setIsReloading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+  // Track the last unread count we observed so we can detect "badge changed"
+  // events and refresh the preview only then (Phase 12 optimization).
+  const lastObservedCount = useRef<number>(0);
   const { isSupported, subscription, subscribeToPush } = usePushNotifications();
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
+  // ── Phase 12: split fetching ───────────────────────────────────────────
+  //
+  // `fetchPreview` is the expensive path: it loads the full 5-item preview
+  // + the count. Called only on mount, on dropdown open, and when the
+  // periodic badge poll detects a delta.
+  //
+  // `refreshBadge` is the cheap path: just the count from
+  // /api/notifications/unread-count. Used for periodic polling so the bell
+  // badge stays fresh without re-fetching the list when nothing changed.
+
+  const fetchPreview = useCallback(async () => {
+    setIsReloading(true);
     try {
-      const res = await fetch("/api/notifications?limit=20");
+      const res = await fetch(`/api/notifications?limit=${PREVIEW_LIMIT}`);
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications);
-        setUnreadCount(data.unreadCount);
+        setNotifications(data.notifications ?? []);
+        const count = Number(data.unreadCount ?? 0);
+        setUnreadCount(count);
+        setBadgeCount(count);
+        lastObservedCount.current = count;
       }
     } catch (error) {
       console.error("Failed to fetch notifications", error);
+    } finally {
+      setIsReloading(false);
     }
-  };
+  }, []);
 
+  const refreshBadge = useCallback(async () => {
+    try {
+      const count = await fetchBadgeCount();
+      setUnreadCount(count);
+      // Phase 12: only re-fetch the preview when the count actually moved.
+      // Steady-state polling becomes a single round-trip per cycle instead
+      // of a list payload.
+      if (count !== lastObservedCount.current) {
+        lastObservedCount.current = count;
+        // Don't await — preview refresh is best-effort.
+        void fetchPreview();
+      }
+    } catch (error) {
+      console.error("Failed to refresh badge", error);
+    }
+  }, [fetchPreview]);
+
+  // Phase 9: SSE is the preferred realtime transport for in-DOM badge
+  // updates. We feed its events into the same state setters as a fetch would.
+  const onStreamEvent = useCallback(
+    (event: NotificationStreamEvent) => {
+      if (event.kind === "ready") {
+        setUnreadCount(event.data.unreadCount);
+        setBadgeCount(event.data.unreadCount);
+        lastObservedCount.current = event.data.unreadCount;
+      } else if (event.kind === "unread") {
+        setUnreadCount(event.data.unreadCount);
+        setBadgeCount(event.data.unreadCount);
+        lastObservedCount.current = event.data.unreadCount;
+      } else if (event.kind === "notification") {
+        // Brand new row from the server. Prepend it to the preview and bump
+        // the unread count, mirroring what a fresh GET would return.
+        setUnreadCount((c) => {
+          const next = c + (event.data.isRead ? 0 : 1);
+          setBadgeCount(next);
+          lastObservedCount.current = next;
+          return next;
+        });
+        setNotifications((prev) => {
+          if (prev.some((n) => n.id === event.data.id)) return prev;
+          const next = [
+            {
+              id: event.data.id,
+              title: event.data.title,
+              message: event.data.message,
+              actionUrl: event.data.actionUrl,
+              isRead: event.data.isRead,
+              createdAt: event.data.createdAt,
+            },
+            ...prev,
+          ];
+          return next.slice(0, PREVIEW_LIMIT);
+        });
+      }
+    },
+    [],
+  );
+
+  const { connected: streamConnected } = useNotificationStream({
+    enabled: true,
+    onEvent: onStreamEvent,
+  });
+
+  // Initial load: fetch the preview once so the dropdown has content even
+  // before the user opens it.
   useEffect(() => {
-    fetchNotifications();
+    void fetchPreview();
+  }, [fetchPreview]);
 
-    // Polling fallback: only run when web push is NOT active.
-    // Once a push subscription is in place, the service worker receives
-    // notifications in real time and polling becomes redundant battery drain.
-    // See FRONTEND_AUDIT.md F3.
+  // Phase 12: polling now hits the cheap badge endpoint. Only the count
+  // moves on the wire during steady state; the full preview is re-fetched
+  // only when the count changes (handled inside refreshBadge).
+  useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
-    if (!subscription) {
-      intervalId = setInterval(fetchNotifications, 30000);
+    // Only poll when we have no realtime transport. SSE is preferred; push
+    // is treated as a sufficient transport because the SW shows the
+    // notification and we re-fetch on focus anyway.
+    const hasRealtime = streamConnected || Boolean(subscription);
+    if (!hasRealtime) {
+      intervalId = setInterval(refreshBadge, BADGE_POLL_MS);
     }
 
     // Re-fetch on window focus so a user returning to the tab sees fresh
-    // state immediately, regardless of transport.
+    // state immediately, regardless of transport. Always invalidates the
+    // badge cache so we don't show a stale number.
     const onFocus = () => {
-      if (document.visibilityState === "visible") fetchNotifications();
+      if (document.visibilityState === "visible") {
+        invalidateBadge();
+        void refreshBadge();
+      }
     };
     document.addEventListener("visibilitychange", onFocus);
 
@@ -60,7 +172,7 @@ export default function NotificationBell() {
       if (intervalId) clearInterval(intervalId);
       document.removeEventListener("visibilitychange", onFocus);
     };
-  }, [subscription]);
+  }, [refreshBadge, streamConnected, subscription]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -81,6 +193,9 @@ export default function NotificationBell() {
       await fetch("/api/notifications/read-all", { method: "PUT" });
       setUnreadCount(0);
       setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+      // Phase 12: optimistic cache update.
+      setBadgeCount(0);
+      lastObservedCount.current = 0;
     } catch (error) {
       console.error("Failed to mark all as read", error);
     }
@@ -94,6 +209,9 @@ export default function NotificationBell() {
       setNotifications(
         notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
+      // Phase 12: optimistic decrement — next badge poll will confirm.
+      decrementBadge();
+      lastObservedCount.current = Math.max(0, lastObservedCount.current - 1);
     } catch (error) {
       console.error("Failed to mark as read", error);
     }
@@ -106,7 +224,13 @@ export default function NotificationBell() {
   };
 
   const handleBellClick = () => {
-    setIsOpen(!isOpen);
+    const willOpen = !isOpen;
+    setIsOpen(willOpen);
+    if (willOpen) {
+      // Phase 12: refresh the preview whenever the dropdown opens so the
+      // user always sees current data, even if SSE has been quiet.
+      void fetchPreview();
+    }
     if (!subscription && isSupported) {
       // Try to subscribe when they interact with the bell
       subscribeToPush();
@@ -174,10 +298,11 @@ export default function NotificationBell() {
 
           <div
             className={styles.list}
-            role='region'
+            role='log'
             aria-labelledby='notification-heading'
             aria-live='polite'
-            aria-atomic='true'
+            aria-atomic='false'
+            aria-busy={isReloading}
           >
             {notifications.length === 0 ? (
               <div className={styles.empty} role='status' aria-live='polite'>
@@ -231,6 +356,16 @@ export default function NotificationBell() {
               })
             )}
           </div>
+
+          {/* Phase 8: link out to the full Notification Center. Always
+              rendered (even when empty) so the user has a path to the page. */}
+          <Link
+            href='/notifications'
+            className={styles.viewAll}
+            onClick={() => setIsOpen(false)}
+          >
+            View all notifications
+          </Link>
         </div>
       )}
     </div>

@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { revalidatePath, updateTag } from 'next/cache';
-import { createNotification } from '@/lib/notification';
+import { dispatch } from '@/lib/notifications/service';
 import { DEFAULT_SETTINGS } from '@/lib/cache';
 import { sendNoReplyEmail } from '@/lib/mail';
 import { parseFormData, adjustWalletSchema } from '@/lib/validation';
@@ -33,7 +33,14 @@ export async function adminUpdateUser(formData: FormData) {
   const confirmPassword = formData.get('confirmPassword') as string;
   
   const updateData: any = { name, nsuId, email, contact, gender };
-  
+
+  // Fetch the current role before update so we can detect a role change
+  // and notify the user (Phase 6/7 — previously role changes were silent).
+  const before = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, email: true, name: true },
+  });
+
   if (role) {
     updateData.role = role;
   }
@@ -73,6 +80,28 @@ export async function adminUpdateUser(formData: FormData) {
       return { error: 'A user with this information already exists.' };
     }
     return { error: 'Failed to update user profile.' };
+  }
+
+  // Phase 6/7: notify the user when their role was changed. Previously this
+  // critical account event was silent. Wrapped so it never affects the update.
+  if (role && before && before.role !== role) {
+    try {
+      await dispatch({
+        event: 'user.role_changed',
+        userId,
+        title: 'Your Account Role Has Changed',
+        message: `Your role on NSUone was updated from ${before.role} to ${role} by an administrator.`,
+        actionUrl: '/dashboard',
+        type: 'CRITICAL',
+        category: 'AUTH',
+        priority: 'CRITICAL',
+        actorUserId: (session.user as any).id,
+        recipientRoleHint: (role as any) === 'TUTOR' ? 'TUTOR' : (role as any) === 'ADMIN' ? 'ADMIN' : 'STUDENT',
+        metadata: { previousRole: before.role, newRole: role },
+      });
+    } catch (err) {
+      console.error('Failed to notify user of role change:', err);
+    }
   }
 
   revalidatePath('/admin/users');
@@ -203,12 +232,37 @@ export async function importCourses(courses: { name: string }[]) {
 export async function toggleBlockUser(userId: string, block: boolean) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== 'ADMIN') throw new Error('Not authorized');
-  
+
   try {
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
-      data: { isBlocked: block }
+      data: { isBlocked: block },
+      select: { id: true, role: true, name: true },
     });
+
+    // Phase 6/7: notify the user that their account access changed. A blocked
+    // user may not see the row until they're reinstated, but it's recorded
+    // for audit + appears on unblock. Critical priority = non-suppressible.
+    try {
+      await dispatch({
+        event: block ? 'user.blocked' : 'user.unblocked',
+        userId,
+        title: block ? 'Your Account Has Been Blocked' : 'Your Account Has Been Restored',
+        message: block
+          ? 'Your NSUone account has been blocked by an administrator. Please contact support if you believe this is an error.'
+          : 'Your NSUone account has been restored. You can resume using the platform normally.',
+        actionUrl: '/contact',
+        type: 'CRITICAL',
+        category: 'SECURITY',
+        priority: 'CRITICAL',
+        actorUserId: (session.user as any).id,
+        recipientRoleHint: (user.role as any) === 'TUTOR' ? 'TUTOR' : 'STUDENT',
+        metadata: { previousBlocked: !block, newBlocked: block },
+      });
+    } catch (err) {
+      console.error('Failed to notify user of block status change:', err);
+    }
+
     revalidatePath('/admin/users');
     return { success: true };
   } catch (err: any) {
@@ -339,12 +393,25 @@ export async function adjustUserBalance(formData: FormData) {
     // Notify the user (push + email). Fire-and-forget.
     const verb = isCredit ? 'credited to' : 'debited from';
     try {
-      await createNotification(
+      await dispatch({
+        event: 'wallet.adjusted',
         userId,
-        isCredit ? 'Wallet Credited' : 'Wallet Debited',
-        `${amount} BDT has been ${verb} your wallet — ${reason}`,
-        '/wallet',
-      );
+        title: isCredit ? 'Wallet Credited' : 'Wallet Debited',
+        message: `${amount} BDT has been ${verb} your wallet — ${reason}`,
+        actionUrl: '/wallet',
+        type: isCredit ? 'SUCCESS' : 'WARNING',
+        category: 'WALLET',
+        priority: 'HIGH',
+        actorUserId: adminId,
+        recipientRoleHint: result.user.role === 'TUTOR' ? 'TUTOR' : 'STUDENT',
+        metadata: {
+          amount,
+          signedDelta,
+          reason,
+          newBalance: result.newBalance,
+          direction,
+        },
+      });
     } catch (err) {
       console.error('Failed to notify user of wallet adjustment:', err);
     }
@@ -474,12 +541,54 @@ export async function deleteConsultancyTopic(id: string) {
 }
 
 export async function setConsultancyRequestStatus(id: string, status: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   if (!['PENDING', 'ASSIGNED', 'COMPLETED', 'CANCELLED'].includes(status)) {
     return { error: 'Invalid status.' };
   }
   try {
+    // Fetch before update so we can detect a real change and notify the student.
+    const existing = await prisma.consultancyRequest.findUnique({
+      where: { id },
+      select: { studentId: true, status: true, topic: true },
+    });
+    if (!existing) {
+      return { error: 'Consultancy request not found.' };
+    }
+    if (existing.status === status) {
+      return { success: true };
+    }
+
     await prisma.consultancyRequest.update({ where: { id }, data: { status } });
+
+    // Phase 7: in-app notification to the student (previously silent). The
+    // status vocabulary maps to a user-facing label.
+    const statusLabel =
+      status === 'ASSIGNED' ? 'assigned to a mentor'
+      : status === 'COMPLETED' ? 'marked complete'
+      : status === 'CANCELLED' ? 'cancelled'
+      : 'updated';
+    try {
+      await dispatch({
+        event: 'consultancy.status_changed',
+        userId: existing.studentId,
+        title: 'Consultancy Request Update',
+        message: `Your consultancy request "${existing.topic}" was ${statusLabel} by an administrator.`,
+        actionUrl: '/consultancy',
+        type: status === 'COMPLETED' ? 'SUCCESS' : status === 'CANCELLED' ? 'WARNING' : 'INFO',
+        category: 'CONSULTANCY',
+        priority: 'HIGH',
+        actorUserId: (session.user as any).id,
+        recipientRoleHint: 'STUDENT',
+        metadata: {
+          consultancyRequestId: id,
+          previousStatus: existing.status,
+          newStatus: status,
+        },
+      });
+    } catch (err) {
+      console.error('Failed to notify student of consultancy status change:', err);
+    }
+
     revalidatePath('/admin/consultancy');
     return { success: true };
   } catch (err: any) {
@@ -492,7 +601,7 @@ export async function setConsultancyRequestStatus(id: string, status: string) {
 // ──────────────────────────────────────────────────────────────────────────
 
 export async function updateTutorExpertise(formData: FormData) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const id = formData.get('id') as string;
   if (!id) return { error: 'ID is required.' };
 
@@ -514,6 +623,13 @@ export async function updateTutorExpertise(formData: FormData) {
   }
 
   try {
+    // Fetch the existing row so we can notify the affected tutor (Phase 6 —
+    // previously admin expertise edits were silent to the tutor).
+    const existing = await prisma.tutorExpertise.findUnique({
+      where: { id },
+      select: { tutorId: true, courseId: true },
+    });
+
     await prisma.tutorExpertise.update({
       where: { id },
       data: {
@@ -527,6 +643,37 @@ export async function updateTutorExpertise(formData: FormData) {
         isActive,
       },
     });
+
+    if (existing) {
+      const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        select: { name: true },
+      });
+      try {
+        await dispatch({
+          event: 'tutor.expertise_updated',
+          userId: existing.tutorId,
+          title: 'Your expertise was updated by an admin',
+          message: `An administrator updated your expertise for ${course?.name ?? 'a course'} (session fee ${sessionFee} BDT${isActive ? '' : ', now inactive'}).`,
+          actionUrl: '/tutor/expertise',
+          type: 'INFO',
+          category: 'COURSE',
+          priority: 'MEDIUM',
+          actorUserId: (session.user as any).id,
+          recipientRoleHint: 'TUTOR',
+          metadata: {
+            expertiseId: id,
+            courseId,
+            previousCourseId: existing.courseId,
+            sessionFee,
+            isActive,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to notify tutor of expertise update:', err);
+      }
+    }
+
     revalidatePath('/admin/expertises');
     return { success: true };
   } catch (err: any) {
@@ -535,9 +682,41 @@ export async function updateTutorExpertise(formData: FormData) {
 }
 
 export async function deleteTutorExpertise(id: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   try {
+    // Fetch before deleting so we can notify the affected tutor (Phase 6 —
+    // previously admin expertise deletions were silent to the tutor).
+    const existing = await prisma.tutorExpertise.findUnique({
+      where: { id },
+      select: { tutorId: true, courseId: true },
+    });
+
     await prisma.tutorExpertise.delete({ where: { id } });
+
+    if (existing) {
+      const course = await prisma.course.findUnique({
+        where: { id: existing.courseId },
+        select: { name: true },
+      });
+      try {
+        await dispatch({
+          event: 'tutor.expertise_deleted',
+          userId: existing.tutorId,
+          title: 'Your expertise was removed by an admin',
+          message: `An administrator removed your expertise for ${course?.name ?? 'a course'}. If you believe this was an error, please contact support.`,
+          actionUrl: '/tutor/expertise',
+          type: 'WARNING',
+          category: 'COURSE',
+          priority: 'HIGH',
+          actorUserId: (session.user as any).id,
+          recipientRoleHint: 'TUTOR',
+          metadata: { expertiseId: id, courseId: existing.courseId },
+        });
+      } catch (err) {
+        console.error('Failed to notify tutor of expertise deletion:', err);
+      }
+    }
+
     revalidatePath('/admin/expertises');
     return { success: true };
   } catch (err: any) {

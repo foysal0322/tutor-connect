@@ -24,6 +24,7 @@ import { resolveFromTemplate } from "./templates";
 import { DEFAULT_DISPATCH_CHANNELS } from "./channels";
 import type { ChannelName } from "./channels";
 import { attemptDelivery } from "./delivery";
+import { getEffectiveChannels } from "./preferences";
 import type {
   NotificationCategory,
   NotificationChannel,
@@ -100,7 +101,19 @@ function resolveChannels(event: NotificationEvent): ChannelName[] {
 //         the delivery RETRYING and are left for the outbox sweeper.
 export async function dispatch(event: NotificationEvent): Promise<Notification> {
   const resolved = resolveEvent(event);
-  const channelNames = resolveChannels(event);
+  const requestedChannels = resolveChannels(event);
+
+  // Phase 10: apply per-user preferences before creating delivery rows. The
+  // Notification row itself is ALWAYS created (it's the audit trail + the
+  // Notification Center feed); only the channel fan-out is filtered. CRITICAL
+  // priority + AUTH/SECURITY categories bypass preferences entirely
+  // (blueprint §XVI #10) — getEffectiveChannels enforces this.
+  const channelNames = await getEffectiveChannels({
+    userId: event.userId,
+    category: resolved.category,
+    priority: resolved.priority,
+    requested: requestedChannels,
+  });
 
   const { notification, deliveries } = await prisma.$transaction(async (tx) => {
     const created = await tx.notification.create({

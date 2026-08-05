@@ -1,0 +1,485 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  padding-bottom: var(--space-8, 32px);
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+}
+
+.categories {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.chip:hover {
+  background-color: var(--surface-1);
+  color: var(--text-main);
+}
+
+.chipActive {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.chipActive:hover {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+.toolbarActions {
+  display: flex;
+  gap: var(--space-3, 12px);
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: var(--space-2, 8px);
+  border-top: 1px solid var(--border-color);
+}
+
+.toggle {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggle:hover {
+  background-color: var(--surface-1);
+}
+
+.toggleActive {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm, 6px);
+  transition: background-color 0.15s ease;
+}
+
+.textButton:hover:not(:disabled) {
+  background-color: var(--primary-light);
+}
+
+.textButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Bulk action bar ───────────────────────────────────────────────────── */
+
+.bulkBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md, 8px);
+}
+
+.bulkCount {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.bulkActions {
+  display: flex;
+  gap: var(--space-2, 8px);
+  align-items: center;
+}
+
+.bulkButton,
+.bulkButtonGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.bulkButton {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.bulkButton:hover {
+  background-color: var(--surface-1);
+}
+
+.bulkButtonGhost {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+}
+
+.bulkButtonGhost:hover {
+  color: var(--text-main);
+}
+
+/* ── List body ─────────────────────────────────────────────────────────── */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 24px);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+}
+
+.sectionHeading {
+  margin: 0;
+  padding: 0 var(--space-4, 16px);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3, 12px);
+  padding: 0;
+  border-bottom: 1px solid var(--border-color);
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s ease;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background-color: var(--surface-1);
+}
+
+.rowUnread {
+  background-color: var(--primary-light);
+}
+
+.rowUnread:hover {
+  background-color: var(--primary-light);
+}
+
+.rowSelected {
+  background-color: var(--surface-2);
+}
+
+.priorityCritical {
+  border-left-color: var(--danger, #ef4444);
+}
+
+.priorityHigh {
+  border-left-color: #f59e0b;
+}
+
+.priorityMedium {
+  border-left-color: var(--primary);
+}
+
+.priorityLow {
+  border-left-color: transparent;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  flex: 1;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.checkbox {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.rowContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rowTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.rowUnread .rowTitle {
+  font-weight: 700;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rowMessage {
+  font-size: 0.875rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.rowMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.categoryPill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  background-color: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: 999px;
+}
+
+.dot {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  flex-shrink: 0;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.iconButton:hover {
+  background-color: var(--surface-2);
+  color: var(--text-main);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: transparent;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.openLink:hover {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+/* ── Select-all + sr-only (Phase 11) ──────────────────────────────────── */
+
+.selectAllLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllLabel .checkbox {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Focus-visible (Phase 11) ─────────────────────────────────────────── */
+/* Visible focus ring on every interactive surface for keyboard users.
+   Mouse clicks don't trigger focus-visible so the visual stays clean. */
+
+.chip:focus-visible,
+.toggle:focus-visible,
+.textButton:focus-visible,
+.bulkButton:focus-visible,
+.bulkButtonGhost:focus-visible,
+.openLink:focus-visible,
+.selectAllLabel:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+/* ── States ────────────────────────────────────────────────────────────── */
+
+.error {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9rem;
+}
+
+.sentinel {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4, 16px);
+  min-height: 48px;
+}
+
+.loadMoreLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.endMark {
+  text-align: center;
+  padding: var(--space-4, 16px);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+/* On narrow screens, the row actions wrap below the content. The checkbox
+   stays anchored top-left so multi-select still works one-handed. */
+
+@media (max-width: 640px) {
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .checkboxLabel {
+    padding: var(--space-3, 12px);
+  }
+  .rowActions {
+    padding: 0 var(--space-3, 12px) var(--space-3, 12px);
+    justify-content: flex-end;
+  }
+  .toolbarActions {
+    justify-content: space-between;
+  }
+}

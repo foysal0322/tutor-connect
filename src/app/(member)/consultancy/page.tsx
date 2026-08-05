@@ -6,8 +6,8 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
-import { createNotification } from '@/lib/notification';
 import { notifyAdmins } from '@/lib/notifications/admin';
+import { dispatch } from '@/lib/notifications/service';
 import { getPlatformSettings } from '@/lib/cache';
 import { redeemCoupon } from '@/lib/coupon';
 import { Input } from '@/components/ui/Input';
@@ -198,12 +198,19 @@ export default async function ConsultancyPage() {
       }
 
       try {
-        await createNotification(
-          student.id,
-          'Consultancy Booked',
-          `Your ${isFree ? 'free' : 'paid'} consultancy request for "${result.request.topic}" was received.`,
-          '/consultancy',
-        );
+        await dispatch({
+          event: 'consultancy.booked',
+          userId: student.id,
+          title: 'Consultancy Booked',
+          message: `Your ${isFree ? 'free' : 'paid'} consultancy request for "${result.request.topic}" was received.`,
+          actionUrl: '/consultancy',
+          type: 'SUCCESS',
+          category: 'CONSULTANCY',
+          priority: 'HIGH',
+          actorUserId: student.id,
+          recipientRoleHint: 'STUDENT',
+          metadata: { requestId: result.request.id, topic: result.request.topic, paid: !isFree },
+        });
       } catch (err) {
         console.error('Failed to notify user of consultancy booking:', err);
       }

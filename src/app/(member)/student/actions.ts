@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { notifyNewCourseRequest, notifyPaymentSubmission, notifyRefundRequest } from '@/lib/discord';
 import { notifyAdmins } from '@/lib/notifications/admin';
+import { dispatch } from '@/lib/notifications/service';
 import {
   parseFormData,
   submitTutorRequestSchema,
@@ -95,6 +96,27 @@ export async function submitTutorRequest(formData: FormData) {
         actorUserId: studentId,
         metadata: { requestId: undefined, courseId, budget },
       });
+    }
+
+    // Phase 7: in-app receipt to the student (previously they got nothing in
+    // their own bell for submitting a request — only admins heard via Discord).
+    try {
+      await dispatch({
+        event: 'tutor_request.submitted_receipt',
+        userId: studentId,
+        title: 'Tutor Request Submitted',
+        message: tutorId
+          ? `Your request for ${course?.name ?? 'a course'} was submitted and a tutor has been assigned. We'll notify you once payment is verified.`
+          : `Your request for ${course?.name ?? 'a course'} was submitted. We'll match you with a tutor and notify you.`,
+        actionUrl: '/student',
+        type: 'INFO',
+        category: 'TUTOR_REQUEST',
+        priority: 'LOW',
+        recipientRoleHint: 'STUDENT',
+        metadata: { courseId, budget, assignedTutorId: tutorId },
+      });
+    } catch (err) {
+      console.error('Failed to send student tutor-request receipt:', err);
     }
   } catch (err) {
     console.error('Failed to send discord notification', err);
@@ -328,6 +350,33 @@ export async function submitPayment(formData: FormData) {
         actorUserId: studentId,
         metadata: { requestId, transactionId: sanitizedTransactionId, amount: totalPaid, method: finalMfsType },
       });
+
+      // Phase 7: in-app receipt to the student (previously the student got
+      // no confirmation in their own bell — only admins heard via Discord).
+      const instantlyVerified = newStatus === 'ACCEPTED';
+      await dispatch({
+        event: 'payment.submitted_receipt',
+        userId: studentId,
+        title: 'Payment Submitted',
+        message: instantlyVerified
+          ? `Your ${totalPaid} BDT ${finalMfsType} payment was submitted and auto-verified. Your session is now active.`
+          : `Your ${totalPaid} BDT ${finalMfsType} payment was submitted. We'll notify you once it's verified.`,
+        actionUrl: '/student/payments',
+        type: instantlyVerified ? 'SUCCESS' : 'INFO',
+        category: 'PAYMENT',
+        priority: 'MEDIUM',
+        recipientRoleHint: 'STUDENT',
+        metadata: {
+          requestId,
+          amount: totalPaid,
+          method: finalMfsType,
+          transactionId: sanitizedTransactionId,
+          autoVerified: instantlyVerified,
+          couponDiscount,
+        },
+      }).catch((err) => {
+        console.error('Failed to send student payment receipt:', err);
+      });
     } catch (err) {
       console.error('Failed to send payment discord notification', err);
     }
@@ -368,7 +417,13 @@ export async function completeTutorRequest(requestId: string, rating?: number | 
     // Verify the request belongs to this student
     const request = await prisma.tutorRequest.findFirst({
       where: { id: requestId, studentId },
-      select: { id: true, status: true }
+      select: {
+        id: true,
+        status: true,
+        topic: true,
+        assignedTutorId: true,
+        course: { select: { name: true } },
+      }
     });
 
     if (!request) return { error: 'Request not found.' };
@@ -386,6 +441,49 @@ export async function completeTutorRequest(requestId: string, rating?: number | 
       where: { id: requestId },
       data: updateData
     });
+
+    // Phase 6: notify the assigned tutor (and admins) that the session was
+    // completed. Previously this transition was silent to the tutor even
+    // though it directly affects their earnings.
+    if (request.assignedTutorId) {
+      try {
+        await dispatch({
+          event: 'tutor.session_completed',
+          userId: request.assignedTutorId,
+          title: 'Session Marked Complete',
+          message: `Your student marked "${request.topic || 'session'}" (${request.course.name}) as complete.${rating ? ` They rated you ${rating}/5.` : ''}`,
+          actionUrl: '/tutor',
+          type: 'SUCCESS',
+          category: 'BOOKING',
+          priority: 'MEDIUM',
+          actorUserId: studentId,
+          recipientRoleHint: 'TUTOR',
+          metadata: {
+            requestId,
+            rating: rating ?? null,
+            hasReview: !!(review && review.trim()),
+          },
+        });
+      } catch (err) {
+        console.error('Failed to notify tutor of session completion:', err);
+      }
+    }
+
+    try {
+      await notifyAdmins({
+        event: 'tutor_request.completed',
+        title: 'Session Completed',
+        message: `A tutoring session for "${request.topic || 'session'}" (${request.course.name}) was marked complete by the student.${rating ? ` Rating: ${rating}/5.` : ''}`,
+        actionUrl: '/admin/requests',
+        type: 'INFO',
+        category: 'BOOKING',
+        priority: 'LOW',
+        actorUserId: studentId,
+        metadata: { requestId, assignedTutorId: request.assignedTutorId, rating: rating ?? null },
+      });
+    } catch (err) {
+      console.error('Failed to notify admins of session completion:', err);
+    }
 
     revalidatePath('/student');
     return { success: true };
@@ -469,6 +567,22 @@ export async function submitRefundRequest(formData: FormData) {
         priority: 'HIGH',
         actorUserId: studentId,
         metadata: { requestId, refundRequestDetails: details.trim() },
+      });
+
+      // Phase 7: in-app receipt to the student (previously silent in their bell).
+      await dispatch({
+        event: 'refund.submitted_receipt',
+        userId: studentId,
+        title: 'Refund Request Submitted',
+        message: `Your refund request was received and is now pending review. We'll notify you once it's processed.`,
+        actionUrl: '/student',
+        type: 'INFO',
+        category: 'REFUND',
+        priority: 'MEDIUM',
+        recipientRoleHint: 'STUDENT',
+        metadata: { requestId, details: details.trim() },
+      }).catch((err) => {
+        console.error('Failed to send student refund receipt:', err);
       });
     } catch (err) {
       console.error('Failed to send refund discord notification', err);

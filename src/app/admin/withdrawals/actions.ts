@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { sendNoReplyEmail } from '@/lib/mail';
 import { idSchema } from '@/lib/validation';
+import { dispatch } from '@/lib/notifications/service';
 
 export async function verifyWithdrawalRequest(withdrawId: string, approve: boolean) {
   const session = await getServerSession(authOptions);
@@ -87,6 +88,36 @@ export async function verifyWithdrawalRequest(withdrawId: string, approve: boole
       });
     } catch (mailErr) {
       console.error('Failed to send withdrawal status email:', mailErr);
+    }
+
+    // Phase 6: in-app + push notification to the tutor (additive — the email
+    // above is unchanged). Previously tutors only received an email; this
+    // gives them a Notification row + web push so the bell surfaces it.
+    try {
+      await dispatch({
+        event: approve ? 'withdrawal.approved' : 'withdrawal.rejected',
+        userId: request.tutorId,
+        title: `Withdrawal ${approve ? 'Approved' : 'Rejected'}`,
+        message: approve
+          ? `Your withdrawal of ${request.netAmount} BDT has been approved and is being processed.`
+          : `Your withdrawal of ${request.netAmount} BDT was rejected. Contact support if you have questions.`,
+        actionUrl: '/tutor/earnings',
+        type: approve ? 'SUCCESS' : 'REJECTION',
+        category: 'WITHDRAWAL',
+        priority: approve ? 'HIGH' : 'HIGH',
+        actorUserId: (session.user as any).id,
+        recipientRoleHint: 'TUTOR',
+        metadata: {
+          withdrawalId: request.id,
+          amount: request.amount,
+          netAmount: request.netAmount,
+          method: request.method,
+          mfsType: request.mfsType,
+          accountNumber: request.accountNumber,
+        },
+      });
+    } catch (err) {
+      console.error('Failed to notify tutor of withdrawal status:', err);
     }
 
     revalidatePath('/admin/withdrawals');

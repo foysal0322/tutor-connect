@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendSupportEmail } from '@/lib/mail';
 import { notifyAdmins } from '@/lib/notifications/admin';
+import { dispatch } from '@/lib/notifications/service';
 
 export async function submitSupportTicket(formData: FormData) {
   const name = formData.get('name') as string;
@@ -50,6 +51,32 @@ export async function submitSupportTicket(formData: FormData) {
       });
     } catch (e) {
       console.error('Failed to notify admins of support ticket:', e);
+    }
+
+    // Phase 7: in-app receipt to the submitter if they have an NSUone
+    // account. The contact form is open to guests, so email is the primary
+    // channel; this in-app row is a bonus for authenticated users.
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, role: true },
+      });
+      if (user) {
+        await dispatch({
+          event: 'support.submitted_receipt',
+          userId: user.id,
+          title: 'Support Ticket Received',
+          message: `We received your support ticket regarding "${type}". Our team will get back to you soon.`,
+          actionUrl: '/contact',
+          type: 'INFO',
+          category: 'SUPPORT',
+          priority: 'LOW',
+          recipientRoleHint: user.role === 'TUTOR' ? 'TUTOR' : 'STUDENT',
+          metadata: { ticketType: type, ticketEmail: email },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to send in-app support receipt:', err);
     }
 
     try {
@@ -112,6 +139,33 @@ export async function resolveSupportTicket(id: string) {
         });
       } catch (mailErr) {
         console.error('Failed to send ticket resolution email:', mailErr);
+      }
+
+      // Phase 7: in-app notification to the ticket submitter if they have an
+      // NSUone account. SupportTicket has no userId column — we resolve by
+      // email. If no matching user, the email above is the only channel.
+      try {
+        const user = await prisma.user.findUnique({
+          where: { email: ticket.email },
+          select: { id: true, role: true },
+        });
+        if (user) {
+          await dispatch({
+            event: 'support.resolved',
+            userId: user.id,
+            title: 'Support Ticket Resolved',
+            message: `Your support ticket regarding "${ticket.type}" has been marked resolved. Reply to our email if you need more help.`,
+            actionUrl: '/contact',
+            type: 'INFO',
+            category: 'SUPPORT',
+            priority: 'MEDIUM',
+            actorUserId: (session.user as any).id,
+            recipientRoleHint: user.role === 'TUTOR' ? 'TUTOR' : 'STUDENT',
+            metadata: { ticketId: ticket.id, ticketType: ticket.type },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send in-app support resolution:', err);
       }
     }
 
