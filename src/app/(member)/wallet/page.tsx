@@ -6,8 +6,8 @@ import { getWalletData } from './actions';
 import WalletClient from './WalletClient';
 import WalletHub from './WalletHub';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import PaymentsView from '@/app/(marketing)/student/payments/PaymentsView';
-import EarningsClient from '@/app/(marketing)/tutor/earnings/EarningsClient';
+import PaymentsView from '@/app/(member)/student/payments/PaymentsView';
+import EarningsClient from '@/app/(member)/tutor/earnings/EarningsClient';
 
 export const revalidate = 0; // Dynamic on every request.
 

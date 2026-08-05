@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookOpen, CheckCircle, MessageSquare, History, Search, PlusCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { KPI } from "@/components/ui/KPI";
-import StudentRequestList from "@/app/(marketing)/student/StudentRequestList";
+import StudentRequestList from "@/app/(member)/student/StudentRequestList";
 
 /**
  * Learning panel — async server component (Phase 3).
