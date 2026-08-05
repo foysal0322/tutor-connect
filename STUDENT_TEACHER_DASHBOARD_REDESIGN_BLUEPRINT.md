@@ -885,7 +885,7 @@ aggregate`, `tutorRequest.count`) are all read-only and run in
 
 **Verification:** `npm run build` ✅.
 
-### Phase 8 — `/tutor/expertise` polish
+### Phase 8 — `/tutor/expertise` polish · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Migrate add/edit from `Modal` → `Sheet`; add bulk select; extend filters (dept/course/fee).
 - **Files likely affected:** `src/app/(marketing)/tutor/expertise/ExpertiseDashboard.tsx`, `AddExpertiseForm.tsx`.
 - **Dependencies:** Phase 1.
@@ -894,6 +894,39 @@ aggregate`, `tutorRequest.count`) are all read-only and run in
 - **Rollback:** Revert.
 - **Complexity:** M.
 - **Acceptance:** Editor opens as `Sheet`; filters/bulk work; behavior unchanged.
+
+**Implementation notes (2026-08-05):**
+- ✅ **Modal → Sheet.** The add/edit expertise form now opens as a
+  right-drawer `<Sheet>` (36rem) instead of a centered `<Modal>`. The
+  Sheet handles portal, focus-trap, escape, and backdrop-close
+  automatically. `AddExpertiseForm` renders unchanged inside the Sheet
+  body. Eliminates the `Modal` import.
+- ✅ **Extended filters.** Two new `<Select>` dropdowns added to the
+  toolbar (alongside the existing search + status radio chips + sort):
+  - **Department filter** — derived from the expertises' unique
+    departments; only appears when there are 2+ departments.
+  - **Fee range filter** — presets: Any / Under 500 / 500–1,000 /
+    Over 1,000 BDT.
+  Both filters compose with the existing search + status filter in the
+  `visible` useMemo.
+- ✅ **Bulk select + activate/deactivate.**
+  - **Per-card checkbox**: each expertise card gets a `CheckSquare` /
+    `Square` toggle button at the top-left. Selection state lives in a
+    `Set<string>` (`selectedIds`).
+  - **Select all**: a "Select all" button above the list
+    toggles selection of all visible items.
+  - **Bulk action bar**: when `selectedIds.size > 0`, a primary-tinted
+    bar appears with the count + Activate / Deactivate / Clear buttons.
+    Bulk actions call `toggleTutorExpertise` per-item (no new server
+    action) and show a toast with the count. Clears selection on
+    completion.
+
+**Behavior unchanged:** per-item toggle, edit, delete, add — all
+handler functions and server actions (`toggleTutorExpertise`,
+`deleteTutorExpertise`, `addTutorExpertise`, `updateTutorExpertise`)
+are preserved verbatim.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 9 — `CommandPalette` + breadcrumbs for member
 - **Objective:** Wire member nav items + quick actions (go to Find Tutor, Request Tutor, Withdraw, Add Expertise, Toggle Theme, Sign Out) into `CommandPalette`; extend `breadcrumb-map.ts`.

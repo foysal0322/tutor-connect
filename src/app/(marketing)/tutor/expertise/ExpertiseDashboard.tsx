@@ -15,10 +15,14 @@ import {
   Tag,
   Trash2,
   User,
+  CheckSquare,
+  Square,
+  CheckCheck,
+  XCircle,
 } from 'lucide-react';
 
 import { useToast } from '@/components/ToastProvider';
-import { Modal } from '@/components/ui/Modal';
+import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import StatCard from '@/components/ui/StatCard';
@@ -201,6 +205,8 @@ export default function ExpertiseDashboard({
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('recent');
+  const [deptFilter, setDeptFilter] = useState('');
+  const [feeFilter, setFeeFilter] = useState('all');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -209,8 +215,23 @@ export default function ExpertiseDashboard({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Expertise | null>(null);
 
+  // Bulk select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const editingExpertise = expertises.find((e) => e.id === editingId) ?? null;
   const modalOpen = isAdding || editingId !== null;
+
+  /* ----- derived departments for filter dropdown ------------------------- */
+  const departments = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of expertises) {
+      if (e.course?.department) {
+        map.set(e.course.department.id, e.course.department.name);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [expertises]);
 
   /* ----- derived summary stats ------------------------------------------- */
 
@@ -235,6 +256,10 @@ export default function ExpertiseDashboard({
     let list = expertises.filter((e) => {
       if (statusFilter === 'active' && !e.isActive) return false;
       if (statusFilter === 'inactive' && e.isActive) return false;
+      if (deptFilter && e.course?.department?.id !== deptFilter) return false;
+      if (feeFilter === 'under500' && (e.sessionFee || 0) >= 500) return false;
+      if (feeFilter === '500to1000' && ((e.sessionFee || 0) < 500 || (e.sessionFee || 0) > 1000)) return false;
+      if (feeFilter === 'over1000' && (e.sessionFee || 0) <= 1000) return false;
       if (!q) return true;
       const haystack = [
         e.course?.name,
@@ -258,7 +283,50 @@ export default function ExpertiseDashboard({
     });
 
     return list;
-  }, [expertises, query, statusFilter, sortKey]);
+  }, [expertises, query, statusFilter, sortKey, deptFilter, feeFilter]);
+
+  /* ----- bulk select helpers --------------------------------------------- */
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      if (prev.size === visible.length) return new Set();
+      return new Set(visible.map((e) => e.id));
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  async function handleBulkToggle(targetActive: boolean) {
+    const toToggle = expertises.filter(
+      (e) => selectedIds.has(e.id) && e.isActive !== targetActive,
+    );
+    if (toToggle.length === 0) {
+      clearSelection();
+      return;
+    }
+    setBulkLoading(true);
+    let ok = 0;
+    for (const exp of toToggle) {
+      const res = await toggleTutorExpertise(exp.id, targetActive);
+      if (!res?.error) ok++;
+    }
+    setBulkLoading(false);
+    clearSelection();
+    toast.success(
+      `${ok} expertise${ok === 1 ? '' : 's'} ${targetActive ? 'activated' : 'deactivated'}.`,
+    );
+  }
 
   /* ----- handlers --------------------------------------------------------- */
 
@@ -437,8 +505,79 @@ export default function ExpertiseDashboard({
                   { value: 'alpha', label: 'Alphabetical' },
                 ]}
               />
+
+              {departments.length > 1 && (
+                <Select
+                  label="Filter by department"
+                  hideLabel
+                  containerClassName={s.sortSelect}
+                  value={deptFilter}
+                  onChange={setDeptFilter}
+                  placeholderOption="All departments"
+                  options={departments.map((d) => ({ value: d.id, label: d.name }))}
+                />
+              )}
+
+              <Select
+                label="Filter by fee"
+                hideLabel
+                containerClassName={s.sortSelect}
+                value={feeFilter}
+                onChange={setFeeFilter}
+                options={[
+                  { value: 'all', label: 'Any fee' },
+                  { value: 'under500', label: 'Under 500 BDT' },
+                  { value: '500to1000', label: '500 – 1,000 BDT' },
+                  { value: 'over1000', label: 'Over 1,000 BDT' },
+                ]}
+              />
             </div>
           </div>
+
+          {/* ---------- Bulk action bar ---------- */}
+          {selectedIds.size > 0 && (
+            <div
+              className={s.bulkBar}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-3)',
+                padding: 'var(--space-2) var(--space-4)',
+                marginBottom: 'var(--space-3)',
+                borderRadius: 'var(--radius-md)',
+                background: 'color-mix(in srgb, var(--primary) 8%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                {selectedIds.size} selected
+              </span>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', marginLeft: 'auto', flexWrap: 'wrap' }}>
+                <Button
+                  size="sm"
+                  onClick={() => handleBulkToggle(true)}
+                  loading={bulkLoading}
+                >
+                  <Power size={14} aria-hidden="true" />
+                  Activate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleBulkToggle(false)}
+                  loading={bulkLoading}
+                >
+                  <Power size={14} aria-hidden="true" />
+                  Deactivate
+                </Button>
+                <Button size="sm" variant="secondary" onClick={clearSelection} disabled={bulkLoading}>
+                  <XCircle size={14} aria-hidden="true" />
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* ---------- List ---------- */}
           {visible.length === 0 ? (
@@ -457,6 +596,43 @@ export default function ExpertiseDashboard({
               </Button>
             </div>
           ) : (
+            <>
+            {/* Select all bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+                marginBottom: 'var(--space-3)',
+                padding: '0 var(--space-2)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={toggleSelectAll}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  padding: '0.25rem 0',
+                }}
+              >
+                {selectedIds.size === visible.length && visible.length > 0 ? (
+                  <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
+                ) : (
+                  <Square size={18} />
+                )}
+                {selectedIds.size === visible.length && visible.length > 0
+                  ? `All ${visible.length} selected`
+                  : 'Select all'}
+              </button>
+            </div>
             <ul
               className="expertise-list"
               style={{
@@ -493,6 +669,23 @@ export default function ExpertiseDashboard({
                       transition: 'opacity var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard)',
                     }}
                   >
+                    {/* Selection checkbox — top-left, before title row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(exp.id)}
+                        aria-label={`Select ${exp.course?.name ?? 'expertise'}`}
+                        aria-pressed={selectedIds.has(exp.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex' }}
+                      >
+                        {selectedIds.has(exp.id) ? (
+                          <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
+                        ) : (
+                          <Square size={18} style={{ color: 'var(--text-muted)' }} />
+                        )}
+                      </button>
+                    </div>
+
                     {/* Row 1: title + status + toggle */}
                     <div
                       style={{
@@ -640,16 +833,17 @@ export default function ExpertiseDashboard({
                 );
               })}
             </ul>
+            </>
           )}
         </>
       )}
 
-      {/* ---------- Add / Edit modal ---------- */}
-      <Modal
+      {/* ---------- Add / Edit Sheet ---------- */}
+      <Sheet
         open={modalOpen}
         onClose={closeModal}
         title={editingId ? 'Edit Expertise' : 'Add New Expertise'}
-        maxWidth="36rem"
+        size="36rem"
       >
         {editingId && editingExpertise ? (
           <AddExpertiseForm
@@ -665,7 +859,7 @@ export default function ExpertiseDashboard({
             onCancel={closeModal}
           />
         )}
-      </Modal>
+      </Sheet>
 
       {/* ---------- Delete confirmation ---------- */}
       <ConfirmDialog
