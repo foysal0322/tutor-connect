@@ -3,8 +3,9 @@
 /**
  * Sheet — side-drawer variant of Modal (Phase 1).
  *
- * Used in Phase 8 for detail editors (e.g., /admin/users/<id>) and
- * mobile-friendly affordances where a centered Modal would feel heavy.
+ * Used for detail editors (e.g., /admin/users/<id>, /tutor/expertise
+ * add/edit) and mobile-friendly affordances where a centered Modal
+ * would feel heavy.
  * Mirrors Modal's accessibility contract:
  *
  *   - Portal into document.body

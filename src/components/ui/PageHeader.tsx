@@ -1,10 +1,10 @@
 import React from "react";
 
 /**
- * PageHeader — standard page title + subtitle + actions slot (Phase 1).
+ * PageHeader — standard page title + subtitle + actions slot.
  *
- * Every admin page (post-Phase-6 migration) will start with this header
- * so the visual hierarchy is consistent:
+ * Every redesigned page on the platform (admin and member) starts with
+ * this header so the visual hierarchy is consistent:
  *
  *   Breadcrumb (rendered separately by Topbar)
  *   ────────────────────────────────────────

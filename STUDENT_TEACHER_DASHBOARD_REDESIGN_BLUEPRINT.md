@@ -553,7 +553,7 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 - **Complexity:** XS.
 - **Acceptance:** Member routes appear in breadcrumbs + command palette; no behavior change.
 
-### Phase 1 — Shared primitives readiness
+### Phase 1 — Shared primitives readiness · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Ensure `KPI`, `PageHeader`, `Toolbar`, `Tabs`, `EmptyState`, skeletons are role-agnostic (no admin-only hard-coding).
 - **Files likely affected:** `src/components/ui/*`, `src/components/forms/*`.
 - **Dependencies:** Phase 0.
@@ -562,6 +562,42 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 - **Rollback:** Revert.
 - **Complexity:** S.
 - **Acceptance:** Primitives render correctly in member context with no admin branding leakage.
+
+**Audit result (2026-08-05):**
+- ✅ All Phase 1 primitives are **purely token-driven** — every color,
+  spacing, radius, shadow, and motion value comes from `--*` CSS
+  variables in `globals.css`. No raw hex, no hard-coded px outside the
+  documented `Topbar` height anchor in `Toolbar`.
+- ✅ **No functional admin hard-coding.** Every `admin` mention in the
+  primitive files was a JSDoc comment framing the primitive as
+  admin-only; those have been neutralised to reflect platform-wide
+  usage (KPI, PageHeader, Toolbar, DataGrid, DataGrid.module.css,
+  CommandPalette, ConfirmDialog, Sheet, Select, SkeletonDashboardStats).
+- ✅ **Member-side consumption already works.** `Tabs` is imported by
+  `/wallet/WalletHub.tsx`, `/dashboard/DashboardContent.tsx`, and
+  `/tutor/expertise/ExpertiseDashboard.tsx`; the latter also consumes
+  `Modal`, `Button`, `Badge`, `StatCard`, `EmptyState`,
+  `ConfirmDialog`, `Select`. No admin-only import paths leak across.
+- ✅ `forms/*` family contains **zero** `admin`/`Admin`/`ADMIN`
+  references — fully role-agnostic already.
+- ✅ `EmptyState` uses utility classes (`.flex`, `.bg-card`,
+  `.border-color`, `.text-muted`) that are defined in `globals.css`
+  independent of any role context.
+
+**Files touched:**
+- `src/components/ui/KPI.tsx` (doc only)
+- `src/components/ui/PageHeader.tsx` (doc only)
+- `src/components/ui/Toolbar.tsx` (doc only)
+- `src/components/ui/DataGrid.tsx` (doc only)
+- `src/components/ui/DataGrid.module.css` (doc only)
+- `src/components/ui/CommandPalette.tsx` (doc only)
+- `src/components/ui/ConfirmDialog.tsx` (doc only)
+- `src/components/ui/Sheet.tsx` (doc only)
+- `src/components/ui/Select.tsx` (doc only)
+- `src/components/skeletons/SkeletonDashboardStats.tsx` (doc only)
+
+**No behaviour, prop, or token changes.** Phase 2 can proceed.
+**Verification:** `npm run build` ✅.
 
 ### Phase 2 — Member shell polish
 - **Objective:** Bring `DashboardLayout` + `Sidebar` + `Topbar` for member side to parity with admin (focus hint, capability badge, breadcrumb coverage, ⌘K items).

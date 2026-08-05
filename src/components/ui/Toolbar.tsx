@@ -1,14 +1,14 @@
 import React from "react";
 
 /**
- * Toolbar — standard search/filter/actions row for list pages (Phase 1).
+ * Toolbar — standard search/filter/actions row for list pages.
  *
  * Layout contract:
  *   [ search field ]  [ filters... ]  ······  [ bulk actions ]
  *
- * Phase 6 will adopt this on every admin list page so that search,
+ * Used by every redesigned list page (admin and member) so that search,
  * filters, and bulk actions share alignment, spacing, and responsive
- * wrap behavior. Today each page hand-rolls its own.
+ * wrap behavior.
  */
 
 export interface ToolbarProps {

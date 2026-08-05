@@ -1,5 +1,6 @@
 /**
- * Skeleton for the 4-column stat cards on the admin dashboard.
+ * Skeleton for the 4-column stat/KPI tiles used on dashboards across
+ * the platform (admin + member).
  */
 export default function SkeletonDashboardStats({ count = 4 }: { count?: number }) {
   return (

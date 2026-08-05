@@ -15,8 +15,9 @@
  *   - Focus trapped while open
  *
  * Filtering is naive substring match (case-insensitive) on label +
- * optional `keywords` field — adequate for ~50 items (the admin nav is
- * under 20). Replace with a fuzzy ranker if/when needed.
+ * optional `keywords` field — adequate for ~50 items (the admin and
+ * member navs are each under 20). Replace with a fuzzy ranker if/when
+ * needed.
  */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +28,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 export interface CommandItem {
   id: string;
   label: string;
-  /** Optional tertiary hint, e.g. "Admin → Users". */
+  /** Optional tertiary hint, e.g. "Admin → Users" or "Member → Wallet". */
   group?: string;
   keywords?: string;
   icon?: React.ReactNode;

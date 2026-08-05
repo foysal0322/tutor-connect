@@ -3,10 +3,11 @@
 /**
  * DataGrid — shared tabular data component (Phase 5 redesign).
  *
- * This is the single table primitive for the admin app. Every capability
- * beyond the original (search + sort + pagination + empty state) is OPT-IN
- * via optional props so existing call sites (withdrawals, support) render
- * unchanged until Phase 6 migrations adopt the new features.
+ * This is the single table primitive for the platform (admin + member).
+ * Every capability beyond the original (search + sort + pagination +
+ * empty state) is OPT-IN via optional props so existing call sites
+ * (withdrawals, support) render unchanged until migrations adopt the
+ * new features.
  *
  * ── Backward-compatible surface (unchanged) ─────────────────────────────
  *   Props:    data, columns, searchable, searchKeys, itemsPerPage,

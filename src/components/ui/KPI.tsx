@@ -19,7 +19,7 @@ import React from "react";
  *   "plain"    — borderless, only the icon tinted
  *
  * Optional `href` wraps the tile in a Next.js <Link> for the click-through
- * pattern used by the admin dashboard quick-stats.
+ * pattern used by dashboards across the platform (admin + member).
  */
 
 import Link from "next/link";

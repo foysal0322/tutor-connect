@@ -1,6 +1,6 @@
 /* DataGrid.module.css — feature-specific styles layered on top of the
    global `.data-grid` table styles in globals.css.
-   Phase 5 of ADMIN_DASHBOARD_REDESIGN_PLAN.md. */
+   Origin: admin redesign Phase 5; now shared across admin + member. */
 
 /* ---------------- Column resize handle ---------------- */
 .resizeHandle {
