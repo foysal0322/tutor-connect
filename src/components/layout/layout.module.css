@@ -1,11 +1,11 @@
 /* Layout Shell */
 .layout {
   display: flex;
-  /* Reserve room for the sticky global Navbar rendered above us in the root
-     layout. At 100vh the shell pushed total document height to navbar + 100vh,
-     causing the page to scroll and the sidebar to slide up under the
-     (semi-transparent) navbar. The .content area scrolls internally instead. */
-  height: calc(100vh - var(--navbar-height, 80px));
+  /* Fill the full viewport. The shell owns the entire screen — Topbar and
+     Sidebar are inside .layout, not above it. There is no marketing Navbar
+     above the dashboard (those pages live outside the (marketing) route
+     group). The .content area scrolls internally instead of the page. */
+  height: 100vh;
   overflow: hidden;
   background-color: var(--bg-color);
 }
