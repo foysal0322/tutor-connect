@@ -10,11 +10,11 @@ import { ClipboardList, Send } from 'lucide-react';
 import { useZodForm } from '@/hooks/useZodForm';
 import { submitTutorRequestSchema } from '@/lib/validation';
 import {
+  FormCard,
   FormSection,
   FormSubmit,
   FormAlert,
   fieldClass,
-  cardEmbeddedClass,
 } from '@/components/forms';
 
 export default function RequestTutorForm({
@@ -93,7 +93,12 @@ export default function RequestTutorForm({
   }
 
   return (
-    <div className={cardEmbeddedClass}>
+    <FormCard
+      surface="embedded"
+      icon={<ClipboardList size={28} />}
+      title="Request a Tutor"
+      subtitle="Fill in the details below to get matched with the right tutor."
+    >
       {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
@@ -194,6 +199,6 @@ export default function RequestTutorForm({
           Submit Request
         </FormSubmit>
       </form>
-    </div>
+    </FormCard>
   );
 }

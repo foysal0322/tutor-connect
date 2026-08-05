@@ -804,7 +804,7 @@ at build) and can be cleaned up in a future hygiene pass.
 
 **Verification:** `npm run build` ✅.
 
-### Phase 6 — Forms standardization
+### Phase 6 — Forms standardization · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Adopt `FormCard`/`FormSection`/`FormSubmit` with dirty tracking on `/profile`, `/student/request-tutor`, `/tutor/earnings` withdrawal form, `/consultancy`.
 - **Files likely affected:** `src/components/ProfileForm.tsx`, the request-tutor form, `EarningsClient.tsx`, consultancy page.
 - **Dependencies:** Phase 1.
@@ -813,6 +813,43 @@ at build) and can be cleaned up in a future hygiene pass.
 - **Rollback:** Revert.
 - **Complexity:** M.
 - **Acceptance:** Forms look unified; validation + toasts unchanged.
+
+**Implementation notes (2026-08-05):**
+- ✅ **ProfileForm** — already used `FormCard`/`FormSection`/`FormSubmit`.
+  **Added dirty tracking**: a `useMemo` baseline is computed from the
+  `user` prop; a form-level `onChange` reads all named field values via
+  `FormData` and compares to the baseline (JSON.stringify). When dirty,
+  a warning pill ("Unsaved changes" + Revert button) replaces the
+  default neutral pill ("All changes saved"). Revert calls
+  `form.reset()` and clears the dirty flag. Successful submit also
+  clears the flag.
+- ✅ **RequestTutorForm** — replaced the raw `<div
+  className={cardEmbeddedClass}>` wrapper with a proper `<FormCard
+  surface="embedded">` (icon: ClipboardList, title: "Request a Tutor",
+  subtitle). The `cardEmbeddedClass` import was removed. All form
+  internals — `FormSection`, `FormSubmit`, `useZodForm`, the date/time
+  split inputs, the pre-selected-tutor banner — are unchanged.
+- ✅ **EarningsClient withdrawal form** — replaced the raw `<div
+  className="card">` + inline `<h3>`/`<p>` header with `<FormCard
+  surface="embedded">` (icon: Wallet, title: "Request Withdrawal",
+  subtitle). All form internals — method radio selector, amount/coupon
+  inputs, MFS/bank conditional fields, fee breakdown, `FormSubmit` —
+  are unchanged.
+- ✅ **Consultancy** — already fully adopted (`FormPage` + `FormCard` +
+  `FormSection` + `FormSubmit`). No work needed. Dirty tracking is not
+  practical here because the page is a server component with a
+  `'use server'` action.
+
+**Dirty tracking scope note:** Only ProfileForm got dirty tracking because
+it's the one "update existing values" form (the pattern where unsaved-
+changes awareness adds the most value). The other three are "submit once"
+forms where the user starts from a blank canvas every visit.
+
+**Behavior unchanged:** all server-action call sites (`updateUserProfile`,
+`submitTutorRequest`, `submitWithdrawalRequest`, `submitConsultancy`),
+validation rules, toasts, and error displays are preserved verbatim.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 7 — Profile enrichment
 - **Objective:** Add a read-only **Tutor section** to `/profile` (rendered when `isTutor === true`); add profile completion `KPI`.

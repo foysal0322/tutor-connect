@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { KPI } from "@/components/ui/KPI";
 import DataGrid, { type ColumnDef } from "@/components/ui/DataGrid";
 import { MfsProviderSelect } from "@/components/MfsProviderSelect";
-import { FormSubmit, FormAlert, fieldClass } from "@/components/forms";
+import { FormCard, FormSubmit, FormAlert, fieldClass } from "@/components/forms";
 import { bdPhoneFieldProps, onBdPhoneChange } from "@/lib/phone";
 
 interface EarningsClientProps {
@@ -446,14 +446,14 @@ export default function EarningsClient({
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ alignItems: 'start' }}>
-        {/* Withdrawal Request Form Card */}
-        <div className="card lg:col-span-1">
-          <h3 className="mb-2" style={{ fontSize: 'var(--text-lg)' }}>Request Withdrawal</h3>
-          <p className="text-sm text-muted mb-6">
-            Submit a withdrawal request to transfer available earnings to your
-            wallet or bank account.
-          </p>
-
+        {/* Withdrawal Request Form */}
+        <FormCard
+          surface="embedded"
+          className="lg:col-span-1"
+          icon={<Wallet size={28} />}
+          title="Request Withdrawal"
+          subtitle="Transfer available earnings to your MFS or bank account."
+        >
           <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
             {/* Withdrawal method selector */}
             <div role="radiogroup" aria-label="Withdrawal method" className={`form-group mb-0 ${fieldClass}`}>
@@ -638,7 +638,7 @@ export default function EarningsClient({
               {balance <= 0 ? "No balance available" : "Request Withdrawal"}
             </FormSubmit>
           </form>
-        </div>
+        </FormCard>
 
         {/* Tables Column */}
         <div className="flex flex-col gap-5 lg:col-span-2">
