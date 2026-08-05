@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { DollarSign, TrendingDown, Wallet } from "lucide-react";
 import { submitWithdrawalRequest } from "./actions";
 import { Input } from "@/components/ui/Input";
+import { KPI } from "@/components/ui/KPI";
+import DataGrid, { type ColumnDef } from "@/components/ui/DataGrid";
 import { MfsProviderSelect } from "@/components/MfsProviderSelect";
 import { FormSubmit, FormAlert, fieldClass } from "@/components/forms";
 import { bdPhoneFieldProps, onBdPhoneChange } from "@/lib/phone";
@@ -157,7 +160,94 @@ export default function EarningsClient({
   const calculatedFee = amount ? parseFloat(amount) * 0.05 : 0;
   const calculatedNet = amount ? parseFloat(amount) * 0.95 : 0;
 
-  // Per-provider badge styling for the history table. BANK gets a neutral
+  // ---- DataGrid column definitions ----
+  const withdrawalColumns: ColumnDef<any>[] = [
+    {
+      header: 'Amount',
+      accessorKey: 'amount',
+      sortable: true,
+      cell: (w) => `${w.amount} BDT`,
+    },
+    {
+      header: 'Method',
+      id: 'method',
+      cell: (w) => {
+        const badge = providerBadge(w);
+        return (
+          <span
+            style={{
+              color: badge.color,
+              backgroundColor: badge.bg,
+              border: `1px solid ${badge.border}`,
+            }}
+            className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
+          >
+            {badge.label}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Account',
+      id: 'account',
+      cell: (w) => {
+        const isBank = w.method === 'BANK' || (!w.mfsType && !w.accountNumber);
+        return isBank ? (
+          <>
+            <div className="font-medium">{w.bankName}</div>
+            <div className="text-xs text-muted">{w.bankAccountNumber}</div>
+          </>
+        ) : (
+          <>
+            {w.accountNumber}
+            <br />
+            <span className="text-xs text-muted">{w.transferType}</span>
+          </>
+        );
+      },
+    },
+    {
+      header: 'Net Payout',
+      accessorKey: 'netAmount',
+      sortable: true,
+      cell: (w) => <strong>{w.netAmount.toFixed(2)} BDT</strong>,
+    },
+    {
+      header: 'Status',
+      id: 'status',
+      cell: (w) => (
+        <span
+          className={`badge ${w.status === 'PENDING' ? 'badge-info' : w.status === 'APPROVED' ? 'badge-success' : 'badge-danger'}`}
+        >
+          {w.status}
+        </span>
+      ),
+    },
+  ];
+
+  const earningsColumns: ColumnDef<any>[] = [
+    {
+      header: 'Student',
+      accessorKey: 'student.name',
+      sortable: true,
+      cell: (r) => <strong>{r.student.name}</strong>,
+    },
+    {
+      header: 'Course',
+      accessorKey: 'course.name',
+      sortable: true,
+    },
+    {
+      header: 'Topic',
+      accessorKey: 'topic',
+    },
+    {
+      header: 'Earning',
+      accessorKey: 'budget',
+      sortable: true,
+      cell: (r) => <strong className="text-success-hover">+{r.budget} BDT</strong>,
+    },
+  ];
   // blue pill; MFS rows fall back to ROCKET color only when mfsType is set.
   const providerBadge = (w: any) => {
     if (w.method === "BANK" || (!w.mfsType && !w.accountNumber)) {
@@ -178,41 +268,36 @@ export default function EarningsClient({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Dynamic Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="card card-compact border-t-4" style={{ borderTopColor: 'var(--primary)' }}>
-          <span className="text-sm text-muted font-semibold">
-            Total Completed Earnings
-          </span>
-          <h2 className="text-2xl mt-1 text-primary">
-            {totalEarned.toFixed(2)} BDT
-          </h2>
-          <p className="mt-1 text-xs text-muted">
-            Accumulated from completed sessions
-          </p>
-        </div>
-        <div className="card card-compact border-t-4" style={{ borderTopColor: 'var(--accent)' }}>
-          <span className="text-sm text-muted font-semibold">
-            Total Withdrawn / Pending
-          </span>
-          <h2 className="text-2xl mt-1" style={{ color: 'var(--accent-hover)' }}>
-            {withdrawn.toFixed(2)} BDT
-          </h2>
-          <p className="mt-1 text-xs text-muted">
-            Includes pending request amounts
-          </p>
-        </div>
-        <div className="card card-compact border-t-4 bg-success-light" style={{ borderTopColor: 'var(--success)' }}>
-          <span className="text-sm text-success-hover font-semibold">
-            Available Balance
-          </span>
-          <h2 className="text-2xl mt-1 text-success-hover">
-            {balance.toFixed(2)} BDT
-          </h2>
-          <p className="mt-1 text-xs text-success-hover">
-            Amount eligible for instant withdrawal
-          </p>
-        </div>
+      {/* KPI row — shared primitive */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 'var(--space-4)',
+        }}
+      >
+        <KPI
+          label="Total Earned"
+          value={`${totalEarned.toFixed(2)}`}
+          icon={<DollarSign size={14} />}
+          tone="primary"
+          variant="accent"
+          hint="From completed sessions"
+        />
+        <KPI
+          label="Withdrawn / Pending"
+          value={`${withdrawn.toFixed(2)}`}
+          icon={<TrendingDown size={14} />}
+          tone="accent"
+          hint="Includes pending requests"
+        />
+        <KPI
+          label="Available"
+          value={`${balance.toFixed(2)}`}
+          icon={<Wallet size={14} />}
+          tone="success"
+          hint="Eligible for withdrawal"
+        />
       </div>
 
       {error && <FormAlert>{error}</FormAlert>}
@@ -559,180 +644,29 @@ export default function EarningsClient({
         <div className="flex flex-col gap-5 lg:col-span-2">
           <div className="card card-compact">
             <h3 className="mb-3" style={{ fontSize: 'var(--text-lg)' }}>Withdrawal Payout History</h3>
-
-            {payouts.length === 0 ? (
-              <p className="text-muted text-sm text-center py-4">
-                No withdrawal requests found.
-              </p>
-            ) : (
-              <div className="data-grid-container overflow-y-auto" style={{ maxHeight: '350px' }}>
-                <table className="data-grid hidden md:table">
-                  <thead className="sticky top-0 bg-white">
-                    <tr>
-                      <th>Amount</th>
-                      <th>Method</th>
-                      <th>Account</th>
-                      <th>Net Payout</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payouts.map((w) => {
-                      const badge = providerBadge(w);
-                      const isBank = w.method === "BANK" || (!w.mfsType && !w.accountNumber);
-                      return (
-                      <tr key={w.id}>
-                        <td>{w.amount} BDT</td>
-                        <td>
-                          <span
-                            style={{
-                              color: badge.color,
-                              backgroundColor: badge.bg,
-                              border: `1px solid ${badge.border}`,
-                            }}
-                            className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
-                          >
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td>
-                          {isBank ? (
-                            <>
-                              <div className="font-medium">{w.bankName}</div>
-                              <div className="text-xs text-muted">
-                                {w.bankAccountNumber}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {w.accountNumber}
-                              <br />
-                              <span className="text-xs text-muted">
-                                {w.transferType}
-                              </span>
-                            </>
-                          )}
-                        </td>
-                        <td>
-                          <strong>{w.netAmount.toFixed(2)} BDT</strong>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${w.status === "PENDING" ? "badge-info" : w.status === "APPROVED" ? "badge-success" : "badge-danger"}`}
-                          >
-                            {w.status}
-                          </span>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* Mobile View */}
-                <div className="md:hidden flex flex-col gap-4 p-4">
-                  {payouts.map((w) => {
-                    const badge = providerBadge(w);
-                    const isBank = w.method === "BANK" || (!w.mfsType && !w.accountNumber);
-                    return (
-                    <div key={w.id} className="card p-3 flex flex-col gap-2">
-                      <div className="flex justify-between items-center border-b border-color pb-2">
-                        <span className="font-semibold">{w.amount} BDT</span>
-                        <span
-                          className={`badge ${w.status === "PENDING" ? "badge-info" : w.status === "APPROVED" ? "badge-success" : "badge-danger"}`}
-                        >
-                          {w.status}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted">Net Payout</span>
-                        <strong>{w.netAmount.toFixed(2)} BDT</strong>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted">Provider</span>
-                        <span
-                          style={{
-                            color: badge.color,
-                            backgroundColor: badge.bg,
-                            border: `1px solid ${badge.border}`,
-                          }}
-                          className="px-2 py-1 rounded-full text-[0.65rem] font-bold tracking-wider"
-                        >
-                          {badge.label}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted">{isBank ? "Bank" : "Account"}</span>
-                        <span>{isBank ? `${w.bankName} •• ${(w.bankAccountNumber || "").slice(-4)}` : w.accountNumber}</span>
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <DataGrid
+              data={payouts}
+              columns={withdrawalColumns}
+              getRowId={(w) => w.id}
+              searchable
+              searchKeys={['amount', 'method', 'mfsType', 'bankName', 'accountNumber', 'status']}
+              itemsPerPage={8}
+              emptyMessage="No withdrawal requests found."
+            />
           </div>
 
           {/* Earnings / Completed Tuition Sessions */}
           <div className="card card-compact">
             <h3 className="mb-3" style={{ fontSize: 'var(--text-lg)' }}>Tuition Earnings Log</h3>
-
-            {completedRequests.length === 0 ? (
-              <p className="text-muted text-sm text-center py-4">
-                No completed sessions found.
-              </p>
-            ) : (
-              <div className="data-grid-container overflow-y-auto" style={{ maxHeight: '350px' }}>
-                <table className="data-grid hidden md:table">
-                  <thead className="sticky top-0 bg-white">
-                    <tr>
-                      <th>Student</th>
-                      <th>Course</th>
-                      <th>Topic</th>
-                      <th>Earning</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completedRequests.map((r) => (
-                      <tr key={r.id}>
-                        <td>
-                          <strong>{r.student.name}</strong>
-                        </td>
-                        <td>{r.course.name}</td>
-                        <td>{r.topic}</td>
-                        <td>
-                          <strong className="text-success-hover">
-                            +{r.budget} BDT
-                          </strong>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Mobile View */}
-                <div className="md:hidden flex flex-col gap-4 p-4">
-                  {completedRequests.map((r) => (
-                    <div key={r.id} className="card p-3 flex flex-col gap-2">
-                      <div className="flex justify-between items-center border-b border-color pb-2">
-                        <span className="font-semibold">{r.course.name}</span>
-                        <strong className="text-success-hover">
-                          +{r.budget} BDT
-                        </strong>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted">Student</span>
-                        <span>{r.student.name}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted">Topic</span>
-                        <span>{r.topic}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <DataGrid
+              data={completedRequests}
+              columns={earningsColumns}
+              getRowId={(r) => r.id}
+              searchable
+              searchKeys={['student.name', 'course.name', 'topic']}
+              itemsPerPage={8}
+              emptyMessage="No completed sessions found."
+            />
           </div>
         </div>
       </div>

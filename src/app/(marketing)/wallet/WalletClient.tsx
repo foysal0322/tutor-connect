@@ -17,6 +17,7 @@ import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
 import { useToast } from '@/components/ToastProvider';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { KPI } from '@/components/ui/KPI';
 import { MfsProviderSelect, MfsProvider } from '@/components/MfsProviderSelect';
 import { FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -197,35 +198,34 @@ export default function WalletClient({
       </section>
 
       <div
-        className={s.kpiRow}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: 'var(--space-4)',
         }}
       >
-        <div className="card" style={{ padding: 'var(--space-4)' }}>
-          <div className={s.kpiLabel}>
-            <ArrowDownLeft size={14} aria-hidden="true" /> Total Deposited
-          </div>
-          <div className={`${s.kpiValue} text-success-hover`}>৳{formatBDT(totalDeposited)}</div>
-        </div>
-        <div className="card" style={{ padding: 'var(--space-4)' }}>
-          <div className={s.kpiLabel}>
-            <ArrowUpRight size={14} aria-hidden="true" /> Total Spent (Tuition)
-          </div>
-          <div className={`${s.kpiValue} text-danger-hover`}>৳{formatBDT(totalSpent)}</div>
-        </div>
+        <KPI
+          label="Total Deposited"
+          value={`৳${formatBDT(totalDeposited)}`}
+          icon={<ArrowDownLeft size={14} />}
+          tone="success"
+          hint="Lifetime wallet top-ups"
+        />
+        <KPI
+          label="Total Spent (Tuition)"
+          value={`৳${formatBDT(totalSpent)}`}
+          icon={<ArrowUpRight size={14} />}
+          tone="danger"
+          hint="Paid toward tutoring sessions"
+        />
         {pendingWithdrawals.length > 0 && (
-          <div className="card" style={{ padding: 'var(--space-4)' }}>
-            <div className={s.kpiLabel}>
-              <Clock size={14} aria-hidden="true" /> Pending Withdrawal{pendingWithdrawals.length > 1 ? 's' : ''}
-            </div>
-            <div className={s.kpiValue}>
-              ৳{formatBDT(pendingWithdrawals.reduce((s2, w) => s2 + w.amount, 0))}
-            </div>
-            <div className={s.kpiSub}>{pendingWithdrawals.length} awaiting review</div>
-          </div>
+          <KPI
+            label={`Pending Withdrawal${pendingWithdrawals.length > 1 ? 's' : ''}`}
+            value={`৳${formatBDT(pendingWithdrawals.reduce((s2, w) => s2 + w.amount, 0))}`}
+            icon={<Clock size={14} />}
+            tone="info"
+            hint={`${pendingWithdrawals.length} awaiting review`}
+          />
         )}
       </div>
 

@@ -1,5 +1,7 @@
 import { Wallet, Clock, CheckCircle2, ReceiptText, ArrowUpRight } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
+import { KPI } from '@/components/ui/KPI';
+import DataGrid, { type ColumnDef } from '@/components/ui/DataGrid';
 import PendingPaymentsSection from './PendingPaymentsSection';
 import s from './payments.module.css';
 
@@ -9,6 +11,8 @@ import s from './payments.module.css';
  * so the unified /wallet hub can embed the same UI inside its Payments tab.
  *
  * Server component — receives already-fetched rows and renders them.
+ *
+ * Phase 4: bespoke KPI cards → shared <KPI>; bespoke history table → <DataGrid>.
  */
 export default function PaymentsView({
   requests,
@@ -26,6 +30,79 @@ export default function PaymentsView({
   const verifiedCount = requests.filter(
     (r) => r.status !== 'PAYMENT_PENDING' && r.status !== 'MATCHED',
   ).length;
+
+  // Only rows with a payment record go into the history DataGrid.
+  const paidRequests = requests.filter((r) => r.payment);
+
+  const columns: ColumnDef<any>[] = [
+    {
+      header: 'Course',
+      accessorKey: 'course.name',
+      sortable: true,
+      cell: (r) => <strong>{r.course.name}</strong>,
+    },
+    {
+      header: 'Tuition Fee',
+      accessorKey: 'budget',
+      sortable: true,
+      cell: (r) => `${r.budget} BDT`,
+    },
+    {
+      header: 'Total Paid',
+      accessorKey: 'payment.amount',
+      sortable: true,
+      cell: (r) => <strong>{r.payment.amount} BDT</strong>,
+    },
+    {
+      header: 'Provider',
+      accessorKey: 'payment.mfsType',
+      cell: (r) => (
+        <span
+          className={`badge ${
+            r.payment.mfsType === 'BKASH'
+              ? 'badge-danger'
+              : r.payment.mfsType === 'NAGAD'
+                ? 'badge-warning'
+                : 'badge-info'
+          }`}
+        >
+          {r.payment.mfsType}
+        </span>
+      ),
+    },
+    {
+      header: 'MFS Account',
+      accessorKey: 'payment.accountNumber',
+      cell: (r) => r.payment.accountNumber,
+    },
+    {
+      header: 'Transaction ID',
+      accessorKey: 'payment.transactionId',
+      cell: (r) => (
+        <code className="bg-white border border-color px-2 py-1 rounded text-xs font-mono">
+          {r.payment.transactionId}
+        </code>
+      ),
+    },
+    {
+      header: 'Date',
+      accessorKey: 'payment.createdAt',
+      sortable: true,
+      cell: (r) => new Date(r.payment.createdAt).toLocaleDateString(),
+    },
+    {
+      header: 'Status',
+      id: 'status',
+      cell: (r) => {
+        const isVerified = r.status !== 'PAYMENT_PENDING' && r.status !== 'MATCHED';
+        return (
+          <span className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`}>
+            {isVerified ? 'VERIFIED' : 'PENDING VERIFICATION'}
+          </span>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="w-full">
@@ -47,40 +124,45 @@ export default function PaymentsView({
       </section>
 
       {/* ---------- KPI summary ---------- */}
-      <div className={`${s.kpiRow} mb-5`}>
-        <div className={`card ${s.kpiCard}`}>
-          <div className={s.kpiLabel}>
-            <Clock size={14} aria-hidden="true" /> Awaiting Payment
-          </div>
-          <div className={s.kpiValue}>{pendingRequests.length}</div>
-          <div className={s.kpiSub}>
-            {pendingRequests.length > 0
+      <div
+        className="mb-5"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 'var(--space-4)',
+        }}
+      >
+        <KPI
+          label="Awaiting Payment"
+          value={pendingRequests.length}
+          icon={<Clock size={14} />}
+          tone="danger"
+          hint={
+            pendingRequests.length > 0
               ? `${formatBDT(totalPayable)} BDT due now`
-              : 'Nothing due right now'}
-          </div>
-        </div>
-        <div className={`card ${s.kpiCard}`}>
-          <div className={s.kpiLabel}>
-            <ArrowUpRight size={14} aria-hidden="true" /> Total Paid
-          </div>
-          <div className={s.kpiValue}>{formatBDT(totalPaid)} <span className={s.currency}>BDT</span></div>
-          <div className={s.kpiSub}>
-            Across {requests.length} payment{requests.length === 1 ? '' : 's'}
-          </div>
-        </div>
-        <div className={`card ${s.kpiCard}`}>
-          <div className={s.kpiLabel}>
-            <CheckCircle2 size={14} aria-hidden="true" /> Verified Sessions
-          </div>
-          <div className={s.kpiValue}>{verifiedCount}</div>
-          <div className={s.kpiSub}>of {requests.length} submitted</div>
-        </div>
+              : 'Nothing due right now'
+          }
+        />
+        <KPI
+          label="Total Paid"
+          value={`${formatBDT(totalPaid)}`}
+          icon={<ArrowUpRight size={14} />}
+          tone="primary"
+          hint={`Across ${requests.length} payment${requests.length === 1 ? '' : 's'}`}
+        />
+        <KPI
+          label="Verified Sessions"
+          value={verifiedCount}
+          icon={<CheckCircle2 size={14} />}
+          tone="success"
+          hint={`of ${requests.length} submitted`}
+        />
       </div>
 
       <PendingPaymentsSection initialPending={pendingRequests} userBalance={userBalance} />
 
       <h2 className="mb-3">Payment History</h2>
-      {requests.length === 0 ? (
+      {paidRequests.length === 0 ? (
         <div className={`card ${s.emptyState}`}>
           <ReceiptText size={36} aria-hidden="true" />
           <p className={s.emptyTitle}>No payment history yet</p>
@@ -89,82 +171,15 @@ export default function PaymentsView({
           </p>
         </div>
       ) : (
-        <div className="data-grid-container">
-          <table className="data-grid hidden md:table">
-            <thead>
-              <tr>
-                <th>Course</th>
-                <th>Tuition Fee</th>
-                <th>Total Paid (with 5% fee)</th>
-                <th>MFS Provider</th>
-                <th>MFS Account</th>
-                <th>Transaction ID</th>
-                <th>Payment Date</th>
-                <th>Verification Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((req) => {
-                if (!req.payment) return null;
-                const isVerified = req.status !== 'PAYMENT_PENDING' && req.status !== 'MATCHED';
-                return (
-                  <tr key={req.id}>
-                    <td><strong>{req.course.name}</strong></td>
-                    <td>{req.budget} BDT</td>
-                    <td><strong>{req.payment.amount} BDT</strong></td>
-                    <td>
-                      <span className={`badge ${req.payment.mfsType === 'BKASH' ? 'badge-danger' : (req.payment.mfsType === 'NAGAD' ? 'badge-warning' : 'badge-info')}`}>
-                        {req.payment.mfsType}
-                      </span>
-                    </td>
-                    <td>{req.payment.accountNumber}</td>
-                    <td><code className="bg-white border border-color px-2 py-1 rounded text-xs font-mono">{req.payment.transactionId}</code></td>
-                    <td>{new Date(req.payment.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`}>
-                        {isVerified ? 'VERIFIED' : 'PENDING VERIFICATION'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {/* Mobile Card View */}
-          <div className="md:hidden flex flex-col gap-4 p-4">
-            {requests.map((req) => {
-              if (!req.payment) return null;
-              const isVerified = req.status !== 'PAYMENT_PENDING' && req.status !== 'MATCHED';
-              return (
-                <div key={req.id} className="card p-4 flex flex-col gap-2">
-                  <div className="flex justify-between items-center border-b border-color pb-2">
-                    <span className="font-semibold">{req.course.name}</span>
-                    <span className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`}>
-                      {isVerified ? 'VERIFIED' : 'PENDING'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted">Total Paid</span>
-                    <strong>{req.payment.amount} BDT</strong>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted">Provider</span>
-                    <span>{req.payment.mfsType}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted">Txn ID</span>
-                    <code className="text-xs">{req.payment.transactionId}</code>
-                  </div>
-                  <div className="flex justify-between text-sm text-muted">
-                    <span>Date</span>
-                    <span>{new Date(req.payment.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <DataGrid
+          data={paidRequests}
+          columns={columns}
+          getRowId={(r) => r.id}
+          searchable
+          searchKeys={['course.name', 'payment.mfsType', 'payment.transactionId']}
+          itemsPerPage={10}
+          emptyMessage="No payments found."
+        />
       )}
     </div>
   );

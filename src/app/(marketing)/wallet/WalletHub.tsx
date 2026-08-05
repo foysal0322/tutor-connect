@@ -3,7 +3,7 @@
 import { Wallet, Clock, TrendingUp } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import Tabs from '@/components/ui/Tabs';
-import s from './wallethub.module.css';
+import { KPI } from '@/components/ui/KPI';
 
 /**
  * Unified "Money" hub. Replaces the three separate sidebar entries
@@ -16,6 +16,8 @@ import s from './wallethub.module.css';
  * active tab is chosen by the Tabs component from the highest `count`, so a
  * member with pending payments lands on Payments, while a tutor with no
  * payments due but active earnings lands on Earnings.
+ *
+ * Phase 4: bespoke hero KPI cards replaced with the shared <KPI> primitive.
  */
 export default function WalletHub({
   userName,
@@ -60,49 +62,40 @@ export default function WalletHub({
       </header>
 
       {/* ---------- KPI hero row ---------- */}
-      <div className={s.heroRow}>
-        <div className={`${s.heroCard} ${s.heroPrimary}`}>
-          <div className={s.heroIcon}>
-            <Wallet size={22} aria-hidden="true" />
-          </div>
-          <div className={s.heroBody}>
-            <span className={s.heroLabel}>Wallet Balance</span>
-            <div className={s.heroValue}>
-              {formatBDT(walletBalance)} <span className={s.heroCurrency}>BDT</span>
-            </div>
-            <span className={s.heroHint}>Available for tuition payments</span>
-          </div>
-        </div>
-
-        <div className={s.heroCard}>
-          <div className={`${s.heroIcon} ${s.heroIconAmber}`}>
-            <Clock size={20} aria-hidden="true" />
-          </div>
-          <div className={s.heroBody}>
-            <span className={s.heroLabel}>Payments Due</span>
-            <div className={s.heroValue}>
-              {paymentsDueCount} <span className={s.heroSub}>{paymentsDueCount === 1 ? 'session' : 'sessions'}</span>
-            </div>
-            <span className={s.heroHint}>
-              {paymentsDueCount > 0
-                ? `${formatBDT(paymentsDueTotal)} BDT due now`
-                : 'Nothing due right now'}
-            </span>
-          </div>
-        </div>
-
-        <div className={s.heroCard}>
-          <div className={`${s.heroIcon} ${s.heroIconGreen}`}>
-            <TrendingUp size={20} aria-hidden="true" />
-          </div>
-          <div className={s.heroBody}>
-            <span className={s.heroLabel}>Available to Withdraw</span>
-            <div className={s.heroValue}>
-              {formatBDT(earningsAvailable)} <span className={s.heroCurrency}>BDT</span>
-            </div>
-            <span className={s.heroHint}>From completed tutoring sessions</span>
-          </div>
-        </div>
+      <div
+        className="mb-6"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 'var(--space-4)',
+        }}
+      >
+        <KPI
+          label="Wallet Balance"
+          value={`${formatBDT(walletBalance)}`}
+          icon={<Wallet size={14} />}
+          tone="primary"
+          variant="accent"
+          hint="Available for tuition payments"
+        />
+        <KPI
+          label="Payments Due"
+          value={paymentsDueCount}
+          icon={<Clock size={14} />}
+          tone="danger"
+          hint={
+            paymentsDueCount > 0
+              ? `${formatBDT(paymentsDueTotal)} BDT due now`
+              : 'Nothing due right now'
+          }
+        />
+        <KPI
+          label="Available to Withdraw"
+          value={formatBDT(earningsAvailable)}
+          icon={<TrendingUp size={14} />}
+          tone="success"
+          hint="From completed tutoring sessions"
+        />
       </div>
 
       <Tabs tabs={tabs} panels={panels} />

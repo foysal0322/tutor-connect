@@ -711,7 +711,7 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 
 **Verification:** `npm run build` ✅.
 
-### Phase 4 — `/wallet` canonicalization
+### Phase 4 — `/wallet` canonicalization · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Replace bespoke tabs/KPIs/tables with shared primitives across Wallet/Payments/Earnings; reuse `EarningsClient` internals via `DataGrid`.
 - **Files likely affected:** `src/app/(marketing)/wallet/WalletHub.tsx`, `src/app/(marketing)/tutor/earnings/EarningsClient.tsx`.
 - **Dependencies:** Phase 1, Phase 3.
@@ -720,6 +720,38 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 - **Rollback:** Revert.
 - **Complexity:** M.
 - **Acceptance:** Visually unified; behavior unchanged.
+
+**Implementation notes (2026-08-05):**
+- ✅ **Tabs** — already adopted (WalletHub uses the shared `<Tabs>` primitive
+  since the original wallet redesign). No change needed.
+- ✅ **KPI adoption across all four wallet surfaces:**
+  - **WalletHub** — 3 bespoke `heroCard` KPIs → `<KPI>` (variant="accent"
+    on the wallet-balance tile for emphasis).
+  - **WalletClient** — 3 bespoke `card` KPIs (Total Deposited, Total Spent,
+    Pending Withdrawal) → `<KPI>`.
+  - **PaymentsView** — 3 bespoke `kpiCard` KPIs (Awaiting Payment, Total
+    Paid, Verified Sessions) → `<KPI>`.
+  - **EarningsClient** — 3 bespoke `card-compact border-t-4` KPIs (Total
+    Earned, Withdrawn/Pending, Available) → `<KPI>`.
+- ✅ **DataGrid migration:**
+  - **PaymentsView** — Payment History table (8 columns, manual
+    desktop+mobile split) → single `<DataGrid>` with search + pagination.
+  - **EarningsClient** — Withdrawal Payout History table (5 columns,
+    manual desktop+mobile split) → `<DataGrid>`; Tuition Earnings Log
+    (4 columns) → `<DataGrid>`. Both gain search + pagination for free.
+  - All mobile card views were removed — DataGrid handles responsive
+    rendering internally.
+- ✅ **Behavior preserved.** All form submissions, validation rules,
+  success banners, toasts, and confirm dialogs are unchanged. The
+  `providerBadge` / `destinationLabel` helpers in EarningsClient are
+  preserved and used inside DataGrid `cell` renderers.
+
+**Dead CSS follow-up (not blocking):** `wallethub.module.css`, `wallet.module.css`,
+and `payments.module.css` now contain orphaned `.heroCard` / `.kpiRow` /
+`.kpiCard` / `.kpiValue` classes. They're harmless (unused CSS modules are
+tree-shaken at build time) and can be cleaned up in a future hygiene pass.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 5 — List pages → `DataGrid`
 - **Objective:** Migrate `StudentRequestList`, assigned-students table (Teaching tab), `/find-tutor` results (card mode or DataGrid) to the shared table primitive; row actions open `Sheet`.
