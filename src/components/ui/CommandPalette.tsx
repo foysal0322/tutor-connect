@@ -89,6 +89,30 @@ export function CommandPalette({
     });
   }, [items, query]);
 
+  // Group items by their `group` label, preserving the order in which groups
+  // first appear in `filtered`. Lets the palette render section headers
+  // between Recently Visited / Operations / Catalog / Actions (Phase 9).
+  const grouped = useMemo(() => {
+    const map = new Map<string, CommandItem[]>();
+    for (const it of filtered) {
+      const key = it.group ?? "Commands";
+      const arr = map.get(key);
+      if (arr) arr.push(it);
+      else map.set(key, [it]);
+    }
+    return Array.from(map.entries());
+  }, [filtered]);
+
+  // Flatten back to a list with stable indices so keyboard navigation
+  // (Arrow Up/Down, Enter) can target rows by absolute position.
+  const flatWithIndex = useMemo(() => {
+    let i = 0;
+    return grouped.map(([group, list]) => ({
+      group,
+      items: list.map((it) => ({ it, index: i++ })),
+    }));
+  }, [grouped]);
+
   // Keep active index in range when filtered list changes.
   useEffect(() => {
     setActive((a) => Math.min(a, Math.max(0, filtered.length - 1)));
@@ -220,7 +244,7 @@ export function CommandPalette({
             flex: 1,
           }}
         >
-          {filtered.length === 0 && (
+          {flatWithIndex.length === 0 && (
             <li
               style={{
                 padding: "var(--space-4)",
@@ -232,48 +256,62 @@ export function CommandPalette({
               No results
             </li>
           )}
-          {filtered.map((item, i) => (
+          {flatWithIndex.map(({ group, items }) => (
             <li
-              key={item.id}
-              id={`cmd-${item.id}`}
-              role="option"
-              aria-selected={i === active}
-              data-cmd-index={i}
-              onMouseEnter={() => setActive(i)}
-              onClick={() => {
-                item.onSelect(item);
-                onClose();
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-3)",
-                padding: "var(--space-2) var(--space-3)",
-                borderRadius: "var(--radius-md)",
-                cursor: "pointer",
-                background:
-                  i === active ? "var(--primary-light)" : "transparent",
-                color: i === active ? "var(--primary)" : "var(--text-main)",
-                fontSize: "var(--text-sm)",
-              }}
+              key={`group-${group}`}
+              role="group"
+              aria-label={group}
+              style={{ listStyle: "none" }}
             >
-              {item.icon && (
-                <span aria-hidden="true" style={{ display: "inline-flex" }}>
-                  {item.icon}
-                </span>
-              )}
-              <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
-              {item.group && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "var(--text-muted)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {item.group}
-                </span>
-              )}
+              <div
+                aria-hidden="true"
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  color: "var(--text-muted)",
+                  padding: "var(--space-2) var(--space-3) 2px",
+                  marginTop: group === flatWithIndex[0].group ? 0 : "var(--space-1)",
+                }}
+              >
+                {group}
+              </div>
+              {items.map(({ it, index }) => {
+                const isActive = index === active;
+                return (
+                  <div
+                    key={it.id}
+                    id={`cmd-${it.id}`}
+                    role="option"
+                    aria-selected={isActive}
+                    data-cmd-index={index}
+                    onMouseEnter={() => setActive(index)}
+                    onClick={() => {
+                      it.onSelect(it);
+                      onClose();
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-3)",
+                      padding: "var(--space-2) var(--space-3)",
+                      borderRadius: "var(--radius-md)",
+                      cursor: "pointer",
+                      background: isActive ? "var(--primary-light)" : "transparent",
+                      color: isActive ? "var(--primary)" : "var(--text-main)",
+                      fontSize: "var(--text-sm)",
+                    }}
+                  >
+                    {it.icon && (
+                      <span aria-hidden="true" style={{ display: "inline-flex" }}>
+                        {it.icon}
+                      </span>
+                    )}
+                    <span style={{ flex: 1, minWidth: 0 }}>{it.label}</span>
+                  </div>
+                );
+              })}
             </li>
           ))}
         </ul>

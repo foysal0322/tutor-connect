@@ -1094,23 +1094,67 @@ unrelated warning).
 
 ---
 
-### Phase 9 — Command palette · 🟡
+### Phase 9 — Command palette · 🟡 ✅ DONE (2026-08-05)
 
 **Goal**: keyboard-first navigation.
 
-- Wire `CommandPalette` to the nav config from Phase 4.
-- Add quick actions: "Toggle theme", "Sign out", "Jump to <page>".
-- Add recently-visited + pinned favorites (Phase 8 optional, listed here).
-- Add page-scoped commands (e.g., on `/admin/users`, "Filter by role").
+- ✅ Wired `CommandPalette` to the nav config from Phase 4 (was already
+  using `ROUTE_TITLES`; Phase 9 swaps that for `ADMIN_NAV` / `MEMBER_NAV`
+  so each item carries its sidebar icon). Routes that exist in
+  `ROUTE_TITLES` but not in the sidebar config (e.g. `/admin/users/[id]`
+  detail route) fall back in without an icon.
+- ✅ Quick actions: kept "Toggle theme" + "Sign out", added "Refresh
+  current page" (`router.refresh()`) and "Scroll to top"
+  (`window.scrollTo`).
+- ✅ **Recently-visited**: new helper `src/components/layout/recent-routes.ts`
+  records each pathname into `sessionStorage` (`nsuone.cmd.recent`,
+  newest-first, deduped, max 6). Topbar pushes on pathname change and
+  reads on palette open; current route is excluded so the palette never
+  offers "jump to where you already are". Renders as a "Recently
+  Visited" group at the top of the list when no query is typed.
+- ✅ **Grouped rendering**: upgraded `CommandPalette` to render proper
+  WAI-ARIA `role="group"` section headers between Recently Visited /
+  Operations / Catalog / Growth / System / Actions. Previously every
+  item showed its group as inline right-aligned caption text; the new
+  layout is far more scannable. Keyboard navigation (Arrow Up/Down,
+  Home/End implicit via Enter, Esc to close) walks the flat index, so
+  behaviour is unchanged.
+- ⏸️ **Pinned favorites** deferred to Phase 12 — needs a UI to pin/unpin
+  and a separate localStorage namespace; "Recently Visited" already
+  covers the "jump back to what I was just doing" intent.
+- ⏸️ **Page-scoped commands** (e.g. on `/admin/users`, "Filter by
+  role: Tutors") deferred to Phase 12 — would require URL-driven filter
+  state on the list pages (they currently use local React state), so
+  a palette command couldn't actually drive the filter without a
+  URL-state refactor. Flagged.
 
-**Files likely affected**: `src/components/ui/CommandPalette.tsx`,
-`src/components/layout/Topbar.tsx`.
-**Components**: `CommandPalette`, `ShortcutProvider`.
-**Dependencies**: Phase 1, Phase 3, Phase 4.
-**Risk**: 🟡.
-**Testing checklist**: `Cmd/Ctrl+K` opens; arrow keys navigate; Enter
-routes; Esc closes; palette is aria-dialog with focus trap.
-**Rollback**: revert commit; Topbar's `⌘K` button becomes inert.
+**Files touched**:
+- `src/components/layout/Topbar.tsx` (nav items now sourced from
+  `ADMIN_NAV`/`MEMBER_NAV` with icons; recent-routes effect; new
+  actions; `openPalette` wrapped in `useCallback` so the ⌘K shortcut
+  binding is stable)
+- `src/components/layout/recent-routes.ts` (new helper — push / read /
+  clear `nsuone.cmd.recent` sessionStorage)
+- `src/components/ui/CommandPalette.tsx` (grouped rendering with
+  `role="group"` headers; flat-index keyboard nav preserved)
+
+**Files NOT touched**:
+- `useKeyboardShortcut` (Phase 1) — already used; no change needed.
+- No "ShortcutProvider" needed — the existing `useKeyboardShortcut`
+  hook covers the ⌘K binding.
+
+**Components**: `CommandPalette`, `Breadcrumb`, `useKeyboardShortcut`,
+`ThemeProvider`.
+**Dependencies**: Phase 1 (palette primitive), Phase 3 (Topbar +
+breadcrumb-map), Phase 4 (nav config).
+**Risk**: 🟡 — palette is additive UX; nav-item routing unchanged.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
+**Testing checklist**: ⌘K / Ctrl+K opens; arrow keys walk all groups
+flat; Enter routes; Esc closes; recents repopulate after navigating
+around and reopening; aria-dialog + focus-trap contract preserved.
+**Rollback**: revert commit; Topbar's ⌘K button falls back to the
+Phase 3 ROUTE_TITLES-only palette.
 **Estimated difficulty**: medium.
 
 ---
@@ -1212,7 +1256,7 @@ Order of operations when executing this plan:
 7. ✅ Phase 6 — page-by-page migration (one commit per page).
 8. ✅ Phase 7 — Dashboard/Visitors visual lift.
 9. 🟡 Phase 8 — Drawers + Sheets (partial: Wallet Modal → Sheet; rest deferred to Phase 12).
-10. ☐ Phase 9 — Command palette.
+10. ✅ Phase 9 — Command palette.
 11. ☐ Phase 10 — Settings/Profile polish.
 12. ☐ Phase 11 — A11y + polish pass.
 13. ☐ Phase 12 — Flagged follow-ups (only with approval).
