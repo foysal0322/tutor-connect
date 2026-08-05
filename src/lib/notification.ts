@@ -1,72 +1,31 @@
-import webpush from 'web-push';
-import { prisma } from './prisma';
+// Legacy entry point — preserved verbatim as a façade over the new
+// NotificationService.dispatch(). See NOTIFICATION_SYSTEM_ARCHITECTURE_BLUEPRINT.md
+// §XV Phase 3: "Keep createNotification signature intact as a thin delegator
+// so existing call sites still work."
+//
+// Behavior is byte-identical to the pre-Phase-3 implementation:
+//   - DB row carries userId/title/message/actionUrl plus Phase 2 defaults
+//     (type="SYSTEM", category="SYSTEM", priority="MEDIUM", etc.)
+//   - Push payload is {title, body: message, url: actionUrl || '/'}
+//   - 410/404 subscriptions are pruned; other push errors are logged
+//
+// All six existing call sites continue to import { createNotification } from
+// "@/lib/notification" — no diff required at the call sites.
 
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  try {
-    webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || 'mailto:support@nsuone.com',
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-  } catch (error) {
-    console.error("Failed to set VAPID details:", error);
-  }
-} else {
-  console.warn("VAPID keys are missing. Web push notifications will be disabled.");
-}
+import type { Notification } from "@prisma/client";
+import { dispatch } from "./notifications/service";
 
 export async function createNotification(
   userId: string,
   title: string,
   message: string,
-  actionUrl?: string
-) {
-  // 1. Create the in-app notification record in DB
-  const notification = await prisma.notification.create({
-    data: {
-      userId,
-      title,
-      message,
-      actionUrl,
-    },
+  actionUrl?: string,
+): Promise<Notification> {
+  return dispatch({
+    event: "legacy.raw",
+    userId,
+    title,
+    message,
+    actionUrl,
   });
-
-  // 2. Fetch user's push subscriptions
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { userId },
-  });
-
-  // 3. Send web push to all user's registered devices
-  if (subscriptions.length > 0) {
-    const payload = JSON.stringify({
-      title,
-      body: message,
-      url: actionUrl || '/',
-    });
-
-    const pushPromises = subscriptions.map(async (sub) => {
-      const pushSubscription = {
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: sub.p256dh,
-          auth: sub.auth,
-        },
-      };
-
-      try {
-        await webpush.sendNotification(pushSubscription, payload);
-      } catch (error: any) {
-        // If subscription is invalid/expired (status 410 or 404), remove it from DB
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          await prisma.pushSubscription.delete({ where: { id: sub.id } });
-        } else {
-          console.error('Error sending push notification:', error);
-        }
-      }
-    });
-
-    await Promise.all(pushPromises);
-  }
-
-  return notification;
 }
