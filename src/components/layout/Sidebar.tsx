@@ -25,6 +25,12 @@ import { usePathname } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { ADMIN_NAV, type NavItem } from './admin-nav';
 import { MEMBER_NAV } from './member-nav';
+import {
+  readMemberFocus,
+  writeMemberFocus,
+  EVENT_NAME,
+  type MemberFocus,
+} from './member-focus';
 import styles from './layout.module.css';
 
 type SidebarProps = {
@@ -58,11 +64,31 @@ export default function Sidebar({
   const [isMounted, setIsMounted] = useState(false);
   const [seenCounts, setSeenCounts] = useState<any>({});
   const [query, setQuery] = useState('');
+  const [memberFocus, setMemberFocus] = useState<MemberFocus | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
   const groups = role === 'ADMIN' ? ADMIN_NAV : MEMBER_NAV;
   const badgeStorageKey =
     role === 'ADMIN' ? 'adminSeenCounts' : 'studentSeenCounts';
+
+  // Member-only focus hint (blueprint §8). Read on mount + subscribe to
+  // cross-component changes (DashboardContent writes it on tab change; we
+  // also allow click-to-toggle on the heading — see rendering below).
+  // Admin shell opts out entirely so this stays a member-only cue.
+  useEffect(() => {
+    if (role === 'ADMIN') {
+      setMemberFocus(null);
+      return;
+    }
+    setMemberFocus(readMemberFocus());
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<MemberFocus>).detail;
+      if (detail === 'learning' || detail === 'teaching') setMemberFocus(detail);
+      else setMemberFocus(readMemberFocus());
+    };
+    window.addEventListener(EVENT_NAME, onChange);
+    return () => window.removeEventListener(EVENT_NAME, onChange);
+  }, [role]);
 
   // ---- Badge hydration: read persisted seen-counts on mount -------------
   useEffect(() => {
@@ -192,12 +218,31 @@ export default function Sidebar({
     return item.href.split('/').length > 2 ? isActivePrefix : isExact;
   };
 
+  // Match a nav group heading to the persisted focus ("Learning" | "Teaching").
+  // Used to flag the emphasized group. Returns false for admin / unmatched.
+  const groupMatchesFocus = (heading: string | null): boolean => {
+    if (!heading || !memberFocus) return false;
+    const lc = heading.toLowerCase();
+    return lc === memberFocus;
+  };
+
+  // Click handler on a group heading: toggle the member focus between
+  // learning and teaching. Member-only; admin headings are not interactive.
+  const handleHeadingClick = (heading: string) => {
+    const lc = heading.toLowerCase();
+    if (lc !== 'learning' && lc !== 'teaching') return;
+    const next: MemberFocus = lc === 'learning' ? 'learning' : 'teaching';
+    writeMemberFocus(next);
+    setMemberFocus(next);
+  };
+
   const showSearch = !collapsed;
 
   return (
     <aside
       className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
       data-collapsed={collapsed ? '1' : '0'}
+      data-member-focus={memberFocus ?? ''}
     >
       {showSearch && (
         <div className={styles.sidebarSearch}>
@@ -235,13 +280,42 @@ export default function Sidebar({
 
         {filteredGroups.map((group, gi) => {
           const showHeading = group.heading && !collapsed;
+          const focused = groupMatchesFocus(group.heading ?? null);
+          const headingInteractive =
+            !!group.heading &&
+            !collapsed &&
+            role !== 'ADMIN' &&
+            (group.heading.toLowerCase() === 'learning' ||
+              group.heading.toLowerCase() === 'teaching');
           return (
             <div
               key={group.heading ?? `group-${gi}`}
-              className={styles.navGroup}
+              className={`${styles.navGroup} ${
+                focused ? styles.navGroupFocused : ''
+              }`}
             >
               {showHeading && (
-                <div className={styles.navHeading}>{group.heading}</div>
+                <div
+                  className={`${styles.navHeading} ${
+                    headingInteractive ? styles.navHeadingInteractive : ''
+                  }`}
+                  onClick={
+                    headingInteractive && group.heading
+                      ? () => handleHeadingClick(group.heading!)
+                      : undefined
+                  }
+                  role={
+                    headingInteractive ? 'button' : undefined
+                  }
+                  tabIndex={headingInteractive ? 0 : undefined}
+                  title={
+                    headingInteractive
+                      ? `Focus on ${group.heading}`
+                      : undefined
+                  }
+                >
+                  {group.heading}
+                </div>
               )}
               {group.items.map((item) => {
                 const Icon = item.icon;

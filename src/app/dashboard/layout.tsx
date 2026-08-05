@@ -18,6 +18,7 @@ export default async function DashboardRootLayout({ children }: { children: Reac
       userName={session.user?.name ?? null}
       userEmail={session.user?.email ?? null}
       currentCounts={currentCounts}
+      isTutor={currentCounts.isTutor}
     >
       {children}
     </DashboardLayout>

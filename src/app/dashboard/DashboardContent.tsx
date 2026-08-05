@@ -28,6 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Tabs from "@/components/ui/Tabs";
+import { writeMemberFocus } from "@/components/layout/member-focus";
 import ActionCenter, { type ActionItem } from "./sections/ActionCenter";
 import PerformanceSummary from "./sections/PerformanceSummary";
 import RecentActivity, { type ActivityEntry } from "./sections/RecentActivity";
@@ -236,6 +237,12 @@ export default function DashboardContent({
             { id: "learning", label: "Learning", count: learningCount },
             { id: "teaching", label: "Teaching", count: teachingCount },
           ]}
+          onSelect={(id) => {
+            // Persist the active workflow as the member shell's focus hint.
+            // Sidebar reads this to emphasize the matching nav group. Pure
+            // presentation; no session or role change. See member-focus.ts.
+            if (id === "learning" || id === "teaching") writeMemberFocus(id);
+          }}
           panels={{
             learning: learningPanel,
             teaching: (

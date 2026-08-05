@@ -13,7 +13,10 @@ export default async function ProfileRootLayout({ children }: { children: React.
   return (
     <DashboardLayout
       role={(session.user as { role: 'STUDENT' | 'TUTOR' }).role}
+      userName={session.user?.name}
+      userEmail={session.user?.email}
       currentCounts={currentCounts}
+      isTutor={currentCounts.isTutor}
     >
       {children}
     </DashboardLayout>

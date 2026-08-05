@@ -599,7 +599,7 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 **No behaviour, prop, or token changes.** Phase 2 can proceed.
 **Verification:** `npm run build` ✅.
 
-### Phase 2 — Member shell polish
+### Phase 2 — Member shell polish · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Bring `DashboardLayout` + `Sidebar` + `Topbar` for member side to parity with admin (focus hint, capability badge, breadcrumb coverage, ⌘K items).
 - **Files likely affected:** `src/components/layout/member-nav.ts`, `src/components/layout/breadcrumb-map.ts`, `src/components/layout/Sidebar.tsx` (if needed), `src/components/UserMenu.tsx`.
 - **Dependencies:** Phase 1.
@@ -608,6 +608,60 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 - **Rollback:** Revert shell changes.
 - **Complexity:** M.
 - **Acceptance:** Shell looks/feels like admin; navigation behaves identically; no layout shifts.
+
+**Audit result (2026-08-05):**
+- ✅ **⌘K command palette** was already shell-aware (Topbar picks
+  `MEMBER_NAV` + member routes from `ROUTE_TITLES`, with Recently Visited
+  tracking + shell-level actions: theme toggle, refresh, scroll-top, sign
+  out). No additional work needed.
+- ✅ **Breadcrumb coverage** extended — added three missing member routes
+  to `ROUTE_TITLES`: `/tutor/earnings`, `/student/payments`, `/contact`.
+  Every member route under the shell now renders a titled crumb.
+- ✅ **Capability badge** plumbed end-to-end — `getMemberSidebarCounts`
+  now returns `{ paymentsDue, isTutor }` (one extra indexed
+  `tutorExpertise.count`, run in `Promise.all` with the existing query).
+  `isTutor` flows through the four member layouts → `DashboardLayout` →
+  `Topbar` → `UserMenu`. When `isTutor && role !== 'ADMIN'`, a green
+  "Tutor" capability chip renders beside the role chip (both popover and
+  inline/mobile variants). Admin shell opts out — admins keep the single
+  "Administrator" chip.
+- ✅ **Focus hint (Learning / Teaching)** implemented as a UI-only
+  concept in `src/components/layout/member-focus.ts`:
+  - Persisted at `localStorage["nsuone.member.focus"]`, default `"learning"`.
+  - **Writers:** `<DashboardContent>` pushes the active tab id on every
+    change via a new optional `onSelect` prop on `<Tabs>` (fires on
+    initial mount + every click; `SettingsManager` and other callers are
+    unaffected — `onSelect` is opt-in).
+  - **Readers:** `<Sidebar>` subscribes (mount + `nsuone:member-focus-change`
+    CustomEvent), exposes a `data-member-focus` attribute on the `<aside>`,
+    and the matching group heading (Learning or Teaching) picks up a
+    primary-tone accent + tinted backdrop. The heading is also a
+    click-to-toggle affordance (member-only; admin shell opts out
+    entirely). Collapsed rail hides the emphasis (it requires the
+    heading text).
+
+**Files touched:**
+- `src/components/layout/breadcrumb-map.ts` (3 ROUTE_TITLES entries)
+- `src/lib/server/member-counts.ts` (added `isTutor` to the returned shape)
+- `src/components/layout/DashboardLayout.tsx` (new `isTutor?` prop → Topbar)
+- `src/components/layout/Topbar.tsx` (new `isTutor?` prop → UserMenu)
+- `src/components/UserMenu.tsx` + `UserMenu.module.css` (capability chip)
+- `src/app/dashboard/layout.tsx`, `src/app/(marketing)/profile/layout.tsx`,
+  `src/app/(marketing)/tutor/layout.tsx`, `src/app/(marketing)/student/layout.tsx`
+  (pass `isTutor={currentCounts.isTutor}`)
+- `src/components/layout/member-focus.ts` (NEW)
+- `src/components/ui/Tabs.tsx` (optional `onSelect`)
+- `src/app/dashboard/DashboardContent.tsx` (wire `onSelect` → `writeMemberFocus`)
+- `src/components/layout/Sidebar.tsx` + `layout.module.css` (read +
+  render focus emphasis; click-to-toggle heading)
+
+**Preservation contract respected:**
+- ❌ No `User.role` flips; `isTutor` is **read-only** and data-derived.
+- ❌ No JWT/session change; `isTutor` is a per-render server prop, not on the token.
+- ❌ No server-action, Prisma model, or route change.
+- ❌ No new runtime dependencies.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 3 — `/dashboard` decomposition + KPI adoption
 - **Objective:** Convert Learning and Teaching tabs to `Tabs` primitive, `KPI` tiles, and per-section `<Suspense>`; keep all data queries intact.

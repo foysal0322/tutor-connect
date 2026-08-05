@@ -41,8 +41,11 @@ export const ROUTE_TITLES: Record<string, string> = {
   "/wallet": "Money",
   "/find-tutor": "Find a Tutor",
   "/student/request-tutor": "Tuition Requests",
+  "/student/payments": "Payments",
   "/tutor/expertise": "Offer Course",
+  "/tutor/earnings": "Earnings",
   "/consultancy": "Consultancy",
+  "/contact": "Contact Support",
   "/profile": "My Profile",
 };
 

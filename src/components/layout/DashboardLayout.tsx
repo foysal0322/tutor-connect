@@ -13,12 +13,19 @@ export default function DashboardLayout({
   userName,
   userEmail,
   currentCounts,
+  isTutor,
 }: {
   children: React.ReactNode;
   role: 'ADMIN' | 'STUDENT' | 'TUTOR';
   userName?: string | null;
   userEmail?: string | null;
   currentCounts?: any;
+  /**
+   * Data-derived tutor capability flag (any TutorExpertise row exists).
+   * Surfaced as a "Tutor" chip in UserMenu for non-admin members. Ignored
+   * when role === 'ADMIN'. See member-counts.ts.
+   */
+  isTutor?: boolean;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Desktop icon-rail collapse (Phase 4). Read persisted state on mount so
@@ -77,6 +84,7 @@ export default function DashboardLayout({
           onMenuClick={() => setIsSidebarOpen(true)}
           isCollapsed={isCollapsed}
           onToggleCollapse={toggleCollapse}
+          isTutor={isTutor}
         />
         <main className={styles.content}>
           <div className="container container-wide animate-fade-in">

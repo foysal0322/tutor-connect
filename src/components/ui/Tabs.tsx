@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Tabs.module.css";
 
 export type TabItem = {
@@ -16,13 +16,21 @@ export type TabItem = {
  * The default active tab is the one with the highest `count` (priority by
  * activity). This lets the dashboard surface whichever role — learning or
  * teaching — the member is most active in, while still letting them switch.
+ *
+ * Optional `onSelect` is fired whenever the active tab changes, including
+ * the initial mount (with whatever id the count heuristic picked). This
+ * lets parents (e.g. <DashboardContent>) sync side effects like the
+ * member-focus hint without owning tab state themselves.
  */
 export default function Tabs({
   tabs,
   panels,
+  onSelect,
 }: {
   tabs: TabItem[];
   panels: Record<string, React.ReactNode>;
+  /** Called with the active tab id on initial mount and on every change. */
+  onSelect?: (id: string) => void;
 }) {
   const [active, setActive] = useState(() => {
     if (tabs.length === 0) return "";
@@ -31,6 +39,12 @@ export default function Tabs({
       tabs[0],
     ).id;
   });
+
+  // Notify parent of the active tab: once on mount, then on every change.
+  useEffect(() => {
+    if (onSelect && active) onSelect(active);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
   if (tabs.length === 0) return null;
 

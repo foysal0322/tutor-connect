@@ -54,6 +54,11 @@ export interface TopbarProps {
   /** Desktop icon-rail collapse state (Phase 4). */
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  /**
+   * Data-derived tutor capability flag — surfaced as a chip in <UserMenu>.
+   * Ignored for the admin shell. See member-counts.ts.
+   */
+  isTutor?: boolean;
 }
 
 export default function Topbar({
@@ -63,6 +68,7 @@ export default function Topbar({
   onMenuClick,
   isCollapsed,
   onToggleCollapse,
+  isTutor,
 }: TopbarProps) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
@@ -261,7 +267,7 @@ export default function Topbar({
 
           {user && (
             // UserMenu only reads { name, email, role } — see UserMenu.tsx:47-49.
-            <UserMenu user={user as any} variant="popover" />
+            <UserMenu user={user as any} variant="popover" isTutor={isTutor} />
           )}
         </div>
       </header>

@@ -20,6 +20,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
       userName={session.user?.name}
       userEmail={session.user?.email}
       currentCounts={currentCounts}
+      isTutor={currentCounts.isTutor}
     >
       {children}
     </DashboardLayout>

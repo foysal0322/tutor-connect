@@ -19,6 +19,7 @@ export default async function TutorLayout({ children }: { children: React.ReactN
       userName={session.user?.name}
       userEmail={session.user?.email}
       currentCounts={currentCounts}
+      isTutor={currentCounts.isTutor}
     >
       {children}
     </DashboardLayout>
