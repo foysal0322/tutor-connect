@@ -851,7 +851,7 @@ validation rules, toasts, and error displays are preserved verbatim.
 
 **Verification:** `npm run build` ✅.
 
-### Phase 7 — Profile enrichment
+### Phase 7 — Profile enrichment · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Add a read-only **Tutor section** to `/profile` (rendered when `isTutor === true`); add profile completion `KPI`.
 - **Files likely affected:** `src/app/(marketing)/profile/page.tsx`, `src/components/ProfileForm.tsx`.
 - **Dependencies:** Phase 6.
@@ -860,6 +860,30 @@ validation rules, toasts, and error displays are preserved verbatim.
 - **Rollback:** Revert.
 - **Complexity:** S.
 - **Acceptance:** Tutor section appears exactly when `isTutor === true`; no new mutations.
+
+**Implementation notes (2026-08-05):**
+- ✅ **Profile completion KPI** added at the top of `/profile` using the
+  shared `<KPI>` primitive. Uses the same 5-field heuristic as the
+  dashboard teaching panel (gender, department, CGPA, any expertise,
+  active expertise). Tone shifts: accent (<50%) → primary (50–79%) →
+  success (≥80%).
+- ✅ **Read-only Tutor section** renders above the form when `isTutor`
+  (data-derived: `activeExpertiseCount + inactiveExpertiseCount > 0`).
+  Shows a teaching summary stat row: Active Expertise, Avg Rating (with
+  star icon + review count), Completed Sessions, and Inactive count (if
+  any). Includes a "Manage Expertise" deep link to `/tutor/expertise`.
+  Pure students (no expertise) see only the KPI + form — the Tutor
+  section is omitted entirely.
+- ✅ **`ProfileForm.tsx` unchanged** — the editable form still works
+  exactly as before (Phase 6 dirty tracking included). The enrichment
+  lives entirely in the page component, above the form.
+
+**Preservation:** No new mutations, server actions, or Prisma writes.
+The four summary queries (`tutorExpertise.count` × 2, `tutorRequest.
+aggregate`, `tutorRequest.count`) are all read-only and run in
+`Promise.all`.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 8 — `/tutor/expertise` polish
 - **Objective:** Migrate add/edit from `Modal` → `Sheet`; add bulk select; extend filters (dept/course/fee).
