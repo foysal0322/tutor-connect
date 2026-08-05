@@ -1159,22 +1159,54 @@ Phase 3 ROUTE_TITLES-only palette.
 
 ---
 
-### Phase 10 — Settings + Profile polish · 🟢
+### Phase 10 — Settings + Profile polish · 🟢 ✅ DONE (2026-08-05)
 
 **Goal**: bring the two stragglers up to standard.
 
-- Add `loading.tsx` to `/admin/settings` and `/admin/profile`.
-- Add section tabs to settings (Withdrawal / Payment / Consultancy / Advanced).
-- Add "Unsaved changes" indicator on settings.
-- Strip the password-change field from the admin-only profile context
-  (cosmetic — render a separate `<AdminProfileForm>` if the shared
-  `<ProfileForm>` cannot be cleanly conditioned).
+- ✅ Added `src/app/admin/settings/loading.tsx` and
+  `src/app/admin/profile/loading.tsx` — skeleton-card based skeletons so
+  neither route flashes bare during RSC data fetch.
+- ✅ Refactored `SettingsManager.tsx` to a single `<form>` wrapping a
+  `<Tabs>` (Withdrawal / Payment / Consultancy / Advanced). Inactive
+  panels keep their inputs mounted (display:none via `Tabs`), so all
+  four fields are submitted with every save — the
+  `updatePlatformSettings` server-action call site is unchanged.
+- ✅ Added an "Unsaved changes" status pill next to the form header.
+  Switches between a "saved" neutral pill and a warning pill + "Revert"
+  control based on field-vs-baseline diff. The pill clears on submit
+  and re-arms on first edit.
+- ✅ Made the effective-student-fee preview **live** (was previously
+  computed from settings once at render). The "Advanced" tab surfaces
+  it as a large readout with the underlying formula breakdown and the
+  last-updated stamp + record id.
+- ✅ Stripped the password-change section from `/admin/profile` via a
+  new `hidePassword` prop on the shared `<ProfileForm>`. The
+  `/admin/users/[id]` editor keeps the password section (admins
+  legitimately reset other users' passwords). `ProfileForm`'s other
+  consumers (`/profile`) are unaffected. `updateUserProfile` /
+  `adminUpdateUser` action signatures unchanged.
 
-**Files likely affected**: `src/app/admin/settings/SettingsManager.tsx`,
-`src/app/admin/profile/page.tsx`, new `loading.tsx` files.
-**Risk**: 🟢.
-**Testing checklist**: `updatePlatformSettings` action call unchanged;
-`updateUserProfile` action call unchanged.
+**Files touched**:
+- `src/app/admin/settings/SettingsManager.tsx` (rewrote: tabs + dirty
+  tracking + live preview)
+- `src/app/admin/settings/loading.tsx` (new)
+- `src/app/admin/profile/loading.tsx` (new)
+- `src/app/admin/profile/page.tsx` (passes `hidePassword`)
+- `src/components/ProfileForm.tsx` (new `hidePassword?: boolean` prop;
+  guards the password FormSection)
+
+**Files NOT touched** (deliberate):
+- `src/app/actions/admin.ts` — `updatePlatformSettings` /
+  `getAdminPlatformSettings` signatures unchanged.
+- `src/app/actions/user.ts` — `updateUserProfile` unchanged.
+
+**Components**: consumes `Tabs` (Phase 1-era primitive), `FormCard` /
+`FormSection` / `FormSubmit` / `FormAlert` (existing).
+**Dependencies**: none new.
+**Risk**: 🟢 — presentation-only; server-action call sites preserved
+verbatim; both shared consumers of `<ProfileForm>` verified.
+**Verification**: `npm run build` ✅, `npm run lint` ✅ (1 pre-existing
+unrelated warning).
 **Rollback**: revert commit.
 **Estimated difficulty**: low.
 
@@ -1257,7 +1289,7 @@ Order of operations when executing this plan:
 8. ✅ Phase 7 — Dashboard/Visitors visual lift.
 9. 🟡 Phase 8 — Drawers + Sheets (partial: Wallet Modal → Sheet; rest deferred to Phase 12).
 10. ✅ Phase 9 — Command palette.
-11. ☐ Phase 10 — Settings/Profile polish.
+11. ✅ Phase 10 — Settings/Profile polish.
 12. ☐ Phase 11 — A11y + polish pass.
 13. ☐ Phase 12 — Flagged follow-ups (only with approval).
 

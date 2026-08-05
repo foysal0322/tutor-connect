@@ -21,11 +21,14 @@ export default function ProfileForm({
   departments = [],
   isAdmin = false,
   customAction,
+  hidePassword = false,
 }: {
   user: any;
   departments?: any[];
   isAdmin?: boolean;
   customAction?: (formData: FormData) => Promise<any>;
+  /** Hide the password-change section (admin self-profile context). */
+  hidePassword?: boolean;
 }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -152,6 +155,7 @@ export default function ProfileForm({
           </FormSection>
         )}
 
+        {!hidePassword && (
         <FormSection label="Change Password (Optional)" icon={<Lock size={14} />}>
           <Input
             containerClassName={fieldClass}
@@ -188,6 +192,7 @@ export default function ProfileForm({
             }
           />
         </FormSection>
+        )}
 
         <FormSubmit loading={loading} loadingText="Updating..." icon={<UserCircle size={18} />}>
           Update Profile

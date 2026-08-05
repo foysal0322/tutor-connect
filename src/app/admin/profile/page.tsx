@@ -27,7 +27,7 @@ export default async function AdminProfilePage() {
   return (
     <div className='max-w-2xl'>
       <h1 className='mb-6'>My Profile</h1>
-      <ProfileForm user={user} departments={departments} />
+      <ProfileForm user={user} departments={departments} hidePassword />
     </div>
   );
 }
