@@ -26,6 +26,11 @@ import {
   Sun,
   RotateCw,
   ArrowUpToLine,
+  GraduationCap,
+  Wallet,
+  ArrowUpRight,
+  Calendar,
+  MessageSquare,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { CommandPalette, type CommandItem } from "@/components/ui/CommandPalette";
@@ -192,9 +197,67 @@ export default function Topbar({
     },
   ], [theme, toggleTheme, router]);
 
+  // Member-specific quick actions (Phase 9). These overlap with nav items
+  // but use intent-driven labels + richer keywords so members searching
+  // "withdraw", "recharge", or "add expertise" find the right destination
+  // without knowing the exact page name. Admin shell skips these.
+  const memberQuickActions: CommandItem[] = useMemo(() => {
+    if (shell !== "MEMBER") return [];
+    return [
+      {
+        id: "qa-find-tutor",
+        label: "Find a Tutor",
+        group: "Quick Actions",
+        icon: <Search size={14} aria-hidden="true" />,
+        keywords: "search browse tutor teacher",
+        onSelect: () => router.push("/find-tutor"),
+      },
+      {
+        id: "qa-request-tutor",
+        label: "Request a Tutor",
+        group: "Quick Actions",
+        icon: <Calendar size={14} aria-hidden="true" />,
+        keywords: "new book request tutor session",
+        onSelect: () => router.push("/student/request-tutor"),
+      },
+      {
+        id: "qa-recharge",
+        label: "Recharge Wallet",
+        group: "Quick Actions",
+        icon: <Wallet size={14} aria-hidden="true" />,
+        keywords: "recharge deposit top up balance money",
+        onSelect: () => router.push("/wallet"),
+      },
+      {
+        id: "qa-withdraw",
+        label: "Withdraw Earnings",
+        group: "Quick Actions",
+        icon: <ArrowUpRight size={14} aria-hidden="true" />,
+        keywords: "withdraw payout earnings money transfer",
+        onSelect: () => router.push("/tutor/earnings"),
+      },
+      {
+        id: "qa-add-expertise",
+        label: "Add New Expertise",
+        group: "Quick Actions",
+        icon: <GraduationCap size={14} aria-hidden="true" />,
+        keywords: "add create offer teach expertise course",
+        onSelect: () => router.push("/tutor/expertise"),
+      },
+      {
+        id: "qa-consultancy",
+        label: "Book Consultancy",
+        group: "Quick Actions",
+        icon: <MessageSquare size={14} aria-hidden="true" />,
+        keywords: "book advice guidance consultancy mentor",
+        onSelect: () => router.push("/consultancy"),
+      },
+    ];
+  }, [shell, router]);
+
   const commandItems: CommandItem[] = useMemo(
-    () => [...recentItems, ...navItems, ...actionItems],
-    [recentItems, navItems, actionItems],
+    () => [...recentItems, ...memberQuickActions, ...navItems, ...actionItems],
+    [recentItems, memberQuickActions, navItems, actionItems],
   );
 
   return (

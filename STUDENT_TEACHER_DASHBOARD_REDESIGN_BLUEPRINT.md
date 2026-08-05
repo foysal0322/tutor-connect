@@ -928,7 +928,7 @@ are preserved verbatim.
 
 **Verification:** `npm run build` ✅.
 
-### Phase 9 — `CommandPalette` + breadcrumbs for member
+### Phase 9 — `CommandPalette` + breadcrumbs for member · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Wire member nav items + quick actions (go to Find Tutor, Request Tutor, Withdraw, Add Expertise, Toggle Theme, Sign Out) into `CommandPalette`; extend `breadcrumb-map.ts`.
 - **Files likely affected:** `src/components/layout/breadcrumb-map.ts`, `src/components/layout/recent-routes.ts`, command palette config.
 - **Dependencies:** Phase 2.
@@ -937,6 +937,35 @@ are preserved verbatim.
 - **Rollback:** Revert.
 - **Complexity:** S.
 - **Acceptance:** Command palette parity with admin for member routes.
+
+**Implementation notes (2026-08-05):**
+Most of Phase 9 was already wired during Phase 2. This phase closes the
+remaining gap: **member-specific quick actions** in the command palette.
+
+- ✅ **Breadcrumb coverage** (Phase 2): `ROUTE_TITLES` covers all member
+  routes including `/tutor/earnings`, `/student/payments`, `/contact`.
+  Redirect routes (`/student/profile`, `/tutor/profile`, `/student`,
+  `/tutor`) correctly have no title — they redirect before the Topbar
+  renders.
+- ✅ **Nav items** (Phase 2): `Topbar.tsx` sources the member palette
+  from `MEMBER_NAV` + `ROUTE_TITLES` fallback, with Recently Visited
+  tracking (sessionStorage).
+- ✅ **Shell-level actions** (Phase 2): theme toggle, refresh,
+  scroll-top, sign out — all shell-aware.
+- ✅ **Member quick actions** (new): six intent-driven entries grouped
+  under "Quick Actions", each with rich keywords for discoverability:
+  - Find a Tutor (`search browse tutor`)
+  - Request a Tutor (`new book request session`)
+  - Recharge Wallet (`recharge deposit top up balance`)
+  - Withdraw Earnings (`withdraw payout earnings transfer`)
+  - Add New Expertise (`add create offer teach course`)
+  - Book Consultancy (`book advice guidance mentor`)
+
+  These overlap with nav destinations but use different labels and
+  keywords so members can search by intent rather than page name. The
+  admin shell skips them (`shell !== "MEMBER"` returns `[]`).
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 10 — Responsive + mobile drawer pass
 - **Objective:** Sweep every member page at 360/414/768/1024/1440; verify filters → `Sheet` on mobile, tables → card view, touch targets ≥ 44 px.
