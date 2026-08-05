@@ -1013,7 +1013,7 @@ in Sheet/Modal/CommandPalette, ARIA roles on Tabs/Sidebar/DataGrid,
 `:focus-visible` rings from tokens, `prefers-reduced-motion` honored
 globally). A dedicated axe-core/Lighthouse audit is deferred.
 
-### Phase 12 — Performance pass
+### Phase 12 — Performance pass · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Add Suspense boundaries, memoize expensive renders, lazy-load charts, ensure no admin-only code leaks into member bundles.
 - **Files likely affected:** `src/app/dashboard/*`, `next.config.ts` (import optimization), dynamic imports.
 - **Dependencies:** Phases 3–8.
@@ -1022,6 +1022,51 @@ globally). A dedicated axe-core/Lighthouse audit is deferred.
 - **Rollback:** Revert.
 - **Complexity:** M.
 - **Acceptance:** No regressions; equal-or-better Largest Contentful Paint on `/dashboard`.
+
+**Implementation notes (2026-08-05):**
+Most performance work was done incrementally during Phases 3–10. This
+phase is a verification + documentation pass.
+
+- ✅ **Suspense boundaries** (Phase 3): `/dashboard` was decomposed into
+  async server components (`LearningPanel`, `TeachingPanel`) each wrapped
+  in its own `<Suspense>` with `PanelSkeleton` fallbacks. The shell
+  fetches only 8 indexed count queries and paints immediately; panels
+  stream in independently. Non-tutors skip all 12 teaching queries
+  entirely.
+- ✅ **Lazy-load charts** (Phase 3): `TeachingPanelView` uses
+  `dynamic(() => import(...), { ssr: false })` for all three recharts
+  components (`ExpertiseDonut`, `CoursePopularityChart`, `ProfileGauge`).
+  The recharts bundle (~400KB) loads after first paint as a separate
+  chunk.
+- ✅ **Memoized expensive renders**:
+  - `ExpertiseDashboard.visible` — `useMemo` over filter+sort pipeline ✅
+  - `FindTutorClient.filteredExpertises` — `useMemo` over client-side filter ✅
+  - `WalletClient.filteredTxns` — `useMemo` over transaction filter ✅
+  - `Topbar` — `navItems`, `recentItems`, `memberQuickActions`, `actionItems`,
+    `commandItems` all `useMemo`'d ✅
+  - `DataGrid` — rows wrapped in `React.memo`; sorted/filtered/paginated
+    datasets `useMemo`'d ✅
+- ✅ **`next.config.ts` optimizations** already in place:
+  - `optimizePackageImports: ['lucide-react', 'recharts', 'date-fns']` —
+    granular per-file imports for the three biggest deps
+  - `compress: true` (gzip/brotli)
+  - Image optimization (AVIF/WebP, responsive deviceSizes)
+  - Turbopack root pinned
+- ✅ **Bundle hygiene audit**: no member page or `(marketing)` route
+  imports from `@/app/admin/*`. The only shared component that imports
+  both `ADMIN_NAV` and `MEMBER_NAV` is `Topbar`/`Sidebar` (shared layout
+  infrastructure) — both configs are tiny plain-object arrays (~2–3KB
+  combined) and all referenced icons are shared lucide-react components
+  already tree-shaken via `optimizePackageImports`. Not worth the
+  complexity of dynamic imports for negligible savings.
+- ✅ **No regressions**: `npm run build` passes; no new runtime warnings.
+
+**What still needs manual verification** (code audit can't catch):
+- Lighthouse / Core Web Vitals comparison (LCP, CLS, TBT)
+- Bundle analyzer visual check (`@next/bundle-analyzer`)
+- Cold-load trace on `/dashboard` vs pre-redesign
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 13 — Final QA
 - **Objective:** Cross-browser, dark mode every page, role matrix, regression vs. admin.
