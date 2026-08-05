@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { submitPayment } from '@/app/student/actions';
+import { submitPayment } from '@/app/(member)/student/actions';
 import { useToast } from '@/components/ToastProvider';
 import { MfsProviderSelect } from '@/components/MfsProviderSelect';
 import { Input } from '@/components/ui/Input';

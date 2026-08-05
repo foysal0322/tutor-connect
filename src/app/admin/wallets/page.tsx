@@ -75,13 +75,6 @@ export default async function AdminWalletsPage({
 
   return (
     <div className='max-w-full'>
-      <h1 className='mb-2'>Wallet Management</h1>
-      <p className='text-muted mb-6'>
-        Adjust a member&rsquo;s wallet balance directly. Every change is recorded
-        in the user&rsquo;s transaction history with your reason, and the user is
-        notified.
-      </p>
-
       <WalletManager
         users={users}
         adjustments={adjustments}

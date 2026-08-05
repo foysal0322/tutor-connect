@@ -8,7 +8,7 @@ import { Button, ButtonProps } from './Button';
  * Confirmation dialog for destructive or irreversible actions.
  *
  * Replaces window.confirm() (which is blocking, ugly, and untestable) and
- * the ad-hoc confirm patterns scattered across the admin pages.
+ * the ad-hoc confirm patterns scattered across the platform's pages.
  *
  * Usage:
  *   const confirm = useConfirmDialog();

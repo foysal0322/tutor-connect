@@ -1,4 +1,6 @@
-import styles from '../dashboard.module.css';
+'use client';
+
+import DataGrid, { type ColumnDef } from '@/components/ui/DataGrid';
 
 export interface AssignedStudent {
   id: string;
@@ -24,6 +26,52 @@ function statusBadgeClass(status: string) {
   return STATUS_CLASS[status] ?? 'badge-warning';
 }
 
+const columns: ColumnDef<AssignedStudent>[] = [
+  {
+    header: 'Student',
+    accessorKey: 'studentName',
+    sortable: true,
+    cell: (r) => <strong>{r.studentName}</strong>,
+  },
+  {
+    header: 'Course',
+    accessorKey: 'courseName',
+    sortable: true,
+  },
+  {
+    header: 'Topic',
+    accessorKey: 'topic',
+  },
+  {
+    header: 'Mode',
+    accessorKey: 'preferredMode',
+  },
+  {
+    header: 'Time',
+    accessorKey: 'preferredDateTime',
+    cell: (r) =>
+      r.preferredDateTime
+        ? new Date(r.preferredDateTime).toLocaleString()
+        : 'N/A',
+  },
+  {
+    header: 'Budget',
+    accessorKey: 'budget',
+    sortable: true,
+    cell: (r) => `${r.budget.toLocaleString()} BDT`,
+  },
+  {
+    header: 'Status',
+    accessorKey: 'status',
+    sortable: true,
+    cell: (r) => (
+      <span className={`badge ${statusBadgeClass(r.status)}`}>
+        {r.status.replace('_', ' ')}
+      </span>
+    ),
+  },
+];
+
 export default function AssignedStudentsTable({
   rows,
 }: {
@@ -31,78 +79,29 @@ export default function AssignedStudentsTable({
 }) {
   if (rows.length === 0) {
     return (
-      <div className={styles.emptyBlock}>
-        You don&apos;t have any assigned students yet. New requests matched to you
-        will appear here.
+      <div
+        style={{
+          padding: 'var(--space-6) var(--space-4)',
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+          fontSize: 'var(--text-sm)',
+        }}
+      >
+        You don&apos;t have any assigned students yet. New requests matched to
+        you will appear here.
       </div>
     );
   }
 
   return (
-    <div className={styles.tableWrap}>
-      <table className={`${styles.dataGrid} hidden md:table`}>
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Course</th>
-            <th>Topic</th>
-            <th>Mode</th>
-            <th>Time</th>
-            <th>Budget</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id}>
-              <td><strong>{r.studentName}</strong></td>
-              <td>{r.courseName}</td>
-              <td>{r.topic}</td>
-              <td>{r.preferredMode}</td>
-              <td>
-                {r.preferredDateTime
-                  ? new Date(r.preferredDateTime).toLocaleString()
-                  : 'N/A'}
-              </td>
-              <td>{r.budget.toLocaleString()} BDT</td>
-              <td>
-                <span className={`badge ${statusBadgeClass(r.status)}`}>
-                  {r.status.replace('_', ' ')}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className={`${styles.mobileCards} md:hidden`}>
-        {rows.map((r) => (
-          <div key={r.id} className={styles.mobileCard}>
-            <div className={styles.mobileCardHead}>
-              <strong>{r.courseName}</strong>
-              <span className={`badge ${statusBadgeClass(r.status)}`}>
-                {r.status.replace('_', ' ')}
-              </span>
-            </div>
-            <div className={styles.mobileCardRow}>
-              <span className="label">Student</span>
-              <strong>{r.studentName}</strong>
-            </div>
-            <div className={styles.mobileCardRow}>
-              <span className="label">Topic</span>
-              <span>{r.topic}</span>
-            </div>
-            <div className={styles.mobileCardRow}>
-              <span className="label">Mode</span>
-              <span>{r.preferredMode}</span>
-            </div>
-            <div className={styles.mobileCardRow}>
-              <span className="label">Budget</span>
-              <span>{r.budget.toLocaleString()} BDT</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <DataGrid
+      data={rows}
+      columns={columns}
+      getRowId={(r) => r.id}
+      searchable
+      searchKeys={['studentName', 'courseName', 'topic', 'status']}
+      itemsPerPage={10}
+      emptyMessage="No assigned students found."
+    />
   );
 }

@@ -157,6 +157,24 @@
   border-radius: var(--radius-full);
 }
 
+/* Capability chip — data-derived "Tutor" label that supplements the role
+   chip for members who can teach. Uses --success to read as a positive
+   capability rather than a permission level. */
+.capabilityChip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.25rem;
+  margin-left: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
 .separator {
   height: 1px;
   background: var(--border-color);

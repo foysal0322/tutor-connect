@@ -1057,6 +1057,34 @@ h4 {
   color: var(--text-main);
 }
 
+/* --- Touch target enforcement (WCAG 2.5.5 / Phase 10 responsive pass) ---
+   On coarse-pointer devices (touch screens), bump up interactive elements
+   that would otherwise be too small to tap reliably. We use 40px as a
+   pragmatic compromise — the 44px guideline is ideal but would break
+   dense UI patterns (table rows, compact toolbars). The `.touch-target`
+   utility provides an explicit 44px when needed. */
+@media (pointer: coarse) {
+  .btn-action {
+    min-height: 40px;
+    padding-block: 0.5rem;
+  }
+  .btn-sm {
+    min-height: 36px;
+  }
+  .btn-icon {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Cards */
 .card {
   background: var(--card-bg);
@@ -1431,4 +1459,81 @@ input:checked + .w3-slider:before {
 }
 .w3-slider.w3-round:before {
   border-radius: 50%;
+}
+
+/* ==========================================================================
+   Dark mode tokens (Phase 1 of ADMIN_DASHBOARD_REDESIGN_PLAN.md)
+   --------------------------------------------------------------------------
+   Opt-in only: applies when [data-theme="dark"] is set on <html>.
+   ThemeProvider (src/components/ThemeProvider.tsx) toggles the attribute
+   based on localStorage. We deliberately do NOT auto-apply via
+   prefers-color-scheme — every existing component was authored against
+   the light palette, so dark mode must be an explicit user choice until
+   each surface has been audited (Phases 6–11).
+   ========================================================================== */
+[data-theme="dark"] {
+  --primary: #6366f1; /* indigo-500 — slightly brighter for dark contrast */
+  --primary-hover: #818cf8; /* indigo-400 */
+  --primary-light: rgba(99, 102, 241, 0.16);
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-light: rgba(245, 158, 11, 0.18);
+
+  --success: #22c55e;
+  --success-hover: #4ade80;
+  --success-light: rgba(34, 197, 94, 0.18);
+
+  --danger: #f87171; /* red-400 — brighter for dark contrast */
+  --danger-hover: #fca5a5;
+  --danger-light: rgba(248, 113, 113, 0.18);
+
+  --info: #60a5fa;
+  --info-hover: #93c5fd;
+  --info-light: rgba(96, 165, 250, 0.18);
+
+  /* Surfaces & Text — flipped to dark neutrals */
+  --bg-color: #0b1120; /* slate-950 tint */
+  --card-bg: #111827; /* gray-900 */
+  --sidebar-bg: #0f172a; /* slate-900 */
+
+  --text-main: #f1f5f9; /* slate-100 */
+  --text-muted: #94a3b8; /* slate-400 — WCAG AA on #111827 */
+  --border-color: #1f2937; /* gray-800 */
+  --input-bg: #0f172a; /* slate-900 */
+
+  --surface-1: #0f172a; /* slate-900 */
+  --surface-1-translucent: rgba(15, 23, 42, 0.6);
+  --surface-2: #1e293b; /* slate-800 */
+  --surface-3: #334155; /* slate-700 */
+  --surface-4: #475569; /* slate-600 */
+  --surface-5: #64748b; /* slate-500 */
+  --surface-6: #94a3b8; /* slate-400 */
+  --surface-7: #cbd5e1; /* slate-300 */
+  --surface-8: #e2e8f0; /* slate-200 */
+  --surface-9: #f1f5f9; /* slate-100 */
+  --border-strong: #334155; /* slate-700 */
+  --skeleton-base: #1e293b;
+
+  /* Scrollbar — lighter thumb on dark track */
+  --scrollbar-thumb: #6366f1;
+  --scrollbar-thumb-hover: #818cf8;
+
+  /* Shadows are less visible on dark; keep tokens but they render subtly */
+}
+
+/* ==========================================================================
+   Reduced-motion guard (Phase 1)
+   Globally disables non-essential animation when the user has opted out.
+   Critical for vestibular safety. Per ADMIN_DASHBOARD_REDESIGN_PLAN.md §13.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

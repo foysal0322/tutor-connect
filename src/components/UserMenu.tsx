@@ -14,6 +14,12 @@ interface UserMenuProps {
   variant?: 'popover' | 'inline';
   /** Called after a menu item is activated (used to close the mobile drawer). */
   onNavigate?: () => void;
+  /**
+   * Data-derived tutor capability flag (any TutorExpertise row exists).
+   * When true AND role is a non-admin member, a "Tutor" capability chip is
+   * rendered beside the role chip. Purely presentational.
+   */
+  isTutor?: boolean;
 }
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -38,7 +44,7 @@ function profileHref(role: Role): string {
   return role === 'ADMIN' ? '/admin/profile' : '/profile';
 }
 
-export default function UserMenu({ user, variant = 'popover', onNavigate }: UserMenuProps) {
+export default function UserMenu({ user, variant = 'popover', onNavigate, isTutor }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -115,6 +121,9 @@ export default function UserMenu({ user, variant = 'popover', onNavigate }: User
   };
 
   const initials = getInitials(name);
+  // Capability flag — only meaningful for non-admin members. Admins get the
+  // full Administrator chip and don't need a separate capability label.
+  const showTutorCapability = isTutor && role !== 'ADMIN';
 
   // ---------------- Inline (mobile drawer) ----------------
   if (variant === 'inline') {
@@ -126,6 +135,11 @@ export default function UserMenu({ user, variant = 'popover', onNavigate }: User
             <span className={styles.headerName}>{name ?? 'Account'}</span>
             {email && <span className={styles.headerEmail}>{email}</span>}
             <span className={styles.roleChip}>{ROLE_LABEL[role]}</span>
+            {showTutorCapability && (
+              <span className={styles.capabilityChip} title="You can teach on this platform">
+                Tutor
+              </span>
+            )}
           </div>
         </div>
         <div className={styles.inlineLinks}>
@@ -187,6 +201,11 @@ export default function UserMenu({ user, variant = 'popover', onNavigate }: User
               <span className={styles.headerName}>{name ?? 'Account'}</span>
               {email && <span className={styles.headerEmail}>{email}</span>}
               <span className={styles.roleChip}>{ROLE_LABEL[role]}</span>
+              {showTutorCapability && (
+                <span className={styles.capabilityChip} title="You can teach on this platform">
+                  Tutor
+                </span>
+              )}
             </div>
           </div>
 

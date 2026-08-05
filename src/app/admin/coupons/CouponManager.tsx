@@ -5,6 +5,8 @@ import { addCoupon, updateCoupon, deleteCoupon } from '@/app/actions/admin';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { FormSubmit, FormAlert, FormCard, FormSection, fieldClass } from '@/components/forms';
+import DataGrid, { type ColumnDef, type RowAction } from '@/components/ui/DataGrid';
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { format } from 'date-fns';
 import { TicketPercent, Pencil, Trash2, Plus } from 'lucide-react';
 
@@ -33,9 +35,7 @@ const SCOPE_TONE: Record<string, string> = {
 
 function describeValue(c: Coupon) {
   if (c.discountType === 'PERCENT') {
-    return c.maxDiscount
-      ? `${c.value}% (max ${c.maxDiscount} BDT)`
-      : `${c.value}%`;
+    return c.maxDiscount ? `${c.value}% (max ${c.maxDiscount} BDT)` : `${c.value}%`;
   }
   return `${c.value} BDT`;
 }
@@ -145,6 +145,7 @@ export default function CouponManager({ coupons }: { coupons: Coupon[] }) {
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   async function refresh(promise: Promise<any>, okMsg?: string) {
     setLoading(true);
@@ -158,6 +159,7 @@ export default function CouponManager({ coupons }: { coupons: Coupon[] }) {
       setShowAdd(false);
     }
     setLoading(false);
+    return res;
   }
 
   async function handleAdd(formData: FormData) {
@@ -167,7 +169,13 @@ export default function CouponManager({ coupons }: { coupons: Coupon[] }) {
     await refresh(updateCoupon(formData), 'Coupon updated.');
   }
   async function handleDelete(id: string) {
-    if (!confirm('Delete this coupon? Redemption history is preserved.')) return;
+    const ok = await confirm({
+      title: 'Delete this coupon?',
+      description: 'Redemption history is preserved.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
     await refresh(deleteCoupon(id), 'Coupon deleted.');
   }
 
@@ -181,8 +189,104 @@ export default function CouponManager({ coupons }: { coupons: Coupon[] }) {
     { value: 'FLAT', label: 'Flat (BDT)' },
   ];
 
+  const columns: ColumnDef<Coupon>[] = [
+    {
+      header: 'Code',
+      accessorKey: 'code',
+      cell: (c) => (
+        <code className="bg-white border border-color px-2 py-1 rounded text-xs font-mono font-bold">
+          {c.code}
+        </code>
+      ),
+    },
+    {
+      header: 'Scope',
+      accessorKey: 'scope',
+      cell: (c) => (
+        <span className={`badge ${SCOPE_TONE[c.scope] ?? 'badge-info'}`}>{c.scope}</span>
+      ),
+    },
+    {
+      header: 'Discount',
+      accessorKey: 'value',
+      cell: (c) => <span className="font-semibold">{describeValue(c)}</span>,
+    },
+    {
+      header: 'Min / Cap',
+      accessorKey: 'minAmount',
+      cell: (c) => (
+        <span className="text-xs text-muted">
+          Min {c.minAmount} BDT
+          {c.maxDiscount ? ` · Cap ${c.maxDiscount}` : ''}
+        </span>
+      ),
+    },
+    {
+      header: 'Usage',
+      accessorKey: 'usedCount',
+      cell: (c) => (
+        <div className="text-xs">
+          {c.usedCount}
+          {c.usageLimit ? ` / ${c.usageLimit}` : ' (no cap)'}
+          <div className="text-muted">{c.redemptions} logged</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Valid Until',
+      accessorKey: 'validUntil',
+      cell: (c) => (
+        <span className="text-xs text-muted">
+          {c.validUntil ? format(new Date(c.validUntil), 'MMM d, yyyy') : 'No expiry'}
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'isActive',
+      cell: (c) => (
+        <span className={`badge ${c.isActive ? 'badge-success' : 'badge-warning'}`}>
+          {c.isActive ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+  ];
+
+  const actions = (c: Coupon): RowAction<Coupon>[] => [
+    { label: 'Edit', icon: <Pencil size={14} />, onSelect: () => setEditingId(c.id) },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} />,
+      onSelect: () => handleDelete(c.id),
+      danger: true,
+    },
+  ];
+
+  function renderEditForm(c: Coupon) {
+    return (
+      <form action={handleEdit} className="p-3 flex flex-col gap-3">
+        <input type="hidden" name="id" value={c.id} />
+        <CouponFields defaultValues={c} scopeOptions={scopeOptions} typeOptions={typeOptions} />
+        <div className="flex gap-2 mt-1">
+          <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
+            Save
+          </FormSubmit>
+          <button
+            type="button"
+            onClick={() => setEditingId(null)}
+            className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {confirmDialog}
       {error && <FormAlert>{error}</FormAlert>}
       {success && <FormAlert tone="success">{success}</FormAlert>}
 
@@ -218,162 +322,19 @@ export default function CouponManager({ coupons }: { coupons: Coupon[] }) {
 
       {/* List */}
       <div className="card p-0 overflow-hidden">
-        <div className="data-grid-container">
-          <table className="data-grid hidden md:table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Scope</th>
-                <th>Discount</th>
-                <th>Min / Cap</th>
-                <th>Usage</th>
-                <th>Valid Until</th>
-                <th>Status</th>
-                <th className="w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coupons.map((c) => {
-                if (editingId === c.id) {
-                  return (
-                    <tr key={c.id}>
-                      <td colSpan={8}>
-                        <form action={handleEdit} className="p-3">
-                          <input type="hidden" name="id" value={c.id} />
-                          <CouponFields
-                            defaultValues={c}
-                            scopeOptions={scopeOptions}
-                            typeOptions={typeOptions}
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <FormSubmit fullWidth={false} loading={loading} loadingText="Saving...">
-                              Save
-                            </FormSubmit>
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="btn bg-gray-200 text-main hover:bg-gray-300 px-4 py-2 text-sm font-semibold rounded-md"
-                              disabled={loading}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
-                  );
-                }
-                return (
-                  <tr key={c.id}>
-                    <td>
-                      <code className="bg-white border border-color px-2 py-1 rounded text-xs font-mono font-bold">
-                        {c.code}
-                      </code>
-                    </td>
-                    <td>
-                      <span className={`badge ${SCOPE_TONE[c.scope] ?? 'badge-info'}`}>
-                        {c.scope}
-                      </span>
-                    </td>
-                    <td className="font-semibold">{describeValue(c)}</td>
-                    <td className="text-xs text-muted">
-                      Min {c.minAmount} BDT
-                      {c.maxDiscount ? ` · Cap ${c.maxDiscount}` : ''}
-                    </td>
-                    <td className="text-xs">
-                      {c.usedCount}
-                      {c.usageLimit ? ` / ${c.usageLimit}` : ' (no cap)'}
-                      <div className="text-muted">{c.redemptions} logged</div>
-                    </td>
-                    <td className="text-xs text-muted">
-                      {c.validUntil ? format(new Date(c.validUntil), 'MMM d, yyyy') : 'No expiry'}
-                    </td>
-                    <td>
-                      <span className={`badge ${c.isActive ? 'badge-success' : 'badge-warning'}`}>
-                        {c.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => setEditingId(c.id)}
-                          disabled={loading}
-                          className="btn bg-gray-100 text-main hover:bg-gray-200 p-2 rounded-md"
-                          aria-label="Edit"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c.id)}
-                          disabled={loading}
-                          className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white p-2 rounded-md"
-                          aria-label="Delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {/* Mobile cards */}
-          <div className="md:hidden flex flex-col gap-3 p-3">
-            {coupons.map((c) => (
-              <div key={c.id} className="card p-4 flex flex-col gap-2">
-                <div className="flex justify-between items-start gap-2">
-                  <code className="bg-white border border-color px-2 py-1 rounded text-xs font-mono font-bold">
-                    {c.code}
-                  </code>
-                  <span className={`badge ${SCOPE_TONE[c.scope] ?? 'badge-info'}`}>{c.scope}</span>
-                </div>
-                <div className="text-sm">
-                  <div className="font-semibold">{describeValue(c)}</div>
-                  <div className="text-xs text-muted">
-                    Min {c.minAmount} BDT
-                    {c.maxDiscount ? ` · Cap ${c.maxDiscount}` : ''}
-                  </div>
-                  <div className="text-xs">
-                    Used {c.usedCount}
-                    {c.usageLimit ? ` / ${c.usageLimit}` : ' (uncapped)'}
-                  </div>
-                  <div className="text-xs text-muted">
-                    {c.validUntil
-                      ? `Until ${format(new Date(c.validUntil), 'MMM d, yyyy')}`
-                      : 'No expiry'}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className={`badge ${c.isActive ? 'badge-success' : 'badge-warning'}`}>
-                    {c.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingId(c.id)}
-                      disabled={loading}
-                      className="btn bg-gray-100 text-main hover:bg-gray-200 px-3 py-1.5 text-sm font-semibold rounded-md"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      disabled={loading}
-                      className="btn bg-danger-light text-danger-hover hover:bg-danger hover:text-white px-3 py-1.5 text-sm font-semibold rounded-md"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {coupons.length === 0 && (
-            <div className="p-8 text-center text-muted">No coupons yet. Click &quot;New Coupon&quot; to create one.</div>
-          )}
-        </div>
+        <DataGrid
+          data={coupons}
+          columns={columns}
+          searchable={false}
+          getRowId={(c) => c.id}
+          rowActions={actions}
+          editingRowId={editingId}
+          renderEditableRow={renderEditForm}
+          emptyState={{
+            title: 'No coupons yet.',
+            description: 'Click "New Coupon" to create one.',
+          }}
+        />
       </div>
     </div>
   );

@@ -31,38 +31,39 @@ model Course {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  role         String   @default("STUDENT") // STUDENT, TUTOR, ADMIN
-  name         String
-  nsuId        String   @unique
-  email        String   @unique
-  contact      String
-  gender       String?
-  departmentId String?
-  cgpa         Float?
-  password     String
-  isBlocked      Boolean   @default(false)
-  hideCgpa       Boolean   @default(false)
-  balance        Float     @default(0)
-  emailVerified  DateTime?
-  createdAt      DateTime  @default(now())
+  id            String    @id @default(cuid())
+  role          String    @default("STUDENT") // STUDENT, TUTOR, ADMIN
+  name          String
+  nsuId         String    @unique
+  email         String    @unique
+  contact       String
+  gender        String?
+  departmentId  String?
+  cgpa          Float?
+  password      String
+  isBlocked     Boolean   @default(false)
+  hideCgpa      Boolean   @default(false)
+  balance       Float     @default(0)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
 
-  department Department? @relation(fields: [departmentId], references: [id])
+  department        Department?        @relation(fields: [departmentId], references: [id])
   couponRedemptions CouponRedemption[]
 
   expertises       TutorExpertise[]
   studentRequests  TutorRequest[]   @relation("StudentRequests")
   assignedRequests TutorRequest[]   @relation("AssignedRequests")
 
-  consultancyRequests   ConsultancyRequest[]
-  refundRequests        RefundRequest[]
-  processedRefunds      RefundRequest[] @relation("RefundProcessor")
-  passwordResetRequests       PasswordResetRequest[]
-  emailVerificationRequests   EmailVerificationRequest[]
-  withdrawalRequests    WithdrawalRequest[]
-  walletTransactions    WalletTransaction[]
-  notifications         Notification[]
-  pushSubscriptions     PushSubscription[]
+  consultancyRequests       ConsultancyRequest[]
+  refundRequests            RefundRequest[]
+  processedRefunds          RefundRequest[]            @relation("RefundProcessor")
+  passwordResetRequests     PasswordResetRequest[]
+  emailVerificationRequests EmailVerificationRequest[]
+  withdrawalRequests        WithdrawalRequest[]
+  walletTransactions        WalletTransaction[]
+  notifications             Notification[]
+  pushSubscriptions         PushSubscription[]
+  notificationPreferences   NotificationPreference[]
 
   @@index([role])
   @@index([departmentId])
@@ -93,19 +94,19 @@ model TutorExpertise {
 }
 
 model TutorRequest {
-  id              String   @id @default(cuid())
-  studentId       String
-  courseId        String
-  topic           String
-  facultyName     String?
-  preferredMode   String // Online, On Campus
+  id                String   @id @default(cuid())
+  studentId         String
+  courseId          String
+  topic             String
+  facultyName       String?
+  preferredMode     String // Online, On Campus
   preferredDateTime String?
-  budget          Float
-  status          String   @default("PENDING") // PENDING, MATCHED, ACCEPTED, PAYMENT_PENDING, COMPLETED, CANCELLED
-  assignedTutorId String?
-  rating          Int?
-  review          String?
-  createdAt       DateTime @default(now())
+  budget            Float
+  status            String   @default("PENDING") // PENDING, MATCHED, ACCEPTED, PAYMENT_PENDING, COMPLETED, CANCELLED
+  assignedTutorId   String?
+  rating            Int?
+  review            String?
+  createdAt         DateTime @default(now())
 
   student       User   @relation("StudentRequests", fields: [studentId], references: [id])
   assignedTutor User?  @relation("AssignedRequests", fields: [assignedTutorId], references: [id])
@@ -139,7 +140,7 @@ model ConsultancyTopic {
 model ConsultancyRequest {
   id        String   @id @default(cuid())
   studentId String
-  topic     String   // Free-text topic — kept for legacy rows + ad-hoc requests
+  topic     String // Free-text topic — kept for legacy rows + ad-hoc requests
   details   String
   status    String   @default("PENDING") // PENDING, ASSIGNED, COMPLETED, CANCELLED
   // Linked admin-curated topic. Nullable for back-compat with rows created
@@ -151,7 +152,7 @@ model ConsultancyRequest {
   pricePaid Float?
   createdAt DateTime @default(now())
 
-  student User              @relation(fields: [studentId], references: [id])
+  student          User              @relation(fields: [studentId], references: [id])
   consultancyTopic ConsultancyTopic? @relation(fields: [topicId], references: [id])
 
   @@index([studentId])
@@ -167,15 +168,15 @@ model RefundRequest {
   details       String
   status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
   // Audit fields — populated when an admin actioned the request.
-  amount        Float?    // Session fee credited to wallet on approval (TutorRequest.budget)
-  reviewNote    String?   // Optional admin note shown to student + kept on record
+  amount        Float? // Session fee credited to wallet on approval (TutorRequest.budget)
+  reviewNote    String? // Optional admin note shown to student + kept on record
   resolvedAt    DateTime? // When the admin approved or rejected
-  processedById String?   // Admin who actioned the request
+  processedById String? // Admin who actioned the request
   createdAt     DateTime  @default(now())
 
-  request      TutorRequest @relation(fields: [requestId], references: [id])
-  student      User         @relation(fields: [studentId], references: [id])
-  processedBy  User?        @relation("RefundProcessor", fields: [processedById], references: [id])
+  request     TutorRequest @relation(fields: [requestId], references: [id])
+  student     User         @relation(fields: [studentId], references: [id])
+  processedBy User?        @relation("RefundProcessor", fields: [processedById], references: [id])
 
   @@index([requestId])
   @@index([studentId])
@@ -198,12 +199,12 @@ model SupportTicket {
 }
 
 model PasswordResetRequest {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   token     String?
   expiresAt DateTime?
-  status    String   @default("PENDING") // PENDING, RESOLVED
-  createdAt DateTime @default(now())
+  status    String    @default("PENDING") // PENDING, RESOLVED
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -214,7 +215,7 @@ model PasswordResetRequest {
 model EmailVerificationRequest {
   id        String   @id @default(cuid())
   userId    String
-  token     String   // 6-digit OTP
+  token     String // 6-digit OTP
   expiresAt DateTime
   status    String   @default("PENDING") // PENDING | RESOLVED | EXPIRED
   createdAt DateTime @default(now())
@@ -239,7 +240,7 @@ model PendingRegistration {
   cgpa           Float?
   role           String   @default("STUDENT")
   hashedPassword String
-  otp            String   // 6-digit code
+  otp            String // 6-digit code
   expiresAt      DateTime
   status         String   @default("PENDING") // PENDING | RESOLVED | EXPIRED
   createdAt      DateTime @default(now())
@@ -263,24 +264,24 @@ model Payment {
 }
 
 model WithdrawalRequest {
-  id            String   @id @default(cuid())
-  tutorId       String
-  amount        Float // Gross amount requested
-  platformFee   Float // Platform fee deducted (5%)
-  netAmount     Float // Net amount paid (95%)
-  method        String   @default("MFS") // MFS or BANK
+  id                String   @id @default(cuid())
+  tutorId           String
+  amount            Float // Gross amount requested
+  platformFee       Float // Platform fee deducted (5%)
+  netAmount         Float // Net amount paid (95%)
+  method            String   @default("MFS") // MFS or BANK
   // MFS fields (nullable for BANK rows)
-  mfsType       String?  // BKASH, NAGAD, ROCKET
-  accountNumber String?  // MFS account number
-  transferType  String?  // SEND_MONEY, PAYMENT
+  mfsType           String? // BKASH, NAGAD, ROCKET
+  accountNumber     String? // MFS account number
+  transferType      String? // SEND_MONEY, PAYMENT
   // Bank fields (nullable for MFS rows)
   accountHolderName String? // Name as it appears on the bank account
   bankName          String?
   bankAccountNumber String?
   branch            String?
   bftn              String? // Bangladesh Bank Fund Transfer Number
-  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt     DateTime @default(now())
+  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt         DateTime @default(now())
 
   tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
 
@@ -290,13 +291,16 @@ model WithdrawalRequest {
 }
 
 model PaymentInfo {
-  id       String   @id @default(cuid())
-  data     String   @default("")
-  time     DateTime @default(now())
+  id   String   @id @default(cuid())
+  data String   @default("")
+  time DateTime @default(now())
 
   @@index([time])
 }
 
+// Notification system — see NOTIFICATION_SYSTEM_ARCHITECTURE_BLUEPRINT.md §IX.
+// All columns added in Phase 2 are additive with safe defaults so existing
+// rows backfill automatically and every existing query keeps working.
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -306,7 +310,65 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  // Phase 2 additive columns — defaults backfill existing rows.
+  type              String    @default("SYSTEM") // NotificationType enum value
+  category          String    @default("SYSTEM") // NotificationCategory enum value
+  priority          String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  archived          Boolean   @default(false)
+  readAt            DateTime?
+  expiresAt         DateTime?
+  metadata          Json?
+  dedupKey          String?
+  actorUserId       String? // who caused it (loose ref — no FK to avoid cascade surprises)
+  recipientRoleHint String? // STUDENT | TUTOR | ADMIN (for dual-role UI filtering)
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([userId, archived, createdAt(sort: Desc)])
+  @@index([dedupKey, createdAt])
+  @@index([expiresAt])
+}
+
+// Per-notification per-channel delivery log. Written by the channel providers
+// (Phase 4). Today's direct createNotification path does not populate rows;
+// that is intentional and changes nothing about current behavior.
+model NotificationDelivery {
+  id             String    @id @default(cuid())
+  notificationId String
+  channel        String // IN_APP | EMAIL | PUSH | DISCORD | SMS | WEBHOOK
+  status         String    @default("PENDING") // PENDING | SENT | FAILED | EXPIRED
+  attempts       Int       @default(0)
+  lastError      String?
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([channel, status])
+  @@index([status])
+}
+
+// Per-user per-category channel matrix. Absence of a row means "all channels
+// on" — i.e. current behavior. CRITICAL priority events bypass preferences
+// (see blueprint §XVI invariant #10).
+model NotificationPreference {
+  id           String   @id @default(cuid())
+  userId       String
+  category     String // NotificationCategory value
+  channelInApp Boolean  @default(true)
+  channelEmail Boolean  @default(true)
+  channelPush  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
 }
 
 model PushSubscription {
@@ -333,10 +395,10 @@ model VisitorLog {
 model WalletTransaction {
   id          String   @id @default(cuid())
   userId      String
-  amount      Float    // Positive for credit/recharge, negative for payment/withdrawal
-  type        String   // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT, CONSULTANCY_PAYMENT
+  amount      Float // Positive for credit/recharge, negative for payment/withdrawal
+  type        String // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT, CONSULTANCY_PAYMENT
   description String
-  referenceId String?  // MFS transaction ID or TutorRequest ID
+  referenceId String? // MFS transaction ID or TutorRequest ID
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -350,22 +412,22 @@ model WalletTransaction {
 // Seed happens lazily on first getPlatformSettings() call.
 model PlatformSetting {
   id                   String   @id
-  withdrawalFeePercent Float    @default(5)   // tutor-side withdrawal commission, %
-  paymentFeePercent    Float    @default(10)  // student-side payment fee, %
-  promoDiscountPercent Float    @default(50)  // promo applied on paymentFeePercent, %
-  consultancyFreeQuota Int      @default(2)   // free consultancy sessions per student
+  withdrawalFeePercent Float    @default(5) // tutor-side withdrawal commission, %
+  paymentFeePercent    Float    @default(10) // student-side payment fee, %
+  promoDiscountPercent Float    @default(50) // promo applied on paymentFeePercent, %
+  consultancyFreeQuota Int      @default(2) // free consultancy sessions per student
   updatedAt            DateTime @updatedAt
 }
 
 model Coupon {
   id           String    @id @default(cuid())
   code         String    @unique
-  scope        String    // COMMISSION | TUITION | CONSULTANCY
-  discountType String    // PERCENT | FLAT
-  value        Float     // percent (0-100) for PERCENT, BDT amount for FLAT
+  scope        String // COMMISSION | TUITION | CONSULTANCY
+  discountType String // PERCENT | FLAT
+  value        Float // percent (0-100) for PERCENT, BDT amount for FLAT
   minAmount    Float     @default(0) // minimum base amount required to apply
-  maxDiscount  Float?    // cap for PERCENT; null = uncapped
-  usageLimit   Int?      // null = unlimited
+  maxDiscount  Float? // cap for PERCENT; null = uncapped
+  usageLimit   Int? // null = unlimited
   usedCount    Int       @default(0)
   validFrom    DateTime  @default(now())
   validUntil   DateTime?
@@ -379,12 +441,12 @@ model Coupon {
 }
 
 model CouponRedemption {
-  id         String   @id @default(cuid())
-  couponId   String
-  userId     String
-  reference  String?  // e.g. WithdrawalRequest.id / TutorRequest.id / ConsultancyRequest.id
-  discount   Float    // snapshot of the discount amount applied (BDT)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  reference String? // e.g. WithdrawalRequest.id / TutorRequest.id / ConsultancyRequest.id
+  discount  Float // snapshot of the discount amount applied (BDT)
+  createdAt DateTime @default(now())
 
   coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -393,4 +455,3 @@ model CouponRedemption {
   @@index([couponId])
   @@index([userId])
 }
-

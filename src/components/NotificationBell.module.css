@@ -22,6 +22,16 @@
   background-color: var(--surface-1);
 }
 
+/* Phase 11: visible focus ring for keyboard users. Mouse clicks keep the
+   soft hover state; keyboard users get a clear 2px outline that meets
+   WCAG 2.2 AA non-text contrast (3:1) against the surrounding surface. */
+.bellButton:focus-visible,
+.markAllRead:focus-visible,
+.viewAll:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .badge {
   position: absolute;
   top: 0;
@@ -137,4 +147,24 @@
   border-radius: 50%;
   margin-left: 0.5rem;
   margin-top: 0.3rem;
+}
+
+/* Phase 8: "View all" footer linking to /notifications. Pinned to the bottom
+   of the dropdown so it's always reachable, regardless of list length. */
+.viewAll {
+  display: block;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--surface-1);
+  border-top: 1px solid var(--border-color);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.viewAll:hover {
+  background-color: var(--surface-2);
+  text-decoration: underline;
 }

@@ -57,7 +57,7 @@ export interface SelectProps {
   hint?: string;
   /** Small decorative icon shown at the start of the label text (aria-hidden). */
   labelIcon?: React.ReactNode;
-  /** Render the label off-screen (admin filters, sort, inline rows). */
+  /** Render the label off-screen (toolbar filters, sort, inline rows). */
   hideLabel?: boolean;
   /** Override the default label styling (e.g. toolbar micro-labels). */
   labelClassName?: string;

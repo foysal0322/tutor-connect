@@ -1,30 +1,39 @@
 /* Layout Shell */
 .layout {
   display: flex;
-  /* Reserve room for the sticky global Navbar rendered above us in the root
-     layout. At 100vh the shell pushed total document height to navbar + 100vh,
-     causing the page to scroll and the sidebar to slide up under the
-     (semi-transparent) navbar. The .content area scrolls internally instead. */
-  height: calc(100vh - var(--navbar-height, 80px));
+  /* Fill the full viewport. The shell owns the entire screen — Topbar and
+     Sidebar are inside .layout, not above it. There is no marketing Navbar
+     above the dashboard (those pages live outside the (marketing) route
+     group). The .content area scrolls internally instead of the page. */
+  height: 100vh;
   overflow: hidden;
   background-color: var(--bg-color);
 }
 
-/* Sidebar */
+/* Sidebar — 240 px expanded, 56 px collapsed (Phase 4). */
 .sidebar {
-  width: 260px;
+  width: 240px;
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width var(--duration-base) var(--ease-standard);
   z-index: 50;
+  flex-shrink: 0;
+}
+
+/* Collapsed icon-rail (desktop only — the mobile drawer overrides below). */
+.sidebar[data-collapsed="1"] {
+  width: 56px;
 }
 
 .sidebarNav {
   flex: 1;
   padding: 0.75rem 0.75rem;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
@@ -49,6 +58,56 @@
   color: var(--text-muted);
   padding: 0.35rem 0.75rem 0.15rem;
   opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Member-only focus hint (blueprint §8). The Learning or Teaching group
+   heading becomes a clickable toggle that persists a soft "focus" cue. The
+   heading picks up the primary tone + a left accent rail; the matching
+   group also gets a faint tinted backdrop so the focused workflow reads as
+   the user's current emphasis. */
+.navHeadingInteractive {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.navHeadingInteractive:hover {
+  color: var(--text-main);
+}
+
+.navGroupFocused > .navHeadingInteractive {
+  color: var(--primary);
+  opacity: 1;
+  position: relative;
+  padding-left: calc(0.75rem + 2px);
+}
+
+.navGroupFocused > .navHeadingInteractive::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.4rem;
+  bottom: 0.2rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.navGroupFocused {
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  border-radius: var(--radius-md);
+  padding: 0.25rem 0.25rem;
+  margin: 0 -0.25rem 0.5rem;
+}
+
+/* Collapsed rail hides focus affordances — they require the heading text. */
+.sidebar[data-collapsed='1'] .navGroupFocused {
+  background: transparent;
+  padding: 0;
+  margin: 0 0 0.5rem;
 }
 
 .navItem {
@@ -63,6 +122,19 @@
   transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
+}
+
+/* Collapsed: center the icon, hide labels + badges (badges would overflow the rail). */
+.sidebar[data-collapsed="1"] .navItem {
+  justify-content: center;
+  padding: 0.5rem 0;
+  gap: 0;
+}
+
+.sidebar[data-collapsed="1"] .navItemLabel,
+.sidebar[data-collapsed="1"] .navBadge {
+  display: none;
 }
 
 .navItem:hover {
@@ -92,6 +164,74 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.navItemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* In-sidebar search input (Phase 4). Hidden when collapsed (controlled in JS). */
+.sidebarSearch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-3) var(--space-1);
+  padding: 0 var(--space-2);
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-1);
+  flex-shrink: 0;
+}
+
+.sidebarSearch:focus-within {
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+}
+
+.sidebarSearchIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sidebarSearchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: var(--text-sm);
+  font-family: inherit;
+}
+
+.sidebarSearchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.sidebarSearchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebarSearchClear:hover {
+  color: var(--text-main);
+  background-color: var(--surface-2);
+}
+
+.sidebarEmpty {
+  padding: var(--space-4) var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
 }
 
 /* Destructive action (e.g. Logout) — red treatment so it reads as irreversible. */
@@ -141,24 +281,118 @@
   overflow: hidden;
 }
 
-/* Top Nav — mobile/tablet only. On desktop the sidebar is persistent, so
-   this bar would render empty (the menu toggle is hidden > 1024px) and just
-   waste a 64px strip above the page content. */
-.topNav {
-  display: none;
-  height: 64px;
-  background-color: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  z-index: 40;
-}
-
-.topNavLeft, .topNavRight {
+/* Topbar — always visible 48 px sticky bar. Replaces the old mobile-only
+   .topNav. Holds the collapse toggle, breadcrumbs, ⌘K trigger, notification
+   bell, theme toggle, and user menu (Phase 3). */
+.topbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 48px;
+  padding: 0 var(--space-4);
+  background-color: color-mix(in srgb, var(--card-bg) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-shrink: 0;
+}
+
+.topbarLeft,
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.topbarRight {
+  flex-shrink: 0;
+}
+
+/* Generic square icon button used by the Topbar (menu, collapse, ⌘K, theme). */
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: 32px;
+  min-width: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.iconButton:hover {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.iconButton:active {
+  transform: scale(0.98);
+}
+
+/* ⌘K trigger — wider, shows kbd hint. */
+.kbutton {
+  padding: 0 var(--space-2) 0 var(--space-3);
+}
+
+.kbd {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  line-height: 1;
+}
+
+.topbarDivider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-color);
+  margin: 0 var(--space-1);
+}
+
+.breadcrumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Collapse-to-rail toggle — desktop only. The off-canvas drawer handles
+   mobile, so hide this control below the desktop breakpoint. */
+.collapseToggle {
+  display: inline-flex;
+  position: relative;
+}
+
+.collapseToggle [data-icon] {
+  display: none;
+}
+
+/* Default state: show "expand" affordance (sidebar is expanded by default,
+   so the icon hints at the action that collapses). We flip via CSS once
+   Phase 4 reads the persisted state. For now, always show the collapse icon. */
+.collapseToggle [data-icon="collapse"] {
+  display: inline-flex;
 }
 
 .searchBar {
@@ -210,6 +444,11 @@
   overflow-y: auto;
   padding: 1.5rem;
   background-color: var(--bg-color);
+  /* Inside the DashboardLayout shell there is no marketing Navbar — override
+     --navbar-height to 0 so child pages that use `top: var(--navbar-height)`
+     for sticky toolbars (e.g. /find-tutor) stick flush at the top of the
+     content area instead of leaving an 80px gap. */
+  --navbar-height: 0px;
 }
 
 /* Overlay for Mobile Sidebar */
@@ -230,22 +469,43 @@
     left: 0;
     top: 0;
     transform: translateX(-100%);
+    /* Mobile drawer is always full-width, even if the desktop rail was
+       collapsed before the viewport shrank. */
+    width: 240px;
   }
-  
+
+  /* Force-expand the drawer regardless of data-collapsed. */
+  .sidebar[data-collapsed="1"] {
+    width: 240px;
+  }
+
+  .sidebar[data-collapsed="1"] .navItemLabel,
+  .sidebar[data-collapsed="1"] .navBadge {
+    display: revert;
+  }
+
   .sidebar.open {
     transform: translateX(0);
   }
 
-  .topNav {
-    display: flex;
+  /* Mobile: hamburger shows, desktop collapse toggle hides. */
+  .menuToggle {
+    display: inline-flex;
   }
 
-  .menuToggle {
-    display: block;
+  .collapseToggle {
+    display: none;
   }
-  
+
   .overlay.open {
     display: block;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Desktop: hamburger hidden (sidebar is persistent), collapse toggle visible. */
+  .menuToggle {
+    display: none;
   }
 }
 

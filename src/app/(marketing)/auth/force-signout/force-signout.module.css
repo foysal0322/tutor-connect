@@ -1,0 +1,251 @@
+/* Force-signout animated card — shared across all signout reasons.
+ *
+ * Design goals:
+ *   - Centered card with generous spacing (min-h-screen + flex center).
+ *   - Smooth entrance: card fades + lifts in; content staggers behind it.
+ *   - Animated loader: a pulsing orb with three ripple rings radiating
+ *     outward, paired with a logout glyph that breathes. Pure CSS, no JS
+ *     animation libs.
+ *   - Respects prefers-reduced-motion: animation pauses and the layout
+ *     settles into its final state.
+ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6, 24px);
+  background:
+    radial-gradient(
+      ellipse at top,
+      var(--primary-light, #eef2ff) 0%,
+      transparent 60%
+    ),
+    var(--bg, #ffffff);
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-10, 40px) var(--space-8, 32px);
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px -8px rgba(15, 23, 42, 0.12);
+  text-align: center;
+  /* Entrance animation. */
+  animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: hidden;
+}
+
+/* Thin gradient accent at the top of the card — subtle brand cue. */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary, #4f46e5) 50%,
+    transparent 100%
+  );
+  animation: accentSweep 2.4s ease-in-out infinite;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes accentSweep {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateX(-25%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(25%);
+  }
+}
+
+/* ── Animated loader ────────────────────────────────────────────────────
+ * A pulsing orb in the center with three ripple rings. The orb "breathes"
+ * (scale + opacity) while the rings expand outward and fade. The logout
+ * glyph inside the orb stays static so the user reads it instantly. */
+
+.loaderWrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--space-6, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb {
+  position: relative;
+  z-index: 2;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--primary, #4f46e5) 0%,
+    var(--primary-dark, #4338ca) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow:
+    0 4px 12px -2px rgba(79, 70, 229, 0.4),
+    0 0 0 4px rgba(79, 70, 229, 0.08);
+  animation: orbBreathe 2s ease-in-out infinite;
+}
+
+@keyframes orbBreathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 4px 12px -2px rgba(79, 70, 229, 0.4),
+      0 0 0 4px rgba(79, 70, 229, 0.08);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow:
+      0 6px 18px -2px rgba(79, 70, 229, 0.5),
+      0 0 0 8px rgba(79, 70, 229, 0.04);
+  }
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--primary, #4f46e5);
+  opacity: 0;
+  animation: ringPulse 2s ease-out infinite;
+}
+
+.ring2 {
+  animation-delay: 0.6s;
+}
+
+.ring3 {
+  animation-delay: 1.2s;
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.55;
+  }
+  80% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ── Staggered text reveal ────────────────────────────────────────────── */
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main, #0f172a);
+  line-height: 1.25;
+  animation: textRise 0.5s ease-out 0.15s both;
+}
+
+.description {
+  margin: 12px 0 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-muted, #64748b);
+  max-width: 32ch;
+  margin-left: auto;
+  margin-right: auto;
+  animation: textRise 0.5s ease-out 0.25s both;
+}
+
+.hint {
+  margin-top: var(--space-6, 24px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  background-color: var(--surface-1, #f8fafc);
+  border-radius: 999px;
+  animation: textRise 0.5s ease-out 0.35s both;
+}
+
+.hintDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary, #4f46e5);
+  animation: hintDotBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes textRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hintDotBlink {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────
+ * Users who prefer reduced motion get the final static state — no
+ * entrance animation, no breathing orb, no ripples. The card and content
+ * are still fully legible. */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .title,
+  .description,
+  .hint {
+    animation: none;
+  }
+  .orb,
+  .ring,
+  .card::before,
+  .hintDot {
+    animation: none;
+  }
+  .ring {
+    display: none;
+  }
+}

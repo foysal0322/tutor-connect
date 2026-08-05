@@ -1,21 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Menu } from 'lucide-react';
-import styles from './layout.module.css';
+/**
+ * TopNav → re-export of Topbar (Phase 3).
+ *
+ * Kept as a compatibility shim so any existing imports of `TopNav` continue
+ * to resolve. New code should import Topbar directly.
+ */
 
-type TopNavProps = {
-  onMenuClick: () => void;
-};
-
-export default function TopNav({ onMenuClick }: TopNavProps) {
-  return (
-    <header className={styles.topNav}>
-      <div className={styles.topNavLeft}>
-        <button className={styles.menuToggle} onClick={onMenuClick} aria-label="Open sidebar">
-          <Menu size={24} />
-        </button>
-      </div>
-    </header>
-  );
-}
+export { default } from "./Topbar";
+export { default as Topbar } from "./Topbar";
