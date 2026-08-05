@@ -1057,6 +1057,34 @@ h4 {
   color: var(--text-main);
 }
 
+/* --- Touch target enforcement (WCAG 2.5.5 / Phase 10 responsive pass) ---
+   On coarse-pointer devices (touch screens), bump up interactive elements
+   that would otherwise be too small to tap reliably. We use 40px as a
+   pragmatic compromise — the 44px guideline is ideal but would break
+   dense UI patterns (table rows, compact toolbars). The `.touch-target`
+   utility provides an explicit 44px when needed. */
+@media (pointer: coarse) {
+  .btn-action {
+    min-height: 40px;
+    padding-block: 0.5rem;
+  }
+  .btn-sm {
+    min-height: 36px;
+  }
+  .btn-icon {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Cards */
 .card {
   background: var(--card-bg);
