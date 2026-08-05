@@ -663,7 +663,7 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 
 **Verification:** `npm run build` ✅.
 
-### Phase 3 — `/dashboard` decomposition + KPI adoption
+### Phase 3 — `/dashboard` decomposition + KPI adoption · 🟢 ✅ DONE (2026-08-05)
 - **Objective:** Convert Learning and Teaching tabs to `Tabs` primitive, `KPI` tiles, and per-section `<Suspense>`; keep all data queries intact.
 - **Files likely affected:** `src/app/dashboard/page.tsx`, `src/app/dashboard/DashboardContent.tsx` (or equivalent), `src/app/dashboard/loading.tsx`, related chart components.
 - **Dependencies:** Phase 2.
@@ -672,6 +672,44 @@ Phases mirror the admin rollout discipline: each phase is independently shippabl
 - **Rollback:** Revert; queries untouched so no data risk.
 - **Complexity:** L.
 - **Acceptance:** Both tabs visually match admin dashboard density; load feels faster due to Suspense.
+
+**Implementation notes (2026-08-05):**
+- ✅ **Shared `<KPI>` adopted everywhere.** The bespoke `Kpi` component
+  (previously inside DashboardContent) and the legacy `StatCard` (used on
+  the Learning panel) are both replaced by the platform-wide `<KPI>`
+  primitive. Both tabs now share the same compact, token-driven tile.
+- ✅ **Per-section `<Suspense>` streaming.** The page was decomposed into:
+  - `page.tsx` — fetches only **shell counts** (8 indexed `count`
+    queries in parallel — balance, expertise counts, request counts for
+    tab defaults + onboarding gate). The shell paints immediately.
+  - `sections/LearningPanel.tsx` — async server component, fetches its
+    own learning data inside the Suspense boundary.
+  - `sections/TeachingPanel.tsx` — async server component, fetches all
+    teaching data. Short-circuits to the static `<TeachCTA>` for
+    non-tutors (zero DB queries).
+  - `sections/TeachingPanelView.tsx` — client view extracted from the
+    old DashboardContent (recharts dynamic imports stay client-side).
+  - `PanelSkeleton.tsx` — Suspense fallback reusing
+    `SkeletonDashboardStats`.
+- ✅ **DashboardContent simplified.** The orchestrator now only owns the
+  shell header (greeting + balance pill + profile link) + the Tabs strip
+  + focus-hint side-effect. All teaching data types and the bespoke Kpi
+  component are removed. `DashboardData` → `DashboardShellData`.
+- ✅ **loading.tsx fixed.** The previous skeleton used inline hex colors
+  (`#F1F5F9`, `#E2E8F0`) that broke in dark mode. Now uses the global
+  `.skeleton` / `.skeleton-card` classes (token-driven, dark-mode safe).
+- ✅ **Non-tutor speedup.** Members with no expertise skip all 12
+  teaching queries entirely (the `<TeachCTA>` renders without awaiting).
+  Their dashboard paint is noticeably faster.
+
+**Data preservation contract:**
+- All Prisma queries are **identical** to the previous implementation —
+  same `where` clauses, same `select` shapes, same derivation logic.
+  They were relocated, not rewritten.
+- No server-action, route, or auth change.
+- No new dependencies.
+
+**Verification:** `npm run build` ✅.
 
 ### Phase 4 — `/wallet` canonicalization
 - **Objective:** Replace bespoke tabs/KPIs/tables with shared primitives across Wallet/Payments/Earnings; reuse `EarningsClient` internals via `DataGrid`.
