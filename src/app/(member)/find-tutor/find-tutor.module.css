@@ -1168,12 +1168,6 @@
    card grid scrolls. Mobile keeps static flow for a natural top-to-bottom
    read. 720px matches the existing mobile breakpoint. */
 @media (min-width: 721px) {
-  /* Inside the DashboardLayout, negate the 1.5rem padding-top on .content
-     so the sticky toolbar sits flush under the Topbar. Marketing context
-     (guests) is unaffected — no [data-shell] attribute there. */
-  :global([data-shell='member']) .page {
-    margin-top: -1.5rem;
-  }
   .toolbar {
     position: sticky;
     top: var(--navbar-height);
@@ -1181,6 +1175,11 @@
     padding: var(--space-2) 0;
     background: var(--bg-color);
     border-bottom: 1px solid var(--border-color);
+  }
+  /* Inside the member shell, offset the .content padding so the toolbar
+     sits flush under the Topbar. Verified value via browser inspection. */
+  :global([data-shell='member']) .toolbar {
+    top: -20px;
   }
 }
 
