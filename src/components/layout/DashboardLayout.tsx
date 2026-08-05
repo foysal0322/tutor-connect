@@ -86,7 +86,7 @@ export default function DashboardLayout({
           onToggleCollapse={toggleCollapse}
           isTutor={isTutor}
         />
-        <main className={styles.content}>
+        <main className={styles.content} data-shell="member">
           <div className="container container-wide animate-fade-in">
             {children}
           </div>
