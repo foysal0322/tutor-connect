@@ -1303,6 +1303,9 @@
   .statItem::after {
     display: none !important;
   }
+  .tutorsGrid {
+    grid-template-columns: 1fr;
+  }
   .testimonialCard {
     padding: var(--space-8) var(--space-5);
   }
