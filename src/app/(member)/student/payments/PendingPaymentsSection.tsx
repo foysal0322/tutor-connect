@@ -63,7 +63,13 @@ export default function PendingPaymentsSection({
                       {req.course.name}
                     </h3>
                     <span className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      Requested on {new Date(req.createdAt).toLocaleDateString()}
+                      Requested on{' '}
+                      {new Date(req.createdAt).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        timeZone: 'Asia/Dhaka',
+                      })}
                     </span>
                   </div>
                   <span className="badge badge-info">Awaiting Payment</span>

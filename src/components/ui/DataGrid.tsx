@@ -164,6 +164,7 @@ interface HeaderCellProps<T> {
   onSort: (key: string, shiftKey: boolean) => void;
   onResize: (colId: string, delta: number) => void;
   onFilter: (colId: string, value: string | undefined) => void;
+  "data-col-id"?: string;
 }
 
 function HeaderCell<T>({
@@ -176,6 +177,7 @@ function HeaderCell<T>({
   onSort,
   onResize,
   onFilter,
+  ...rest
 }: HeaderCellProps<T>) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [resizing, setResizing] = useState(false);
@@ -238,6 +240,7 @@ function HeaderCell<T>({
       aria-sort={ariaSort as any}
       style={{ width, position: "relative" }}
       className={alignClass}
+      {...rest}
     >
       <div className={styles.thInner}>
         <div className={styles.thContent}>
@@ -755,23 +758,19 @@ export default function DataGrid<T extends Record<string, any>>({
                   (e) => e.key === String(col.accessorKey),
                 );
                 return (
-                  <th
+                  <HeaderCell
                     key={i}
+                    col={col}
+                    colId={colId}
+                    colIndex={i}
+                    width={width}
+                    sortState={sortEntry}
+                    filterValue={columnFilters[colId]}
+                    onSort={handleSort}
+                    onResize={handleResize}
+                    onFilter={handleFilter}
                     data-col-id={colId}
-                    style={width ? { width } : undefined}
-                  >
-                    <HeaderCell
-                      col={col}
-                      colId={colId}
-                      colIndex={i}
-                      width={undefined}
-                      sortState={sortEntry}
-                      filterValue={columnFilters[colId]}
-                      onSort={handleSort}
-                      onResize={handleResize}
-                      onFilter={handleFilter}
-                    />
-                  </th>
+                  />
                 );
               })}
               {hasActions && <th style={{ width: 56 }} aria-label="Actions" />}

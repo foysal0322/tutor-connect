@@ -16,6 +16,7 @@ import {
   FormAlert,
   fieldClass,
 } from '@/components/forms';
+import FormLoading from '@/components/ui/FormLoading';
 
 export default function RequestTutorForm({
   courses,
@@ -99,6 +100,13 @@ export default function RequestTutorForm({
       title="Request a Tutor"
       subtitle="Fill in the details below to get matched with the right tutor."
     >
+      {loading && (
+        <FormLoading
+          variant="fixed"
+          title="Submitting your request"
+          message="Matching you with the right tutor — hang tight…"
+        />
+      )}
       {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
