@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { createPortal } from 'react-dom';
 import LoadingSpinner from './LoadingSpinner';
 import styles from './FormLoading.module.css';
 
@@ -9,8 +12,9 @@ interface FormLoadingProps {
   message?: string;
   /**
    * - `overlay` (default): absolutely fills the nearest positioned ancestor.
-   * - `fixed`: fixed to the viewport — use for full-screen moments
-   *   (e.g. between submit and route transition).
+   * - `fixed`: portaled to document.body and pinned to the viewport — use for
+   *   full-screen moments (e.g. between submit and route transition). Portaled
+   *   so ancestor transforms/filters (e.g. animate-fade-in) can't trap it.
    * - `inline`: sits in normal flow, no backdrop.
    */
   variant?: 'overlay' | 'fixed' | 'inline';
@@ -31,15 +35,27 @@ export default function FormLoading({
   variant = 'overlay',
   size = 'lg',
 }: FormLoadingProps) {
-  const rootClass =
-    variant === 'inline'
-      ? styles.inline
-      : variant === 'fixed'
-        ? styles.fixed
-        : styles.overlay;
+  // Only mount the portal after hydration so server/client output match.
+  // Without this, SSR renders inline and the client renders into document.body,
+  // causing a hydration mismatch.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
-    <div className={rootClass} role="status" aria-live="polite" aria-busy="true">
+  const node = (
+    <div
+      className={
+        variant === 'inline'
+          ? styles.inline
+          : variant === 'fixed'
+            ? styles.fixed
+            : styles.overlay
+      }
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
       <div className={styles.content}>
         <LoadingSpinner size={size} color="var(--primary)" />
         {title && <p className={styles.title}>{title}</p>}
@@ -47,4 +63,9 @@ export default function FormLoading({
       </div>
     </div>
   );
+
+  if (variant === 'fixed') {
+    return mounted ? createPortal(node, document.body) : null;
+  }
+  return node;
 }
