@@ -1,3 +1,5 @@
+'use client';
+
 import { Wallet, Clock, CheckCircle2, ReceiptText, ArrowUpRight } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { KPI } from '@/components/ui/KPI';
@@ -10,7 +12,9 @@ import s from './payments.module.css';
  * pending payments + history table). Extracted from /student/payments/page.tsx
  * so the unified /wallet hub can embed the same UI inside its Payments tab.
  *
- * Server component — receives already-fetched rows and renders them.
+ * Client component — receives already-fetched rows and renders them. Needs
+ * `'use client'` because the DataGrid `columns` carry `cell` render functions
+ * and a `getRowId` callback, neither of which can cross the RSC boundary.
  *
  * Phase 4: bespoke KPI cards → shared <KPI>; bespoke history table → <DataGrid>.
  */
@@ -88,7 +92,13 @@ export default function PaymentsView({
       header: 'Date',
       accessorKey: 'payment.createdAt',
       sortable: true,
-      cell: (r) => new Date(r.payment.createdAt).toLocaleDateString(),
+      cell: (r) =>
+        new Date(r.payment.createdAt).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Asia/Dhaka',
+        }),
     },
     {
       header: 'Status',
