@@ -56,6 +56,7 @@ export function useKeyboardShortcut(
     if (opts.disabled) return;
 
     function onKeyDown(e: KeyboardEvent) {
+      if (!e.key) return;
       const key = e.key.toLowerCase();
       if (key !== opts.key.toLowerCase()) return;
 
