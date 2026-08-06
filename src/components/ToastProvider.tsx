@@ -31,7 +31,7 @@ const ICONS: Record<ToastType, string> = {
   info: 'ℹ',
 };
 
-const AUTO_DISMISS_MS = 3500;
+const AUTO_DISMISS_MS = 6000;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
