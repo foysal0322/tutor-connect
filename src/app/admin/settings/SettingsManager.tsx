@@ -14,6 +14,7 @@ type Settings = {
   paymentFeePercent: number;
   promoDiscountPercent: number;
   consultancyFreeQuota: number;
+  consultancyPaidSessionPrice: number;
   updatedAt: string;
 };
 
@@ -21,13 +22,15 @@ type FieldKey =
   | 'withdrawalFeePercent'
   | 'paymentFeePercent'
   | 'promoDiscountPercent'
-  | 'consultancyFreeQuota';
+  | 'consultancyFreeQuota'
+  | 'consultancyPaidSessionPrice';
 
 const NUMERIC_FIELDS: FieldKey[] = [
   'withdrawalFeePercent',
   'paymentFeePercent',
   'promoDiscountPercent',
   'consultancyFreeQuota',
+  'consultancyPaidSessionPrice',
 ];
 
 export default function SettingsManager({ settings }: { settings: Settings }) {
@@ -41,6 +44,7 @@ export default function SettingsManager({ settings }: { settings: Settings }) {
       paymentFeePercent: String(settings.paymentFeePercent),
       promoDiscountPercent: String(settings.promoDiscountPercent),
       consultancyFreeQuota: String(settings.consultancyFreeQuota),
+      consultancyPaidSessionPrice: String(settings.consultancyPaidSessionPrice),
     }),
     [settings],
   );
@@ -85,6 +89,8 @@ export default function SettingsManager({ settings }: { settings: Settings }) {
         paymentFeePercent: (formData.get('paymentFeePercent') as string) || initial.paymentFeePercent,
         promoDiscountPercent: (formData.get('promoDiscountPercent') as string) || initial.promoDiscountPercent,
         consultancyFreeQuota: (formData.get('consultancyFreeQuota') as string) || initial.consultancyFreeQuota,
+        consultancyPaidSessionPrice:
+          (formData.get('consultancyPaidSessionPrice') as string) || initial.consultancyPaidSessionPrice,
       });
     }
     setLoading(false);
@@ -172,9 +178,24 @@ export default function SettingsManager({ settings }: { settings: Settings }) {
           }
           required
         />
+        <Input
+          containerClassName={fieldClass}
+          name='consultancyPaidSessionPrice'
+          type='number'
+          step='any'
+          min='0'
+          max='100000'
+          label='Paid Session Price (BDT)'
+          hint='Charged from the student wallet once the free quota is used up. A topic with its own explicit price still overrides this.'
+          value={values.consultancyPaidSessionPrice}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            handleChange('consultancyPaidSessionPrice', e.target.value)
+          }
+          required
+        />
         <p className='text-xs text-muted' style={{ gridColumn: '1 / -1' }}>
-          Number of free (price = 0) consultancy sessions each student can claim. Paid topics are
-          unaffected.
+          Each student&apos;s first <em>N</em> sessions are free (counting all past bookings). After that,
+          every session costs the price above — debited from the student&apos;s Campus Wallet at booking.
         </p>
       </FormSection>
     ),

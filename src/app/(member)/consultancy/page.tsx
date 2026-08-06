@@ -27,6 +27,8 @@ import { formatBDT } from '@/lib/format';
 
 /** Fallback free-quota if PlatformSetting row is missing. */
 const FALLBACK_FREE_QUOTA = 2;
+/** Fallback paid-session price if PlatformSetting row is missing. */
+const FALLBACK_PAID_PRICE = 100;
 
 export const metadata: Metadata = {
   title: 'Academic Consultancy — nsuOne',
@@ -49,17 +51,16 @@ export default async function ConsultancyPage() {
   const settings = await getPlatformSettings();
   const freeQuota = settings.consultancyFreeQuota ?? FALLBACK_FREE_QUOTA;
 
-  // Free quota is computed against the student's history of FREE bookings
-  // only (pricePaid == null or 0). Paid bookings don't consume the quota.
-  const usedFreeCount = sessionUser?.id
+  // Free quota counts ALL past sessions (free + paid). Once the student has
+  // booked `freeQuota` times, every subsequent session is paid at the flat
+  // fee (or the topic's explicit price if higher).
+  const totalBookedCount = sessionUser?.id
     ? await prisma.consultancyRequest.count({
-        where: {
-          studentId: sessionUser.id,
-          OR: [{ pricePaid: null }, { pricePaid: 0 }],
-        },
+        where: { studentId: sessionUser.id },
       })
     : 0;
-  const remainingFree = Math.max(0, freeQuota - usedFreeCount);
+  const remainingFree = Math.max(0, freeQuota - totalBookedCount);
+  const paidSessionPrice = settings.consultancyPaidSessionPrice ?? FALLBACK_PAID_PRICE;
 
   async function submitConsultancy(formData: FormData) {
     'use server';
@@ -88,29 +89,28 @@ export default async function ConsultancyPage() {
     if (topicId && !topic) throw new Error('Selected topic no longer exists.');
     if (!details) throw new Error('Please describe what you need help with.');
 
-    const isFree = !topic || topic.price === 0;
-
-    // Free-path: enforce quota. Paid-path: enforce wallet balance.
-    if (isFree) {
-      const settings = await getPlatformSettings();
-      const quota = settings.consultancyFreeQuota ?? FALLBACK_FREE_QUOTA;
-      const usedFree = await prisma.consultancyRequest.count({
-        where: {
-          studentId: student.id,
-          OR: [{ pricePaid: null }, { pricePaid: 0 }],
-        },
-      });
-      if (usedFree >= quota) {
-        throw new Error(`You have already used your ${quota} free consultancy sessions.`);
-      }
-    }
+    // ---- Pricing decision (unified model) ----
+    // Free quota counts ALL past sessions (free + paid), so once a student
+    // has booked N times, every subsequent session is paid. Paid price is
+    // the topic's explicit price if set; otherwise the admin-configured
+    // flat fee (consultancyPaidSessionPrice, default 100 BDT).
+    const quota = settings.consultancyFreeQuota ?? FALLBACK_FREE_QUOTA;
+    const totalUsed = await prisma.consultancyRequest.count({
+      where: { studentId: student.id },
+    });
+    const isFree = totalUsed < quota;
+    const basePrice =
+      topic && topic.price > 0
+        ? topic.price
+        : (settings.consultancyPaidSessionPrice ?? FALLBACK_PAID_PRICE);
+    const chargeAmountBase = isFree ? 0 : basePrice;
 
     // Atomically: debit wallet (if paid) + create the request. Reuses the
     // pattern from adjustUserBalance — server-authoritative balance check
     // inside a transaction so two concurrent bookings can't drain a wallet.
     try {
       const result = await prisma.$transaction(async (tx) => {
-        let chargeAmount = topic?.price ?? 0;
+        let chargeAmount = chargeAmountBase;
         let couponDiscount = 0;
 
         // Optional CONSULTANCY coupon — redeem inside the transaction so
@@ -126,7 +126,7 @@ export default async function ConsultancyPage() {
           chargeAmount = Math.max(0, chargeAmount - couponDiscount);
         }
 
-        if (chargeAmount > 0 && topic) {
+        if (chargeAmount > 0) {
           const fresh = await tx.user.findUnique({
             where: { id: student.id },
             select: { balance: true },
@@ -145,8 +145,8 @@ export default async function ConsultancyPage() {
               userId: student.id,
               amount: -chargeAmount,
               type: 'CONSULTANCY_PAYMENT',
-              description: `Consultancy booking: ${topic.title}${couponDiscount > 0 ? ` (coupon saved ${couponDiscount} BDT)` : ''}`,
-              referenceId: topic.id,
+              description: `Consultancy booking: ${topic?.title ?? 'General Consultancy'}${couponDiscount > 0 ? ` (coupon saved ${couponDiscount} BDT)` : ''}`,
+              referenceId: topic?.id ?? null,
             },
           });
         }
@@ -306,7 +306,7 @@ export default async function ConsultancyPage() {
       <FormCard
         icon={<MessageSquareText size={28} />}
         title="Book a Consultancy Session"
-        subtitle="Free topics count against your complimentary quota. Premium topics are paid from your Campus Wallet."
+        subtitle={`Your first ${freeQuota} session${freeQuota === 1 ? '' : 's'} ${freeQuota === 1 ? 'is' : 'are'} free. After that, each session costs ${formatBDT(paidSessionPrice)} BDT from your Campus Wallet.`}
       >
         <ConsultancySuccessToast />
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
@@ -349,10 +349,7 @@ export default async function ConsultancyPage() {
                 labelIcon={<Tags size={14} />}
                 required
                 placeholderOption="Select a topic"
-                options={topics.map((t) => ({
-                  value: t.id,
-                  label: t.price > 0 ? `${t.title} — ${formatBDT(t.price)} BDT` : `${t.title} (Free)`,
-                }))}
+                options={topics.map((t) => ({ value: t.id, label: t.title }))}
               />
             ) : null}
             <Textarea
@@ -377,7 +374,7 @@ export default async function ConsultancyPage() {
             className="text-xs text-muted"
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '-0.5rem', marginBottom: '1rem' }}
           >
-            <Wallet size={12} /> Paid topics are debited from your Campus Wallet at booking.
+            <Wallet size={12} /> Sessions past your free quota are debited from your Campus Wallet at booking.
             See our{' '}
             <Link href="/consultancy-policy" className="text-primary font-semibold">
               Consultancy Policy

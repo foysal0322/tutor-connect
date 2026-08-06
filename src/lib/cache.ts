@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS = {
   paymentFeePercent: 10,
   promoDiscountPercent: 50,
   consultancyFreeQuota: 2,
+  consultancyPaidSessionPrice: 100,
 };
 
 /**
@@ -37,6 +38,7 @@ export const getPlatformSettings = unstable_cache(
       paymentFeePercent: row.paymentFeePercent,
       promoDiscountPercent: row.promoDiscountPercent,
       consultancyFreeQuota: row.consultancyFreeQuota,
+      consultancyPaidSessionPrice: row.consultancyPaidSessionPrice,
     };
   },
   ['platform-settings'],

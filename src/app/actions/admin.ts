@@ -742,6 +742,7 @@ export async function updatePlatformSettings(formData: FormData) {
   const paymentFeePercent = parseFloat(formData.get('paymentFeePercent') as string);
   const promoDiscountPercent = parseFloat(formData.get('promoDiscountPercent') as string);
   const consultancyFreeQuota = parseInt(formData.get('consultancyFreeQuota') as string, 10);
+  const consultancyPaidSessionPrice = parseFloat(formData.get('consultancyPaidSessionPrice') as string);
 
   const err =
     clampPercent('Withdrawal fee', withdrawalFeePercent) ||
@@ -750,6 +751,13 @@ export async function updatePlatformSettings(formData: FormData) {
   if (err) return err;
   if (Number.isNaN(consultancyFreeQuota) || consultancyFreeQuota < 0 || consultancyFreeQuota > 100) {
     return { error: 'Free quota must be a whole number between 0 and 100.' };
+  }
+  if (
+    Number.isNaN(consultancyPaidSessionPrice) ||
+    consultancyPaidSessionPrice < 0 ||
+    consultancyPaidSessionPrice > 100000
+  ) {
+    return { error: 'Paid session price must be a number between 0 and 100000 BDT.' };
   }
 
   try {
@@ -760,6 +768,7 @@ export async function updatePlatformSettings(formData: FormData) {
         paymentFeePercent,
         promoDiscountPercent,
         consultancyFreeQuota,
+        consultancyPaidSessionPrice,
       },
       create: {
         id: 'default',
@@ -767,6 +776,7 @@ export async function updatePlatformSettings(formData: FormData) {
         paymentFeePercent,
         promoDiscountPercent,
         consultancyFreeQuota,
+        consultancyPaidSessionPrice,
       },
     });
     revalidatePath('/admin/settings');

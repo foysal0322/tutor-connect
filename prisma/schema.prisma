@@ -411,12 +411,13 @@ model WalletTransaction {
 // Singleton configuration row. App reads the row whose id = 'default'.
 // Seed happens lazily on first getPlatformSettings() call.
 model PlatformSetting {
-  id                   String   @id
-  withdrawalFeePercent Float    @default(5) // tutor-side withdrawal commission, %
-  paymentFeePercent    Float    @default(10) // student-side payment fee, %
-  promoDiscountPercent Float    @default(50) // promo applied on paymentFeePercent, %
-  consultancyFreeQuota Int      @default(2) // free consultancy sessions per student
-  updatedAt            DateTime @updatedAt
+  id                            String   @id
+  withdrawalFeePercent          Float    @default(5) // tutor-side withdrawal commission, %
+  paymentFeePercent             Float    @default(10) // student-side payment fee, %
+  promoDiscountPercent          Float    @default(50) // promo applied on paymentFeePercent, %
+  consultancyFreeQuota          Int      @default(2) // free consultancy sessions per student
+  consultancyPaidSessionPrice   Float    @default(100) // BDT charged per session after the free quota is exhausted
+  updatedAt                     DateTime @updatedAt
 }
 
 model Coupon {
