@@ -450,7 +450,11 @@ export default async function ConsultancyPage() {
             .
           </div>
 
-          <FormSubmit icon={<MessageSquareText size={18} />} disabled={!hasUsableTopics}>
+          <FormSubmit
+            icon={<MessageSquareText size={18} />}
+            disabled={!hasUsableTopics || needsRecharge}
+            loadingText={needsRecharge ? 'Recharge required' : 'Submitting...'}
+          >
             Submit Request
           </FormSubmit>
         </form>
