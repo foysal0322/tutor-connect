@@ -62,6 +62,17 @@ export default async function ConsultancyPage() {
   const remainingFree = Math.max(0, freeQuota - totalBookedCount);
   const paidSessionPrice = settings.consultancyPaidSessionPrice ?? FALLBACK_PAID_PRICE;
 
+  // Fetch the student's wallet balance so the pricing card can show whether
+  // they have enough for a paid session and prompt a recharge if not.
+  const userRow = sessionUser?.id
+    ? await prisma.user.findUnique({
+        where: { id: sessionUser.id },
+        select: { balance: true },
+      })
+    : null;
+  const walletBalance = userRow?.balance ?? 0;
+  const needsRecharge = remainingFree === 0 && walletBalance < paidSessionPrice;
+
   async function submitConsultancy(formData: FormData) {
     'use server';
 
@@ -236,18 +247,18 @@ export default async function ConsultancyPage() {
 
       redirect('/consultancy?success=true');
     } catch (err: any) {
+      // Insufficient wallet balance: surface as an inline error on the page
+      // (not a global error boundary). Mirrors the ?success=true pattern.
       if (err?.message?.startsWith('INSUFFICIENT:')) {
         const [, balance, price] = err.message.split(':');
-        throw new Error(
-          `Insufficient wallet balance. You need ${price} BDT but have ${balance} BDT. Recharge your wallet first.`,
-        );
+        redirect(`/consultancy?error=insufficient&balance=${encodeURIComponent(balance)}&price=${encodeURIComponent(price)}`);
       }
-      // Next.js uses redirect() by throwing a digest — rethrow non-INSUFFICIENT errors.
+      // Next.js uses redirect() by throwing a digest — rethrow so navigation fires.
       if (err?.digest?.startsWith('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
         throw err;
       }
       console.error('Consultancy booking error:', err);
-      throw new Error('Failed to submit consultancy request.');
+      redirect('/consultancy?error=failed');
     }
   }
 
@@ -315,6 +326,63 @@ export default async function ConsultancyPage() {
             {remainingFree} of {freeQuota} free sessions remaining
           </span>
         </div>
+
+        {/* ---------- Pricing summary ---------- */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: '0.75rem',
+            marginBottom: '1.25rem',
+            padding: '1rem 1.25rem',
+            background: 'var(--primary-light)',
+            border: '1px solid var(--primary)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <div>
+            <div className="text-xs text-muted" style={{ marginBottom: '0.15rem' }}>Free quota</div>
+            <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
+              {freeQuota} session{freeQuota === 1 ? '' : 's'} / student
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted" style={{ marginBottom: '0.15rem' }}>After quota</div>
+            <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
+              {formatBDT(paidSessionPrice)} BDT / session
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted" style={{ marginBottom: '0.15rem' }}>Your wallet</div>
+            <div style={{ fontWeight: 600, color: needsRecharge ? 'var(--danger)' : 'var(--text-main)' }}>
+              {formatBDT(walletBalance)} BDT
+            </div>
+          </div>
+        </div>
+
+        {needsRecharge && (
+          <div
+            className="mb-5"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+              padding: '0.85rem 1rem',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <span className="text-sm" style={{ color: 'var(--danger)', fontWeight: 500 }}>
+              You&apos;ve used your free quota and your wallet balance is below {formatBDT(paidSessionPrice)} BDT — recharge to book another session.
+            </span>
+            <Link href="/wallet" className="btn-primary" style={{ flexShrink: 0 }}>
+              <Wallet size={16} /> Recharge Wallet
+            </Link>
+          </div>
+        )}
 
         {!hasUsableTopics && (
           <p className="text-muted text-center text-sm" style={{ marginBottom: '1rem' }}>
