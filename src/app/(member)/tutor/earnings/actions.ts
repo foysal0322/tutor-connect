@@ -63,30 +63,17 @@ export async function submitWithdrawalRequest(formData: FormData) {
   }
 
   try {
-    // Compute available balance AND insert the withdrawal request inside one
-    // transaction so concurrent submissions can't both pass the balance check
-    // and over-draw. The array-form $transaction is serialised by Postgres
-    // against other write transactions on the same rows.
-    //
-    // NOTE: we recompute earnings/withdrawn at submission time rather than
-    // caching on the user — this is the source of truth, not the form.
+    // Available balance = User.balance (the single source of truth). We
+    // re-read it inside the transaction so two concurrent submissions can't
+    // both pass the check and over-draw. The amount is debited immediately
+    // — the money is "reserved" until the admin approves or rejects. On
+    // rejection the admin action credits it back.
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Completed earnings (gross, before any platform fee).
-      const completedRequests = await tx.tutorRequest.findMany({
-        where: { assignedTutorId: tutorId, status: 'COMPLETED' },
-        select: { budget: true },
+      const user = await tx.user.findUnique({
+        where: { id: tutorId },
+        select: { balance: true },
       });
-      const totalEarned = completedRequests.reduce((sum, r) => sum + r.budget, 0);
-
-      // 2. Total already claimed by PENDING or APPROVED withdrawals.
-      // (REJECTED rows are excluded — that money is available again.)
-      const withdrawalRequests = await tx.withdrawalRequest.findMany({
-        where: { tutorId, status: { in: ['PENDING', 'APPROVED'] } },
-        select: { amount: true },
-      });
-      const totalWithdrawn = withdrawalRequests.reduce((sum, w) => sum + w.amount, 0);
-
-      const availableBalance = totalEarned - totalWithdrawn;
+      const availableBalance = user?.balance ?? 0;
 
       if (amount > availableBalance) {
         throw new Error(
@@ -94,14 +81,14 @@ export async function submitWithdrawalRequest(formData: FormData) {
         );
       }
 
-      // 3. Platform fee — configurable via /admin/settings. The withdrawal
+      // Platform fee — configurable via /admin/settings. The withdrawal
       // action reads the cached config inside the transaction so a settings
       // change applies to withdrawals submitted after the cache TTL (60s).
       // Keep this calc server-side, never trust the client.
       const settings = await getPlatformSettings();
       let platformFee = amount * (settings.withdrawalFeePercent / 100);
 
-      // 3b. Optional COMMISSION coupon. Redeems atomically inside this
+      // Optional COMMISSION coupon. Redeems atomically inside this
       // transaction and reduces the platform fee (floored at 0).
       let couponDiscount = 0;
       if (couponCode) {
@@ -131,6 +118,22 @@ export async function submitWithdrawalRequest(formData: FormData) {
           branch,
           bftn,
           status: 'PENDING',
+        },
+      });
+
+      // Debit the wallet now (reservation). On REJECT the admin action
+      // credits this back; on APPROVE nothing else happens here.
+      await tx.user.update({
+        where: { id: tutorId },
+        data: { balance: { decrement: amount } },
+      });
+      await tx.walletTransaction.create({
+        data: {
+          userId: tutorId,
+          amount: -amount,
+          type: 'WITHDRAWAL',
+          referenceId: withdrawal.id,
+          description: `Withdrawal requested via ${method}${couponDiscount > 0 ? ` (coupon saved ${couponDiscount} BDT on fee)` : ''}`,
         },
       });
 

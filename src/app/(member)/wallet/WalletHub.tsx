@@ -1,6 +1,6 @@
 'use client';
 
-import { Wallet, Clock, TrendingUp } from 'lucide-react';
+import { Wallet, Clock } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import Tabs from '@/components/ui/Tabs';
 import { KPI } from '@/components/ui/KPI';
@@ -24,7 +24,6 @@ export default function WalletHub({
   walletBalance,
   paymentsDueCount,
   paymentsDueTotal,
-  earningsAvailable,
   walletPanel,
   paymentsPanel,
   earningsPanel,
@@ -33,7 +32,6 @@ export default function WalletHub({
   walletBalance: number;
   paymentsDueCount: number;
   paymentsDueTotal: number;
-  earningsAvailable: number;
   walletPanel: React.ReactNode;
   paymentsPanel: React.ReactNode;
   earningsPanel: React.ReactNode;
@@ -76,7 +74,7 @@ export default function WalletHub({
           icon={<Wallet size={14} />}
           tone="primary"
           variant="accent"
-          hint="Available for tuition payments"
+          hint="Available for payments and withdrawals"
         />
         <KPI
           label="Payments Due"
@@ -88,13 +86,6 @@ export default function WalletHub({
               ? `${formatBDT(paymentsDueTotal)} BDT due now`
               : 'Nothing due right now'
           }
-        />
-        <KPI
-          label="Available to Withdraw"
-          value={formatBDT(earningsAvailable)}
-          icon={<TrendingUp size={14} />}
-          tone="success"
-          hint="From completed tutoring sessions"
         />
       </div>
 

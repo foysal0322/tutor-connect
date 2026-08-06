@@ -15,39 +15,30 @@ export default async function TutorEarningsPage() {
 
   const tutorId = (session.user as any).id;
 
-  // 1. Fetch all completed tutor requests for this tutor
-  const completedRequests = await prisma.tutorRequest.findMany({
-    where: {
-      assignedTutorId: tutorId,
-      status: 'COMPLETED'
-    },
-    include: {
-      course: true,
-      student: true
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  });
+  // Wallet balance is the single source of truth for withdrawable funds
+  // (earnings credit on session completion, debited on withdrawal submit).
+  // totalEarned / totalWithdrawn below are display-only historical metrics.
+  const [completedRequests, withdrawalRequests, tutorRow] = await Promise.all([
+    prisma.tutorRequest.findMany({
+      where: { assignedTutorId: tutorId, status: 'COMPLETED' },
+      include: { course: true, student: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.withdrawalRequest.findMany({
+      where: { tutorId },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.user.findUnique({
+      where: { id: tutorId },
+      select: { balance: true },
+    }),
+  ]);
 
   const totalEarned = completedRequests.reduce((sum, r) => sum + r.budget, 0);
-
-  // 2. Fetch withdrawal requests
-  const withdrawalRequests = await prisma.withdrawalRequest.findMany({
-    where: {
-      tutorId
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  });
-
-  // Total withdrawn is the sum of withdrawals that are APPROVED or PENDING
   const totalWithdrawn = withdrawalRequests
     .filter(w => w.status === 'APPROVED' || w.status === 'PENDING')
     .reduce((sum, w) => sum + w.amount, 0);
-
-  const availableBalance = totalEarned - totalWithdrawn;
+  const availableBalance = tutorRow?.balance ?? 0;
 
   return (
     <div className="max-w-full">

@@ -35,39 +35,30 @@ export async function verifyWithdrawalRequest(withdrawId: string, approve: boole
       return { error: 'This request has already been processed.' };
     }
 
-    // On approval, re-verify the tutor still has sufficient available
-    // balance. State may have shifted since submission (another withdrawal
-    // approved, a completed session disputed, etc.). Server is the source of
-    // truth — we never rely on the form/admin UI having checked.
-    if (approve) {
-      const completedRequests = await prisma.tutorRequest.findMany({
-        where: { assignedTutorId: request.tutorId, status: 'COMPLETED' },
-        select: { budget: true },
+    // Under the unified-wallet model, the wallet was already debited at
+    // submission time. APPROVE = no balance change (the money is already
+    // reserved). REJECT = credit the gross amount back to the tutor's
+    // wallet, atomically with the status flip.
+    await prisma.$transaction(async (tx) => {
+      await tx.withdrawalRequest.update({
+        where: { id: safeId },
+        data: { status: approve ? 'APPROVED' : 'REJECTED' },
       });
-      const totalEarned = completedRequests.reduce((sum, r) => sum + r.budget, 0);
 
-      const otherWithdrawals = await prisma.withdrawalRequest.findMany({
-        where: {
-          tutorId: request.tutorId,
-          status: { in: ['PENDING', 'APPROVED'] },
-          id: { not: safeId }, // exclude the row we're about to flip
-        },
-        select: { amount: true },
-      });
-      const totalClaimed = otherWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-      const available = totalEarned - totalClaimed;
-
-      if (request.amount > available) {
-        return {
-          error: `Cannot approve — tutor's available balance is now ${available} BDT, less than the requested ${request.amount} BDT. Reject instead.`,
-        };
-      }
-    }
-
-    await prisma.withdrawalRequest.update({
-      where: { id: safeId },
-      data: {
-        status: approve ? 'APPROVED' : 'REJECTED'
+      if (!approve) {
+        await tx.user.update({
+          where: { id: request.tutorId },
+          data: { balance: { increment: request.amount } },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            userId: request.tutorId,
+            amount: request.amount,
+            type: 'WITHDRAWAL',
+            referenceId: request.id,
+            description: 'Withdrawal rejected — refund to wallet',
+          },
+        });
       }
     });
 

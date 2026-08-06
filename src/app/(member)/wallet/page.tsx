@@ -63,7 +63,6 @@ export default async function WalletPage() {
   const totalWithdrawn = withdrawalRequests
     .filter((w) => w.status === 'APPROVED' || w.status === 'PENDING')
     .reduce((sum, w) => sum + w.amount, 0);
-  const earningsAvailable = totalEarned - totalWithdrawn;
 
   // Each panel is pre-rendered server-side and handed to the client hub as a
   // React node. The hub's Tabs switch between them without re-fetching.
@@ -92,7 +91,7 @@ export default async function WalletPage() {
       withdrawalRequests={withdrawalRequests}
       totalEarned={totalEarned}
       totalWithdrawn={totalWithdrawn}
-      availableBalance={earningsAvailable}
+      availableBalance={walletData.balance || 0}
     />
   );
 
@@ -107,7 +106,6 @@ export default async function WalletPage() {
         walletBalance={walletData.balance || 0}
         paymentsDueCount={pendingRequests.length}
         paymentsDueTotal={paymentsDueTotal}
-        earningsAvailable={earningsAvailable}
         walletPanel={walletPanel}
         paymentsPanel={paymentsPanel}
         earningsPanel={earningsPanel}

@@ -296,7 +296,7 @@ export default function EarningsClient({
           value={`${balance.toFixed(2)}`}
           icon={<Wallet size={14} />}
           tone="success"
-          hint="Eligible for withdrawal"
+          hint="Wallet balance (withdrawable)"
         />
       </div>
 

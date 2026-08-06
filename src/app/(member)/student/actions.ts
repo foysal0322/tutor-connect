@@ -421,6 +421,7 @@ export async function completeTutorRequest(requestId: string, rating?: number | 
         id: true,
         status: true,
         topic: true,
+        budget: true,
         assignedTutorId: true,
         course: { select: { name: true } },
       }
@@ -437,9 +438,31 @@ export async function completeTutorRequest(requestId: string, rating?: number | 
       updateData.review = review.trim();
     }
 
-    await prisma.tutorRequest.update({
-      where: { id: requestId },
-      data: updateData
+    // Flip status AND credit the tutor's wallet in one transaction so the
+    // balance update can never diverge from the status change. The status
+    // guard above (status !== 'ACCEPTED') makes this idempotent — a repeat
+    // call returns early before reaching here.
+    await prisma.$transaction(async (tx) => {
+      await tx.tutorRequest.update({
+        where: { id: requestId },
+        data: updateData,
+      });
+
+      if (request.assignedTutorId && request.budget > 0) {
+        await tx.user.update({
+          where: { id: request.assignedTutorId },
+          data: { balance: { increment: request.budget } },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            userId: request.assignedTutorId,
+            amount: request.budget,
+            type: 'EARNING_CREDIT',
+            referenceId: requestId,
+            description: `Session completed: ${request.topic || request.course.name}`,
+          },
+        });
+      }
     });
 
     // Phase 6: notify the assigned tutor (and admins) that the session was
