@@ -22,6 +22,7 @@ import {
   gridFullClass,
 } from '@/components/forms';
 import ConsultancySuccessToast from './ConsultancySuccessToast';
+import FormSubmitOverlay from '@/components/ui/FormSubmitOverlay';
 import { formatBDT } from '@/lib/format';
 
 /** Fallback free-quota if PlatformSetting row is missing. */
@@ -322,6 +323,10 @@ export default async function ConsultancyPage() {
         )}
 
         <form action={submitConsultancy} noValidate>
+          <FormSubmitOverlay
+            title="Booking your session"
+            message="Reserving your consultancy slot — hang tight…"
+          />
           <FormSection columns={1}>
             <Input
               containerClassName={fieldClass}

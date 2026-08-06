@@ -16,7 +16,7 @@ import {
   FormAlert,
   fieldClass,
 } from '@/components/forms';
-import FormLoading from '@/components/ui/FormLoading';
+import FormSubmitOverlay from '@/components/ui/FormSubmitOverlay';
 
 export default function RequestTutorForm({
   courses,
@@ -100,13 +100,6 @@ export default function RequestTutorForm({
       title="Request a Tutor"
       subtitle="Fill in the details below to get matched with the right tutor."
     >
-      {loading && (
-        <FormLoading
-          variant="fixed"
-          title="Submitting your request"
-          message="Matching you with the right tutor — hang tight…"
-        />
-      )}
       {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
@@ -125,6 +118,10 @@ export default function RequestTutorForm({
       )}
 
       <form action={handleSubmit} noValidate>
+        <FormSubmitOverlay
+          title="Submitting your request"
+          message="Matching you with the right tutor — hang tight…"
+        />
         <FormSection label="Request Details" icon={<ClipboardList size={14} />} columns={1}>
           {selectedTutor ? (
             <>
