@@ -65,6 +65,19 @@ model User {
   pushSubscriptions         PushSubscription[]
   notificationPreferences   NotificationPreference[]
 
+  // NSUOne Shop — additive back-relations. See NSUONE_SHOP_BLUEPRINT.md.
+  // Capability is data-derived from ShopSellerProfile/ShopListing rows, NOT
+  // from a new role or a flag on User. The unified-campus model is preserved.
+  shopListings        ShopListing[]      @relation("ShopSellerListings")
+  shopBuyerOrders     ShopOrder[]        @relation("ShopBuyerOrders")
+  shopSellerOrders    ShopOrder[]        @relation("ShopSellerOrders")
+  shopReviewsGiven    ShopReview[]       @relation("ShopReviewsGiven")
+  shopReviewsReceived ShopReview[]       @relation("ShopReviewsReceived")
+  shopSaves           ShopSavedListing[] @relation("ShopSavedBy")
+  shopReportsFiled    ShopReport[]       @relation("ShopReportsFiled")
+  shopDisputesOpened  ShopDispute[]      @relation("ShopDisputesOpened")
+  shopSellerProfile   ShopSellerProfile?
+
   @@index([role])
   @@index([departmentId])
   @@index([createdAt])
@@ -411,13 +424,25 @@ model WalletTransaction {
 // Singleton configuration row. App reads the row whose id = 'default'.
 // Seed happens lazily on first getPlatformSettings() call.
 model PlatformSetting {
-  id                            String   @id
-  withdrawalFeePercent          Float    @default(5) // tutor-side withdrawal commission, %
-  paymentFeePercent             Float    @default(10) // student-side payment fee, %
-  promoDiscountPercent          Float    @default(50) // promo applied on paymentFeePercent, %
-  consultancyFreeQuota          Int      @default(2) // free consultancy sessions per student
-  consultancyPaidSessionPrice   Float    @default(100) // BDT charged per session after the free quota is exhausted
-  updatedAt                     DateTime @updatedAt
+  id                             String   @id
+  withdrawalFeePercent           Float    @default(5) // tutor-side withdrawal commission, %
+  paymentFeePercent              Float    @default(10) // student-side payment fee, %
+  promoDiscountPercent           Float    @default(50) // promo applied on paymentFeePercent, %
+  consultancyFreeQuota           Int      @default(2) // free consultancy sessions per student
+  consultancyPaidSessionPrice    Float    @default(100) // BDT charged per session after the free quota is exhausted
+  // NSUOne Shop fields (additive — safe defaults, no behaviour change for
+  // existing transactions). See NSUONE_SHOP_BLUEPRINT.md §3.5, §8.
+  shopCommissionRateDefault      Float    @default(0.07) // 0–0.20, captured per-order at sale time
+  shopAutoFinalizeHours          Int      @default(72)
+  shopDisputeWindowHours         Int      @default(48)
+  shopListingMaxImages           Int      @default(6)
+  shopBoostFeeBdt                Float    @default(100)
+  shopBoostDays                  Int      @default(7)
+  shopModerationMode             String   @default("AUTO") // AUTO | MANUAL
+  shopMinPriceBdt                Float    @default(20)
+  shopMaxPriceBdt                Float    @default(50000)
+  shopMaxActiveListingsPerSeller Int      @default(50)
+  updatedAt                      DateTime @updatedAt
 }
 
 model Coupon {
@@ -455,4 +480,260 @@ model CouponRedemption {
   @@unique([couponId, userId, reference])
   @@index([couponId])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// NSUOne Shop — peer-to-peer campus marketplace.
+//
+// Fully additive module. See NSUONE_SHOP_BLUEPRINT.md for the architecture
+// and the regression contract. Everything here is isolated from existing
+// auth/tutor/payment/consultancy logic; the only existing models touched are
+// the optional back-relations added to `User` above and the shop fields
+// appended to `PlatformSetting`.
+//
+// Conventions (match existing schema):
+//   - All "enums" are plain String fields with comments listing the values.
+//     No Prisma `enum` blocks (none exist in this schema).
+//   - Money is Float (BDT). Matches WalletTransaction.amount, User.balance,
+//     WithdrawalRequest.amount, etc. Decimal was considered and rejected to
+//     keep ledger style uniform.
+// ---------------------------------------------------------------------------
+
+model ShopCategory {
+  id                     String   @id @default(cuid())
+  slug                   String   @unique // "books", "calculators", "lab-kits", ...
+  name                   String
+  description            String?
+  icon                   String? // lucide icon name
+  commissionRateOverride Float? // null = use PlatformSetting.shopCommissionRateDefault
+  sortOrder              Int      @default(0)
+  isActive               Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  listings ShopListing[]
+
+  @@index([isActive, sortOrder])
+}
+
+model ShopListing {
+  id           String    @id @default(cuid())
+  sellerId     String
+  categoryId   String
+  title        String
+  description  String
+  condition    String    @default("GOOD") // NEW | LIKE_NEW | GOOD | FAIR | FOR_PARTS
+  priceBdt     Float
+  quantity     Int       @default(1)
+  status       String    @default("DRAFT") // DRAFT | PENDING_REVIEW | ACTIVE | PAUSED | SOLD | EXPIRED | REJECTED | REMOVED
+  location     String? // free text — "NSU Campus", "Library", etc.
+  images       Json      @default("[]") // [{id,url,sortOrder}]
+  viewCount    Int       @default(0)
+  savedCount   Int       @default(0)
+  soldCount    Int       @default(0)
+  boostedUntil DateTime? // Phase 9 (optional Boost)
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  seller   User               @relation("ShopSellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  category ShopCategory       @relation(fields: [categoryId], references: [id])
+  saves    ShopSavedListing[]
+  reviews  ShopReview[]
+  orders   ShopOrder[]
+  reports  ShopReport[]
+  boosts   ShopBoost[]
+
+  @@index([status, categoryId, createdAt(sort: Desc)])
+  @@index([sellerId, status])
+  @@index([createdAt])
+  @@index([title])
+  @@index([boostedUntil])
+}
+
+model ShopOrder {
+  id                  String    @id @default(cuid())
+  buyerId             String
+  sellerId            String
+  listingId           String
+  listingSnapshot     Json // title, price, condition, images at purchase
+  quantity            Int
+  unitPriceBdt        Float
+  subtotalBdt         Float // quantity * unitPriceBdt
+  commissionRate      Float // captured rate at sale time (0–1)
+  commissionBdt       Float
+  payoutBdt           Float // subtotal - commission
+  escrowTxId          String? // WalletTransaction.id (debit from buyer)
+  payoutTxId          String? // WalletTransaction.id (credit to seller)
+  commissionTxId      String? // WalletTransaction.id (platform revenue)
+  refundTxId          String? // WalletTransaction.id (if refunded)
+  status              String    @default("ESCROWED") // AWAITING_CONFIRMATION | ESCROWED | SHIPPED | DELIVERED | COMPLETED | DISPUTED | REFUNDED | CANCELLED
+  shipProof           Json? // [{kind:"PROOF_OF_DELIVERY", url}]
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  completedAt         DateTime?
+  disputeWindowEndsAt DateTime?
+  autoFinalizeAt      DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  buyer   User             @relation("ShopBuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User             @relation("ShopSellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing ShopListing      @relation(fields: [listingId], references: [id])
+  events  ShopOrderEvent[]
+  dispute ShopDispute?
+  review  ShopReview?
+
+  @@index([buyerId, status, createdAt(sort: Desc)])
+  @@index([sellerId, status, createdAt(sort: Desc)])
+  @@index([status, autoFinalizeAt])
+  @@index([status, disputeWindowEndsAt])
+}
+
+model ShopOrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  type      String // CREATED | PAID | SHIPPED | DELIVERED | COMPLETED | DISPUTE_OPENED | DISPUTE_MESSAGE | DISPUTE_RESOLVED | REFUNDED | CANCELLED | COMMISSION_CAPTURED | PAYOUT_RELEASED
+  actorId   String?
+  metadata  Json?
+  note      String?
+  createdAt DateTime @default(now())
+
+  order ShopOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model ShopDispute {
+  id           String    @id @default(cuid())
+  orderId      String    @unique
+  openedById   String
+  reason       String
+  status       String    @default("OPEN") // OPEN | AWAITING_SELLER | AWAITING_BUYER | RESOLVED_BUYER | RESOLVED_SELLER | ESCALATED | CLOSED
+  resolution   String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  order    ShopOrder            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  messages ShopDisputeMessage[]
+  openedBy User                 @relation("ShopDisputesOpened", fields: [openedById], references: [id])
+
+  @@index([status, createdAt(sort: Desc)])
+}
+
+model ShopDisputeMessage {
+  id          String   @id @default(cuid())
+  disputeId   String
+  authorId    String
+  body        String
+  attachments Json?
+  createdAt   DateTime @default(now())
+
+  dispute ShopDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@index([disputeId, createdAt])
+}
+
+model ShopReview {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  fromUserId String
+  toUserId   String
+  listingId  String
+  rating     Int // 1–5
+  body       String?
+  createdAt  DateTime @default(now())
+
+  from    User        @relation("ShopReviewsGiven", fields: [fromUserId], references: [id])
+  to      User        @relation("ShopReviewsReceived", fields: [toUserId], references: [id])
+  listing ShopListing @relation(fields: [listingId], references: [id])
+  order   ShopOrder   @relation(fields: [orderId], references: [id])
+
+  @@index([toUserId, createdAt(sort: Desc)])
+  @@index([listingId])
+}
+
+model ShopSavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User        @relation("ShopSavedBy", fields: [userId], references: [id], onDelete: Cascade)
+  listing ShopListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model ShopReport {
+  id          String   @id @default(cuid())
+  listingId   String?
+  reporterId  String
+  reason      String // PROHIBITED_ITEM | MISREPRESENTATION | SPAM | FRAUD | OFF_CAMPUS_TRANSACTION_REQUEST | HARASSMENT | OTHER
+  detail      String?
+  status      String   @default("OPEN") // OPEN | ACKNOWLEDGED | ACTIONED | DISMISSED
+  handledById String?
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listing  ShopListing? @relation(fields: [listingId], references: [id])
+  reporter User         @relation("ShopReportsFiled", fields: [reporterId], references: [id])
+
+  @@index([status, createdAt(sort: Desc)])
+}
+
+// 1:1 with User. Lazily created on the user's first listing attempt.
+// Holds denormalized seller stats so the storefront + admin views avoid
+// real-time aggregates on hot paths.
+model ShopSellerProfile {
+  userId         String   @id
+  bio            String?
+  storefrontName String?
+  isSuspended    Boolean  @default(false)
+  listingCount   Int      @default(0)
+  completedSales Int      @default(0)
+  avgRating      Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isSuspended, completedSales(sort: Desc)])
+}
+
+// Image metadata for listings, delivery proof, and dispute evidence.
+// (Upload pipeline lands in Phase 5 — until then listings store image URLs
+// inline in ShopListing.images JSON. This model is here so the Phase 5
+// migration is no-op schema-wise.)
+model ShopImage {
+  id         String   @id @default(cuid())
+  kind       String   @default("LISTING") // LISTING | PROOF_OF_DELIVERY | DISPUTE_EVIDENCE
+  listingId  String?
+  orderId    String?
+  uploaderId String
+  url        String
+  createdAt  DateTime @default(now())
+
+  @@index([listingId])
+  @@index([orderId])
+}
+
+// Phase 9 (optional Boost). Model exists so the schema is stable from day
+// one; not exercised until Phase 9 ships.
+model ShopBoost {
+  id        String   @id @default(cuid())
+  listingId String
+  paidTxId  String // WalletTransaction.id
+  startsAt  DateTime @default(now())
+  endsAt    DateTime
+  feeBdt    Float
+  createdAt DateTime @default(now())
+
+  listing ShopListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([endsAt])
 }

@@ -164,3 +164,61 @@ export const adjustWalletSchema = z.object({
   amount: bdtAmountSchema,
   reason: reasonSchema,
 });
+
+// --- NSUOne Shop schemas ----------------------------------------------------
+// See NSUONE_SHOP_BLUEPRINT.md §15.2. Used by server actions in
+// src/app/(marketing)/shop/selling/actions.ts.
+
+export const shopItemConditionSchema = z.enum([
+  'NEW',
+  'LIKE_NEW',
+  'GOOD',
+  'FAIR',
+  'FOR_PARTS',
+]);
+
+export const shopListingFormSchema = z.object({
+  listingId: idSchema.optional().or(z.literal('')),
+  title: nonEmpty('Title', 120),
+  description: nonEmpty('Description', 4000),
+  categoryId: idSchema,
+  condition: shopItemConditionSchema,
+  priceBdt: bdtAmountSchema,
+  quantity: z.coerce
+    .number()
+    .int('Quantity must be a whole number.')
+    .min(1, 'Quantity must be at least 1.')
+    .max(9999, 'Quantity is too large.'),
+  location: z.string().trim().max(120, 'Location is too long.').optional().or(z.literal('')),
+  // Image URLs as JSON-encoded array of {url, sortOrder}. Empty array is valid.
+  // The uploader (Phase 5) will populate this; for now sellers pass URLs by hand
+  // or leave empty.
+  imagesJson: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .transform((v) => {
+      if (!v) return [];
+      try {
+        const parsed = JSON.parse(v);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+          .filter(
+            (x): x is { url: string; sortOrder?: number } =>
+              typeof x === 'object' &&
+              x !== null &&
+              typeof (x as { url?: unknown }).url === 'string',
+          )
+          .slice(0, 6);
+      } catch {
+        return [];
+      }
+    }),
+});
+
+export const shopListingStatusActionSchema = z.object({
+  listingId: idSchema,
+  action: z.enum(['pause', 'resume', 'delete'], {
+    message: 'Select a valid action.',
+  }),
+});

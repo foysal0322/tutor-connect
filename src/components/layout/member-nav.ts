@@ -12,6 +12,8 @@ import {
   Calendar,
   GraduationCap,
   MessageSquare,
+  Store,
+  Tag,
   User,
   Wallet,
   LogOut,
@@ -48,6 +50,13 @@ export const MEMBER_NAV: NavGroup[] = [
     heading: "Teaching",
     items: [
       { id: "offer-course", label: "Offer Course", href: "/tutor/expertise", icon: GraduationCap },
+    ],
+  },
+  {
+    heading: "Shop",
+    items: [
+      { id: "shop-browse", label: "Browse Shop", href: "/shop", icon: Store },
+      { id: "shop-selling", label: "Selling", href: "/shop/selling", icon: Tag },
     ],
   },
   {

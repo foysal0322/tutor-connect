@@ -1,0 +1,80 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.search {
+  flex: 1 1 240px;
+  min-width: 200px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+  color: var(--text-main);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.select,
+.priceInput {
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+  color: var(--text-main);
+  font: inherit;
+  font-size: var(--text-sm);
+  min-width: 110px;
+}
+
+.priceInput {
+  min-width: 90px;
+  max-width: 110px;
+}
+
+.select:focus-visible,
+.priceInput:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.reset {
+  margin-left: auto;
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.reset:hover {
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+
+@media (max-width: 640px) {
+  .search {
+    flex: 1 1 100%;
+  }
+  .select,
+  .priceInput {
+    flex: 1 1 calc(50% - var(--space-1));
+  }
+}

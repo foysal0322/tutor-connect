@@ -47,6 +47,20 @@ export const ROUTE_TITLES: Record<string, string> = {
   "/consultancy": "Consultancy",
   "/contact": "Contact Support",
   "/profile": "My Profile",
+
+  // Shop (member shell — also browseable publicly)
+  "/shop": "Shop",
+  "/shop/selling": "Selling",
+  "/shop/selling/new": "New Listing",
+  "/shop/orders": "My Orders",
+  "/shop/saved": "Saved",
+  "/shop/disputes": "Disputes",
+  "/shop/listing": "Listing",
+  "/shop/category": "Category",
+  "/shop/seller": "Seller",
+
+  // Admin shop
+  "/admin/shop": "Shop",
 };
 
 /** Root crumb per shell — used as the first breadcrumb. */

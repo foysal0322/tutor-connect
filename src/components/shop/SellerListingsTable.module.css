@@ -1,0 +1,119 @@
+.wrap {
+  width: 100%;
+}
+
+.error {
+  padding: 0.75rem 1rem;
+  margin-bottom: var(--space-3);
+  background: var(--danger-bg, color-mix(in srgb, var(--danger) 10%, transparent));
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--danger);
+  font-size: var(--text-sm);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  min-width: 720px;
+}
+
+.table thead th {
+  text-align: left;
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  background: var(--surface-2);
+}
+
+.table tbody td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.titleLink {
+  color: var(--text-main);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.titleLink:hover {
+  color: var(--primary);
+}
+
+.meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+  text-decoration: none;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+
+.iconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--danger-bg, color-mix(in srgb, var(--danger) 10%, transparent));
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+@media (max-width: 720px) {
+  .table {
+    font-size: var(--text-xs);
+  }
+}

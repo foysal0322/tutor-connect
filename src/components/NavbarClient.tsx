@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Store } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import UserMenu from "./UserMenu";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -72,6 +72,15 @@ export default function NavbarClient({ session }: { session: any }) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Find a Tutor
+          </Link>
+          <Link
+            href='/shop'
+            className={activeClass("/shop")}
+            aria-current={isActive("/shop") ? "page" : undefined}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Store size={14} aria-hidden='true' style={{ marginRight: 4, verticalAlign: '-2px' }} />
+            Shop
           </Link>
           {!session && (
             <Link

@@ -20,6 +20,7 @@ import {
   DollarSign,
   CreditCard,
   MessageSquare,
+  ShoppingBag,
   Briefcase,
   LifeBuoy,
   GraduationCap,
@@ -57,6 +58,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "wallets", label: "Wallets", href: "/admin/wallets", icon: CreditCard },
       { id: "consultancy", label: "Consultancy", href: "/admin/consultancy", icon: MessageSquare, badgeKey: "consultancy" },
       { id: "support", label: "Support Tickets", href: "/admin/support", icon: LifeBuoy, badgeKey: "support" },
+      { id: "shop", label: "Shop", href: "/admin/shop", icon: ShoppingBag },
     ],
   },
   {
