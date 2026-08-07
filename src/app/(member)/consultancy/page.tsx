@@ -362,7 +362,6 @@ export default async function ConsultancyPage() {
 
         {needsRecharge && (
           <div
-            className="mb-5"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -370,6 +369,7 @@ export default async function ConsultancyPage() {
               gap: '1rem',
               flexWrap: 'wrap',
               padding: '0.85rem 1rem',
+              marginBottom: '1.75rem',
               background: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid rgba(239, 68, 68, 0.4)',
               borderRadius: 'var(--radius-md)',
