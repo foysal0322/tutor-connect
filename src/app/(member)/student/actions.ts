@@ -618,3 +618,80 @@ export async function submitRefundRequest(formData: FormData) {
     return { error: 'Failed to submit refund request.' };
   }
 }
+
+/**
+ * Student-initiated cancellation of their OWN pending refund request.
+ *
+ * The student withdraws the refund ask *before* an admin actioned it. Once
+ * APPROVED/REJECTED the refund is no longer cancellable — the admin has
+ * already moved money / made a decision. We delete the PENDING row because
+ * the RefundRequest model has no CANCELLED status and a deleted row means
+ * the student is free to re-request later if they change their mind again.
+ */
+export async function cancelRefundRequest(refundRequestId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role === 'ADMIN') {
+    return { error: 'Not authorized.' };
+  }
+
+  const studentId = (session.user as any).id;
+
+  try {
+    // Verify ownership + PENDING state in one query (cheap, secure).
+    const refund = await prisma.refundRequest.findFirst({
+      where: { id: refundRequestId, studentId },
+      select: { id: true, status: true, requestId: true, details: true },
+    });
+
+    if (!refund) {
+      return { error: 'Refund request not found.' };
+    }
+    if (refund.status !== 'PENDING') {
+      return { error: 'This refund has already been processed and cannot be cancelled.' };
+    }
+
+    // Atomically delete the pending refund row. No money has moved yet (the
+    // wallet credit only happens on admin approval), so this is safe.
+    await prisma.refundRequest.delete({ where: { id: refund.id } });
+
+    try {
+      const studentName = session.user?.name || 'A student';
+      // Tell admins so they don't action a refund the student no longer wants.
+      await notifyAdmins({
+        event: 'refund.cancelled_by_student',
+        title: 'Refund Request Cancelled',
+        message: `${studentName} withdrew their pending refund request.`,
+        actionUrl: '/admin/requests',
+        type: 'INFO',
+        category: 'REFUND',
+        priority: 'MEDIUM',
+        actorUserId: studentId,
+        metadata: { requestId: refund.requestId, refundRequestId: refund.id },
+      });
+
+      // Receipt to the student.
+      await dispatch({
+        event: 'refund.cancelled_receipt',
+        userId: studentId,
+        title: 'Refund Request Cancelled',
+        message: `Your refund request was cancelled. The session is active again — you can re-request a refund later if needed.`,
+        actionUrl: '/student',
+        type: 'INFO',
+        category: 'REFUND',
+        priority: 'LOW',
+        recipientRoleHint: 'STUDENT',
+        metadata: { requestId: refund.requestId },
+      }).catch((err) => {
+        console.error('Failed to send refund-cancel receipt:', err);
+      });
+    } catch (err) {
+      console.error('Failed to send refund-cancel notifications:', err);
+    }
+
+    revalidatePath('/student');
+    return { success: true };
+  } catch (err) {
+    console.error('Cancel refund request error:', err);
+    return { error: 'Failed to cancel refund request.' };
+  }
+}

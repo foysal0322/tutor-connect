@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Star, Mail, Phone, Lock, Clock } from 'lucide-react';
-import { completeTutorRequest, submitRefundRequest, cancelTutorRequest } from './actions';
+import { completeTutorRequest, submitRefundRequest, cancelTutorRequest, cancelRefundRequest } from './actions';
 import { useToast } from '@/components/ToastProvider';
 import PaymentForm from '@/components/payments/PaymentForm';
 import { Textarea } from '@/components/ui/Textarea';
@@ -109,7 +109,7 @@ const columns: ColumnDef<any>[] = [
 export default function StudentRequestList({ initialRequests, userBalance = 0 }: RequestListProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
-  const [mode, setMode] = useState<'details' | 'cancel' | 'payment' | 'complete' | 'refund'>('details');
+  const [mode, setMode] = useState<'details' | 'cancel' | 'payment' | 'complete' | 'refund' | 'cancel-refund'>('details');
 
   // Rating/Review state
   const [completeRating, setCompleteRating] = useState(0);
@@ -117,6 +117,10 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
 
   // Refund form state
   const [refundDetails, setRefundDetails] = useState('');
+  // Inline error for the refund form — rendered inside the Sheet (the global
+  // toast renders behind the open drawer and is invisible — same bug as the
+  // admin wallet-adjust Sheet, fixed 2026-08-04).
+  const [refundError, setRefundError] = useState('');
 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -130,6 +134,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
     setCompleteRating(0);
     setCompleteReview('');
     setRefundDetails('');
+    setRefundError('');
   }
 
   function closeDetail() {
@@ -163,10 +168,32 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
     }
   };
 
+  const handleCancelRefund = async (refundRequestId: string, requestId: string) => {
+    setMode('details');
+    closeDetail();
+    const res = await cancelRefundRequest(refundRequestId);
+    if (res?.error) {
+      toast.error(res.error);
+    } else {
+      toast.success('Refund request cancelled. The session is active again.');
+      // Drop the cancelled refund from local state so the action buttons
+      // (Complete / Request Refund) reappear without a refetch.
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
+            ? { ...r, refundRequests: (r.refundRequests || []).filter((rr: any) => rr.id !== refundRequestId) }
+            : r,
+        ),
+      );
+    }
+  };
+
   const handleRefundSubmit = async (e: React.FormEvent, requestId: string) => {
     e.preventDefault();
+    setRefundError('');
     if (!refundDetails.trim()) {
-      toast.error('Please describe your reason for requesting a refund.');
+      // Inline inside the Sheet — the toast would be hidden behind the drawer.
+      setRefundError('Please describe your reason for requesting a refund.');
       return;
     }
 
@@ -177,7 +204,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
     startTransition(async () => {
       const res = await submitRefundRequest(formData);
       if (res?.error) {
-        toast.error(res.error);
+        setRefundError(res.error);
       } else {
         toast.success('Refund request submitted for admin review.');
         setRequests((prev) =>
@@ -212,6 +239,9 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
   const req = activeRequest;
   const badge = req ? getStatusBadge(req.status, req.refundRequests) : null;
   const isRefunded = req?.refundRequests?.some((r: any) => r.status === 'APPROVED');
+  // A PENDING refund blocks completion (admin owns the next move) and is
+  // cancellable by the student. APPROVED/REJECTED are not — those have moved.
+  const pendingRefund = req?.refundRequests?.find((r: any) => r.status === 'PENDING');
 
   return (
     <>
@@ -420,18 +450,32 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                 )}
                 {req.status === 'ACCEPTED' && !isRefunded && (
                   <>
-                    <button
-                      onClick={() => {
-                        setMode('complete');
-                        setCompleteRating(0);
-                        setCompleteReview('');
-                      }}
-                      className="btn"
-                      style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
-                    >
-                      Mark Completed
-                    </button>
-                    {(!req.refundRequests || req.refundRequests.length === 0) && (
+                    {/* Hide "Mark Completed" while a refund is pending — admin
+                        owns the next move (approve credits wallet / reject
+                        reactivates the session). Student can't complete a
+                        session they're asking to be refunded for. */}
+                    {!pendingRefund && (
+                      <button
+                        onClick={() => {
+                          setMode('complete');
+                          setCompleteRating(0);
+                          setCompleteReview('');
+                        }}
+                        className="btn"
+                        style={{ background: 'var(--success)', color: 'white', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
+                      >
+                        Mark Completed
+                      </button>
+                    )}
+                    {pendingRefund ? (
+                      <button
+                        onClick={() => setMode('cancel-refund')}
+                        className="btn"
+                        style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
+                      >
+                        Cancel Refund Request
+                      </button>
+                    ) : (!req.refundRequests || req.refundRequests.length === 0) ? (
                       <button
                         onClick={() => setMode('refund')}
                         className="btn"
@@ -439,7 +483,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                       >
                         Request Refund
                       </button>
-                    )}
+                    ) : null}
                   </>
                 )}
               </div>
@@ -473,6 +517,41 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
                 >
                   Keep
+                </button>
+              </div>
+            )}
+
+            {/* Cancel-refund confirmation — withdraw the pending refund ask.
+                The session reactivates and "Mark Completed" reappears. */}
+            {mode === 'cancel-refund' && pendingRefund && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  background: '#f8fafc',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', flex: 1, minWidth: '12rem' }}>
+                  Cancel your refund request? The session stays active and you can re-request a refund later.
+                </span>
+                <button
+                  onClick={() => handleCancelRefund(pendingRefund.id, req.id)}
+                  className="btn"
+                  style={{ background: 'var(--text-main)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                >
+                  Yes, Cancel Refund
+                </button>
+                <button
+                  onClick={() => setMode('details')}
+                  className="btn"
+                  style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                >
+                  Keep Refund Request
                 </button>
               </div>
             )}
@@ -571,6 +650,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   placeholder="Reason for refund request..."
                   value={refundDetails}
                   onChange={(e) => setRefundDetails(e.target.value)}
+                  error={refundError}
                 />
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                   <button
