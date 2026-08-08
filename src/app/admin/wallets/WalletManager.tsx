@@ -9,6 +9,7 @@ import {
   Activity,
   ArrowDownCircle,
   ArrowUpCircle,
+  AlertCircle,
   Plus,
   Minus,
 } from 'lucide-react';
@@ -74,9 +75,13 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
   const [direction, setDirection] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const REASON_MIN = 10;
+  const reasonTooShort = reason.trim().length > 0 && reason.trim().length < REASON_MIN;
 
   const filteredUsers = useMemo(() => {
     let result = [...userList];
@@ -116,6 +121,7 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
     setDirection('CREDIT');
     setAmount('');
     setReason('');
+    setError('');
   };
 
   const openModal = (userId: string) => {
@@ -131,6 +137,26 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeUser) return;
+    setError('');
+
+    // Client-side pre-flight: mirror the server's reasonSchema check so the
+    // admin sees the error inside the Sheet (the global toast would render
+    // behind the open Sheet drawer and be invisible — that was the bug).
+    if (reason.trim().length < REASON_MIN) {
+      setError(`Please provide more detail (at least ${REASON_MIN} characters).`);
+      return;
+    }
+    const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      setError('Enter a positive amount.');
+      return;
+    }
+    if (direction === 'DEBIT' && amountNum > activeUser.balance) {
+      setError(
+        `Cannot debit more than the current balance (${formatBDT(activeUser.balance)} BDT).`,
+      );
+      return;
+    }
 
     const formData = new FormData();
     formData.append('userId', activeUser.id);
@@ -141,7 +167,9 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
     startTransition(async () => {
       const res = await adjustUserBalance(formData);
       if (res?.error) {
-        toast.error(res.error);
+        // Inline inside the Sheet, not the global toast (which renders
+        // behind the drawer and is invisible to the admin).
+        setError(res.error);
       } else {
         const signed = direction === 'CREDIT' ? `+${amount}` : `-${amount}`;
         toast.success(`Wallet adjusted (${signed} BDT). User notified.`);
@@ -789,6 +817,32 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
       >
         {activeUser && (
           <form id='adjust-wallet-form' onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            {/* Inline error — rendered INSIDE the Sheet so it's always
+                visible. The previous toast.error() fired but rendered behind
+                the open Sheet drawer, hiding the error from the admin. */}
+            {error && (
+              <div
+                role='alert'
+                aria-live='assertive'
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 'var(--space-2)',
+                  padding: 'var(--space-3) var(--space-3)',
+                  background:
+                    'var(--danger-bg, color-mix(in srgb, var(--danger) 10%, transparent))',
+                  color: 'var(--danger)',
+                  border: '1px solid var(--danger)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: 'var(--text-sm)',
+                  lineHeight: 1.4,
+                }}
+              >
+                <AlertCircle size={16} aria-hidden='true' style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{error}</span>
+              </div>
+            )}
+
             {/* User + current balance card */}
             <div
               style={{
@@ -925,7 +979,10 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
               min={1}
               step='0.01'
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (error) setError('');
+              }}
               hint={
                 direction === 'DEBIT' && activeUser
                   ? `Max: ${formatBDT(activeUser.balance)} BDT — cannot go below zero.`
@@ -939,8 +996,12 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
               rows={3}
               placeholder='e.g. Promotional credit, correction for duplicate charge, goodwill refund…'
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              hint='Shown to the user in their notification and transaction history.'
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (error) setError('');
+              }}
+              error={reasonTooShort ? `Needs ${REASON_MIN - reason.trim().length} more character${reason.trim().length === REASON_MIN - 1 ? '' : 's'}.` : null}
+              hint={`Shown to the user in their notification and transaction history. Minimum ${REASON_MIN} characters · ${reason.trim().length}/${REASON_MIN}`}
             />
           </form>
         )}
