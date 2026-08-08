@@ -3,8 +3,9 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, Lock } from 'lucide-react';
+import { ShieldCheck, Lock, Wallet } from 'lucide-react';
 import { placeOrder } from '@/app/(member)/shop/orders/actions';
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './BuyButton.module.css';
 
@@ -34,6 +35,7 @@ export default function BuyButton({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [, startTransition] = useTransition();
+  const { confirm, dialog } = useConfirmDialog();
 
   if (!isSignedIn) {
     return (
@@ -69,24 +71,121 @@ export default function BuyButton({
 
   const total = priceBdt * qty;
   const hasFunds = viewerBalance == null ? false : viewerBalance >= total;
+  const balanceAfter = viewerBalance == null ? null : viewerBalance - total;
 
-  function handleBuy() {
+  async function handleBuy() {
     setError('');
     if (!hasFunds) {
-      setError(
-        `Insufficient wallet balance. Recharge your wallet and come back.`,
-      );
+      setError(`Insufficient wallet balance. Recharge your wallet and come back.`);
       return;
     }
-    if (
-      !confirm(
-        `Buy ${qty} × ${formatBDT(priceBdt)} = ${formatBDT(
-          total,
-        )}?\nFunds will be held in escrow until you confirm delivery.`,
-      )
-    ) {
-      return;
-    }
+
+    const ok = await confirm({
+      title: 'Confirm your purchase',
+      description: (
+        <div>
+          {/* Order summary card */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: '0.5rem 1rem',
+              padding: '0.875rem 1rem',
+              background: 'var(--surface-2)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--text-sm)',
+            }}
+          >
+            <span style={{ color: 'var(--text-muted)' }}>Item price</span>
+            <strong style={{ textAlign: 'right' }}>
+              {formatBDT(priceBdt)}
+            </strong>
+            {qty > 1 && (
+              <>
+                <span style={{ color: 'var(--text-muted)' }}>Quantity</span>
+                <strong style={{ textAlign: 'right' }}>× {qty}</strong>
+              </>
+            )}
+            <span
+              style={{
+                color: 'var(--text-muted)',
+                borderTop: '1px solid var(--border-color)',
+                paddingTop: '0.5rem',
+                marginTop: '0.25rem',
+              }}
+            >
+              Total
+            </span>
+            <strong
+              style={{
+                textAlign: 'right',
+                fontSize: 'var(--text-lg)',
+                color: 'var(--primary)',
+                borderTop: '1px solid var(--border-color)',
+                paddingTop: '0.5rem',
+                marginTop: '0.25rem',
+              }}
+            >
+              {formatBDT(total)}
+            </strong>
+          </div>
+
+          {/* Wallet impact row */}
+          {balanceAfter != null && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '0.75rem',
+                padding: '0.5rem 0.75rem',
+                background:
+                  'var(--info-bg, color-mix(in srgb, var(--info) 8%, transparent))',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-main)',
+              }}
+            >
+              <Wallet size={14} aria-hidden='true' style={{ color: 'var(--info)' }} />
+              <span>
+                Wallet after purchase:{' '}
+                <strong>{formatBDT(balanceAfter)}</strong>
+              </span>
+            </div>
+          )}
+
+          {/* Trust note */}
+          <p
+            style={{
+              display: 'inline-flex',
+              alignItems: 'flex-start',
+              gap: '0.4rem',
+              marginTop: '0.75rem',
+              marginBottom: 0,
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-muted)',
+              lineHeight: 1.5,
+            }}
+          >
+            <ShieldCheck
+              size={14}
+              aria-hidden='true'
+              style={{ flexShrink: 0, marginTop: 1, color: 'var(--success)' }}
+            />
+            <span>
+              Funds are held in <strong>escrow</strong> — the seller is paid
+              only after you confirm delivery. You can cancel for a full refund
+              any time before shipping.
+            </span>
+          </p>
+        </div>
+      ),
+      confirmLabel: `Place order — ${formatBDT(total)}`,
+      tone: 'primary',
+    });
+
+    if (!ok) return;
+
     setLoading(true);
     startTransition(async () => {
       const fd = new FormData();
@@ -165,10 +264,10 @@ export default function BuyButton({
 
       <div className={styles.fineprint}>
         <ShieldCheck size={12} aria-hidden='true' />
-        <span>
-          Funds released to seller only after you confirm delivery.
-        </span>
+        <span>Funds released to seller only after you confirm delivery.</span>
       </div>
+
+      {dialog}
     </div>
   );
 }
