@@ -13,6 +13,8 @@ import {
   GraduationCap,
   MessageSquare,
   Store,
+  ShoppingBag,
+  Bookmark,
   Tag,
   User,
   Wallet,
@@ -57,6 +59,8 @@ export const MEMBER_NAV: NavGroup[] = [
     items: [
       { id: "shop-browse", label: "Browse Shop", href: "/shop", icon: Store },
       { id: "shop-selling", label: "Selling", href: "/shop/selling", icon: Tag },
+      { id: "shop-orders", label: "My Orders", href: "/shop/orders", icon: ShoppingBag },
+      { id: "shop-saved", label: "Saved", href: "/shop/saved", icon: Bookmark },
     ],
   },
   {

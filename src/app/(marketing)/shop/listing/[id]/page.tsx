@@ -1,9 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { ArrowLeft, MapPin, Package, ShieldCheck, UserCircle } from 'lucide-react';
+import { notFound, redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { ArrowLeft, MapPin, Package, ShieldCheck, Star, UserCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import EmptyState from '@/components/ui/EmptyState';
+import BuyButton from '@/components/shop/BuyButton';
+import SaveButton from '@/components/shop/SaveButton';
+import ReviewForm from '@/components/shop/ReviewForm';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { getShopListing } from '@/lib/shop/queries';
 import { formatBDT, conditionLabel } from '@/lib/shop/service';
 import styles from './listing.module.css';
@@ -52,6 +57,64 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (!listing) {
     notFound();
   }
+
+  // Resolve viewer context for the buy button (balance, ownership, auth).
+  const session = await getServerSession(authOptions);
+  const viewer = session?.user as
+    | { id?: string; role?: string }
+    | undefined;
+  const isSignedIn = !!viewer?.id;
+  const isOwner = viewer?.id === listing.seller.id;
+
+  // Fetch viewer state + reviews + existing save in parallel.
+  const [viewerRow, reviews, existingSave, pendingReviewOrder] = await Promise.all([
+    isSignedIn
+      ? prisma.user.findUnique({
+          where: { id: viewer!.id! },
+          select: { balance: true, emailVerified: true },
+        })
+      : null,
+    prisma.shopReview.findMany({
+      where: { listingId: listing.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        rating: true,
+        body: true,
+        createdAt: true,
+        from: { select: { name: true } },
+      },
+    }),
+    isSignedIn
+      ? prisma.shopSavedListing.findUnique({
+          where: {
+            userId_listingId: {
+              userId: viewer!.id!,
+              listingId: listing.id,
+            },
+          },
+          select: { userId: true },
+        })
+      : null,
+    // If the viewer is a buyer of a COMPLETED order with no review yet, surface the form.
+    isSignedIn && !isOwner
+      ? prisma.shopOrder.findFirst({
+          where: {
+            buyerId: viewer!.id!,
+            listingId: listing.id,
+            status: 'COMPLETED',
+            review: null,
+          },
+          orderBy: { completedAt: 'desc' },
+          select: { id: true },
+        })
+      : null,
+  ]);
+
+  const viewerBalance = viewerRow?.balance ?? null;
+  const viewerVerified = viewerRow?.emailVerified != null;
+  const isSaved = !!existingSave;
 
   const images = sortedImages(listing.images);
   const sellerName =
@@ -127,25 +190,70 @@ export default async function ListingDetailPage({ params }: PageProps) {
             </div>
           </Link>
 
+          {isSignedIn && (
+            <SaveButton listingId={listing.id} initiallySaved={isSaved} />
+          )}
+
           <div className={styles.trustNote}>
             <ShieldCheck size={16} aria-hidden='true' />
             <span>
-              Buying will move funds to escrow. The seller is paid only when
-              you confirm delivery. (Live in a later phase.)
+              Buying moves funds to escrow. The seller is paid only when you
+              confirm delivery.
             </span>
           </div>
 
-          {isSoldOut ? (
-            <button type='button' className={styles.buyBtnDisabled} disabled>
-              Sold out
-            </button>
-          ) : (
-            <button type='button' className={styles.buyBtnDisabled} disabled>
-              Buy with escrow — coming soon
-            </button>
-          )}
+          <BuyButton
+            listingId={listing.id}
+            priceBdt={listing.priceBdt}
+            quantity={listing.quantity}
+            isSoldOut={isSoldOut}
+            isOwner={isOwner}
+            isSignedIn={isSignedIn}
+            isVerified={viewerVerified}
+            viewerBalance={viewerBalance}
+          />
         </aside>
       </div>
+
+      {pendingReviewOrder && (
+        <section className={styles.reviewsSection}>
+          <ReviewForm
+            orderId={pendingReviewOrder.id}
+            listingTitle={listing.title}
+          />
+        </section>
+      )}
+
+      <section className={styles.reviewsSection} aria-label='Reviews'>
+        <h2 className={styles.reviewsHeading}>
+          <Star size={16} aria-hidden='true' /> Reviews ({reviews.length})
+        </h2>
+        {reviews.length === 0 ? (
+          <p className={styles.noReviews}>
+            No reviews yet. Be the first to buy and review this item.
+          </p>
+        ) : (
+          <ul className={styles.reviewList}>
+            {reviews.map((r) => (
+              <li key={r.id} className={styles.reviewItem}>
+                <div className={styles.reviewHeader}>
+                  <strong>{r.from.name}</strong>
+                  <span className={styles.reviewRating}>
+                    {'★'.repeat(r.rating)}
+                    <span className={styles.reviewRatingEmpty}>
+                      {'★'.repeat(5 - r.rating)}
+                    </span>
+                  </span>
+                  <span className={styles.reviewDate}>
+                    {new Date(r.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {r.body && <p className={styles.reviewBody}>{r.body}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

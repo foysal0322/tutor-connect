@@ -16,12 +16,14 @@ export default async function NewListingPage() {
     redirect('/auth/signin');
   }
 
-  const settings = await coerceShopSettings({
+  const settingsRow = await prisma.platformSetting.findUnique({
+    where: { id: 'default' },
+  });
+  const settings = coerceShopSettings({
     ...(await getPlatformSettings()),
-    shopMinPriceBdt: (await prisma.platformSetting.findUnique({ where: { id: 'default' } }))
-      ?.shopMinPriceBdt,
-    shopMaxPriceBdt: (await prisma.platformSetting.findUnique({ where: { id: 'default' } }))
-      ?.shopMaxPriceBdt,
+    shopMinPriceBdt: settingsRow?.shopMinPriceBdt,
+    shopMaxPriceBdt: settingsRow?.shopMaxPriceBdt,
+    shopListingMaxImages: settingsRow?.shopListingMaxImages,
   });
 
   const categories = await prisma.shopCategory.findMany({
@@ -41,6 +43,7 @@ export default async function NewListingPage() {
         categories={categories.map((c) => ({ value: c.id, label: c.name }))}
         minPrice={settings.shopMinPriceBdt}
         maxPrice={settings.shopMaxPriceBdt}
+        maxImages={settings.shopListingMaxImages}
         initial={{
           title: '',
           description: '',
@@ -49,6 +52,7 @@ export default async function NewListingPage() {
           priceBdt: '',
           quantity: '1',
           location: '',
+          images: [],
         }}
       />
     </div>

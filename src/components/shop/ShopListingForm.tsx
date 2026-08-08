@@ -7,6 +7,7 @@ import { FormCard, FormSection, FormSubmit, FormAlert, fieldClass } from '@/comp
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, type SelectOption } from '@/components/ui/Select';
+import ShopImageUploader, { type UploadedImage } from '@/components/shop/ShopImageUploader';
 import { saveListing } from '@/app/(marketing)/shop/selling/actions';
 
 export interface ShopListingFormInitial {
@@ -18,6 +19,7 @@ export interface ShopListingFormInitial {
   priceBdt: string;
   quantity: string;
   location: string;
+  images?: UploadedImage[];
 }
 
 interface Props {
@@ -25,6 +27,7 @@ interface Props {
   categories: SelectOption[];
   minPrice: number;
   maxPrice: number;
+  maxImages: number;
   mode: 'create' | 'edit';
 }
 
@@ -41,17 +44,18 @@ export default function ShopListingForm({
   categories,
   minPrice,
   maxPrice,
+  maxImages,
   mode,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [images, setImages] = useState<UploadedImage[]>(initial.images ?? []);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError('');
-    // Image pipeline lands in Phase 5 — for now sellers go text-only.
-    formData.set('imagesJson', JSON.stringify([]));
+    formData.set('imagesJson', JSON.stringify(images));
     if (initial.listingId) {
       formData.set('listingId', initial.listingId);
     }
@@ -78,6 +82,15 @@ export default function ShopListingForm({
     >
       {error && <FormAlert>{error}</FormAlert>}
       <form action={handleSubmit} className='flex flex-col gap-5'>
+        <FormSection label='Photos' icon={<Tag size={14} />}>
+          <ShopImageUploader
+            value={images}
+            onChange={setImages}
+            maxImages={maxImages}
+            disabled={loading}
+          />
+        </FormSection>
+
         <FormSection label='Item details' icon={<Tag size={14} />}>
           <Input
             containerClassName={fieldClass}
@@ -152,11 +165,6 @@ export default function ShopListingForm({
             hint='Helps buyers plan a meet-up. Keep it general — never share your dorm/room.'
           />
         </FormSection>
-
-        <p className='text-xs text-muted'>
-          Image uploads land in the next phase. For now your listing will show a
-          placeholder tile.
-        </p>
 
         <FormSubmit
           loading={loading}

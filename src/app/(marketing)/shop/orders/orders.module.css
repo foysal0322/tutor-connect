@@ -1,0 +1,11 @@
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-8);
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    padding: 0 var(--space-3) var(--space-6);
+  }
+}

@@ -36,6 +36,7 @@ export default async function EditListingPage({ params }: PageProps) {
       quantity: true,
       location: true,
       status: true,
+      images: true,
     },
   });
   if (!listing) notFound();
@@ -60,7 +61,22 @@ export default async function EditListingPage({ params }: PageProps) {
     ...(await getPlatformSettings()),
     shopMinPriceBdt: settingsRow?.shopMinPriceBdt,
     shopMaxPriceBdt: settingsRow?.shopMaxPriceBdt,
+    shopListingMaxImages: settingsRow?.shopListingMaxImages,
   });
+
+  // Coerce stored images JSON into UploadedImage shape.
+  const rawImages = Array.isArray(listing.images) ? (listing.images as unknown) : [];
+  const images = (Array.isArray(rawImages) ? rawImages : [])
+    .filter(
+      (x): x is { url: string; sortOrder?: number } =>
+        typeof x === 'object' && x !== null && typeof (x as { url?: unknown }).url === 'string',
+    )
+    .slice(0, settings.shopListingMaxImages)
+    .map((img, i) => ({
+      url: img.url,
+      sortOrder: typeof img.sortOrder === 'number' ? img.sortOrder : i,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', padding: '0 var(--space-4) var(--space-8)' }}>
@@ -70,6 +86,7 @@ export default async function EditListingPage({ params }: PageProps) {
         categories={categories.map((c) => ({ value: c.id, label: c.name }))}
         minPrice={settings.shopMinPriceBdt}
         maxPrice={settings.shopMaxPriceBdt}
+        maxImages={settings.shopListingMaxImages}
         initial={{
           listingId: listing.id,
           title: listing.title,
@@ -79,6 +96,7 @@ export default async function EditListingPage({ params }: PageProps) {
           priceBdt: String(listing.priceBdt),
           quantity: String(listing.quantity),
           location: listing.location ?? '',
+          images,
         }}
       />
     </div>

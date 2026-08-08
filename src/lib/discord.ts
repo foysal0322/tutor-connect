@@ -163,3 +163,107 @@ export const notifySupportRequest = async (details: {
     },
   ]);
 };
+
+// --- NSUOne Shop events (Phase 8) -----------------------------------------
+// Routed to the general alerts webhook (WEBHOOK_2). Toned to match the
+// existing palette. See NSUONE_SHOP_BLUEPRINT.md §14.
+
+export const notifyShopOrder = async (details: {
+  kind: "placed" | "cancelled" | "refunded";
+  orderId: string;
+  listingTitle?: string;
+  buyerName?: string;
+  sellerName?: string;
+  amount: number;
+}) => {
+  const emoji =
+    details.kind === "placed" ? "🛒" : details.kind === "refunded" ? "↩️" : "❌";
+  const title =
+    details.kind === "placed"
+      ? "Shop Order Placed"
+      : details.kind === "refunded"
+      ? "Shop Order Refunded"
+      : "Shop Order Cancelled";
+  const color =
+    details.kind === "placed" ? 0x2ecc71 : details.kind === "refunded" ? 0xe74c3c : 0x95a5a6;
+  await sendWebhook(WEBHOOK_2, `${emoji} **${title}**`, [
+    {
+      title,
+      color,
+      fields: [
+        ...(details.listingTitle
+          ? [{ name: "Item", value: details.listingTitle, inline: true }]
+          : []),
+        ...(details.buyerName
+          ? [{ name: "Buyer", value: details.buyerName, inline: true }]
+          : []),
+        ...(details.sellerName
+          ? [{ name: "Seller", value: details.sellerName, inline: true }]
+          : []),
+        { name: "Amount", value: `${details.amount} BDT`, inline: true },
+        { name: "Order", value: details.orderId, inline: false },
+      ],
+    },
+  ]);
+};
+
+export const notifyShopDispute = async (details: {
+  kind: "opened" | "resolved";
+  orderId: string;
+  listingTitle?: string;
+  reason?: string;
+}) => {
+  const emoji = details.kind === "opened" ? "⚠️" : "✅";
+  const title =
+    details.kind === "opened" ? "Shop Dispute Opened" : "Shop Dispute Resolved";
+  const color = details.kind === "opened" ? 0xf1c40f : 0x2ecc71;
+  await sendWebhook(WEBHOOK_2, `${emoji} **${title}**`, [
+    {
+      title,
+      color,
+      fields: [
+        ...(details.listingTitle
+          ? [{ name: "Item", value: details.listingTitle, inline: true }]
+          : []),
+        { name: "Order", value: details.orderId, inline: false },
+        ...(details.reason
+          ? [{ name: "Reason", value: details.reason, inline: false }]
+          : []),
+      ],
+    },
+  ]);
+};
+
+export const notifyShopListingModerated = async (details: {
+  kind: "reported" | "rejected" | "approved";
+  listingTitle?: string;
+  reportId?: string;
+}) => {
+  const emoji = details.kind === "reported" ? "🚩" : details.kind === "rejected" ? "🚫" : "✅";
+  const title =
+    details.kind === "reported"
+      ? "Shop Listing Reported"
+      : details.kind === "rejected"
+      ? "Shop Listing Rejected"
+      : "Shop Listing Approved";
+  const color =
+    details.kind === "reported"
+      ? 0xe67e22
+      : details.kind === "rejected"
+      ? 0xe74c3c
+      : 0x2ecc71;
+  await sendWebhook(WEBHOOK_2, `${emoji} **${title}**`, [
+    {
+      title,
+      color,
+      fields: [
+        ...(details.listingTitle
+          ? [{ name: "Item", value: details.listingTitle, inline: true }]
+          : []),
+        ...(details.reportId
+          ? [{ name: "Report", value: details.reportId, inline: false }]
+          : []),
+      ],
+    },
+  ]);
+};
