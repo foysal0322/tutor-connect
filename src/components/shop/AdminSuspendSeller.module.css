@@ -57,3 +57,10 @@
     display: none;
   }
 }
+
+@media (pointer: coarse) {
+  .btn {
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+  }
+}

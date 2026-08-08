@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import styles from './ShopFilters.module.css';
 
 /**
@@ -62,6 +62,23 @@ export default function ShopFilters({
     [router, pathname, params],
   );
 
+  // Debounce the search input so we don't push the URL on every keystroke.
+  const [searchDraft, setSearchDraft] = useState(current.q ?? '');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      // Only push if the value actually changed from what's in the URL.
+      if (searchDraft !== (current.q ?? '')) {
+        update('q', searchDraft);
+      }
+    }, 350);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchDraft]);
+
   const resetAll = () => {
     router.push(pathname);
   };
@@ -74,8 +91,8 @@ export default function ShopFilters({
       <input
         type='search'
         placeholder='Search items, books, calculators…'
-        defaultValue={current.q ?? ''}
-        onChange={(e) => update('q', e.target.value)}
+        value={searchDraft}
+        onChange={(e) => setSearchDraft(e.target.value)}
         className={styles.search}
         aria-label='Search shop'
       />

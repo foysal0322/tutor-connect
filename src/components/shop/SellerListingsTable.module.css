@@ -96,6 +96,15 @@
   text-decoration: none;
 }
 
+/* Touch-target enforcement — bumps small icon buttons past the 44px mobile
+   threshold. Mirrors the global .touch-target utility pattern. */
+@media (pointer: coarse) {
+  .iconBtn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 .iconBtn:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--text-main);

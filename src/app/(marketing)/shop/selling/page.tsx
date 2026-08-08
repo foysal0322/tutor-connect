@@ -100,7 +100,7 @@ export default async function SellingDashboardPage() {
         <EmptyState
           icon={<Tag size={36} />}
           title='No listings yet'
-          description='List your first item — old textbooks, calculators, lab kits, anything the campus needs.'
+          description='List your first item — old textbooks, calculators, lab kits, anything the campus needs. Listings are free; the platform takes 7% only when you make a sale.'
           action={
             <Link href='/shop/selling/new' className={styles.newCta}>
               <Plus size={14} aria-hidden='true' /> Create a listing

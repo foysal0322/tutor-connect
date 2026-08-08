@@ -74,6 +74,13 @@
   transition: background var(--duration-fast) var(--ease-standard);
 }
 
+@media (pointer: coarse) {
+  .iconBtn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .iconBtn:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.8);
 }

@@ -64,7 +64,11 @@ export default function DisputeThread({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.thread}>
+      <div
+        className={styles.thread}
+        aria-live='polite'
+        aria-label='Dispute messages'
+      >
         {messages.map((m) => (
           <div
             key={m.id}
