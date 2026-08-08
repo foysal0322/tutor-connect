@@ -79,7 +79,7 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               href={`/auth/signin${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
               className={footerLinkClass}
             >
-              Sign In
+              Sign in
             </Link>
           </>
         }

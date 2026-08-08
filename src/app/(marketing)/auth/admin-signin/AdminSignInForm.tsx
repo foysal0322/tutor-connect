@@ -82,7 +82,7 @@ export default function AdminSignInForm() {
           </FormSection>
 
           <FormSubmit loading={loading} loadingText="Signing in..." icon={<ShieldCheck size={18} />}>
-            Sign In as Admin
+            Sign in as Admin
           </FormSubmit>
         </form>
       </FormCard>

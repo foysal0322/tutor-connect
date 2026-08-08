@@ -99,7 +99,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "profile", label: "Profile", href: "/admin/profile", icon: User },
       {
         id: "logout",
-        label: "Logout",
+        label: "Sign out",
         href: "/auth/force-signout?reason=manual",
         icon: LogOut,
         danger: true,

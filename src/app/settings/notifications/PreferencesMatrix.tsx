@@ -29,7 +29,7 @@ const CATEGORY_META: Record<string, { label: string; hint: string }> = {
   SUPPORT: { label: 'Support Tickets', hint: 'Ticket submissions and resolutions' },
   COURSE: { label: 'Courses & Expertise', hint: 'Admin edits to your tutor expertise' },
   SYSTEM: { label: 'System', hint: 'Platform-wide announcements and receipts' },
-  AUTH: { label: 'Account & Login', hint: 'Role changes — always on for security' },
+  AUTH: { label: 'Account & Sign in', hint: 'Role changes — always on for security' },
   SECURITY: { label: 'Security', hint: 'Block/unblock and access changes — always on' },
 };
 

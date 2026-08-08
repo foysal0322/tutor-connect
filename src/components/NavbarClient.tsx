@@ -130,7 +130,7 @@ export default function NavbarClient({ session }: { session: any }) {
                 className={styles.btnTutorSignIn}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sign In
+                Sign in
               </Link>
             ) : (
               <>
@@ -148,7 +148,7 @@ export default function NavbarClient({ session }: { session: any }) {
         <div className={styles.authButtonsDesktop}>
           {!session ? (
             <Link href='/auth/signin' className={styles.btnTutorSignIn}>
-              Sign In
+              Sign in
             </Link>
           ) : (
             <>

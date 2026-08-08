@@ -197,7 +197,7 @@ export default function SignInForm() {
           </FormSection>
 
           <FormSubmit loading={loading} loadingText="Signing in..." icon={<LogIn size={18} />}>
-            Sign In
+            Sign in
           </FormSubmit>
         </form>
       </FormCard>

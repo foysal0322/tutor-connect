@@ -99,7 +99,7 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
         footer={
           step !== 'SUCCESS' ? (
             <Link href="/auth/signin" className={footerLinkClass}>
-              Back to Sign In
+              Back to Sign in
             </Link>
           ) : undefined
         }
@@ -163,7 +163,7 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
         {step === 'SUCCESS' && (
           <div style={{ textAlign: 'center' }}>
             <Link href="/auth/signin" className={homeLinkClass}>
-              Sign In Now
+              Sign in now
             </Link>
           </div>
         )}

@@ -282,13 +282,13 @@ export default async function ConsultancyPage() {
             }}
           >
             <p style={{ color: 'var(--text-muted, #64748b)', margin: 0 }}>
-              Please log in first to claim your {freeQuota} free consultancy sessions or book a premium topic.
+              Please sign in first to claim your {freeQuota} free consultancy sessions or book a premium topic.
             </p>
             <Link
               href={`/auth/signin?callbackUrl=${encodeURIComponent('/consultancy')}`}
               className="btn-primary"
             >
-              <LogIn size={18} /> Login to continue
+              <LogIn size={18} /> Sign in to continue
             </Link>
           </div>
         </FormCard>

@@ -72,7 +72,7 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
             <p>Great news! We have assigned a qualified tutor for your request on <strong>${request.topic} (${request.course.name})</strong>.</p>
             <p><strong>Assigned Tutor:</strong> ${tutor?.name || 'Assigned Tutor'}</p>
             <p><strong>Session Fee:</strong> ${finalFee} BDT</p>
-            <p>Please log in to your student dashboard to proceed with the payment and start learning.</p>
+            <p>Please sign in to your student dashboard to proceed with the payment and start learning.</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
             <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
           </div>
@@ -118,7 +118,7 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
               <p>You have been allocated a new tuition request for <strong>${request.topic} (${request.course.name})</strong>.</p>
               <p><strong>Student Name:</strong> ${request.student.name}</p>
               <p><strong>Session Fee:</strong> ${finalFee} BDT</p>
-              <p>Please log in to your tutor dashboard to review the request details.</p>
+              <p>Please sign in to your tutor dashboard to review the request details.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
               <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
             </div>
@@ -250,7 +250,7 @@ export async function verifyPaymentAction(requestId: string, approve: boolean) {
                 <h2 style="color: #ef4444;">Payment Verification Failed</h2>
                 <p>Hello ${request.student.name},</p>
                 <p>We could not verify your payment transaction for <strong>${request.topic} (${request.course.name})</strong>.</p>
-                <p>Please log in to your dashboard, check your transaction ID, and re-submit your payment details.</p>
+                <p>Please sign in to your dashboard, check your transaction ID, and re-submit your payment details.</p>
                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
                 <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
               </div>

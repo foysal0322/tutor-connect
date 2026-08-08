@@ -157,7 +157,7 @@ export default function UserMenu({ user, variant = 'popover', onNavigate, isTuto
             onClick={onNavigate}
           >
             <LogOut size={18} aria-hidden="true" />
-            Logout
+            Sign out
           </Link>
         </div>
       </div>
@@ -239,7 +239,7 @@ export default function UserMenu({ user, variant = 'popover', onNavigate, isTuto
             onClick={close}
           >
             <LogOut size={18} aria-hidden="true" />
-            <span>Logout</span>
+            <span>Sign out</span>
           </Link>
         </div>
       )}
