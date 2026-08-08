@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Check, X, Ban, RotateCcw } from 'lucide-react';
-import { moderateListing } from '@/app/(marketing)/shop/disputes/actions';
+import { moderateListing } from '@/app/(member)/shop/disputes/actions';
 import styles from './AdminListingActions.module.css';
 
 interface Props {

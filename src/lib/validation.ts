@@ -167,7 +167,7 @@ export const adjustWalletSchema = z.object({
 
 // --- NSUOne Shop schemas ----------------------------------------------------
 // See NSUONE_SHOP_BLUEPRINT.md §15.2. Used by server actions in
-// src/app/(marketing)/shop/selling/actions.ts.
+// src/app/(member)/shop/selling/actions.ts.
 
 export const shopItemConditionSchema = z.enum([
   'NEW',

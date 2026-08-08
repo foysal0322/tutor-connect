@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Send } from 'lucide-react';
-import { postDisputeMessage } from '@/app/(marketing)/shop/disputes/actions';
+import { postDisputeMessage } from '@/app/(member)/shop/disputes/actions';
 import styles from './DisputeThread.module.css';
 
 export interface DisputeMessage {

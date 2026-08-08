@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { resolveDispute } from '@/app/(marketing)/shop/disputes/actions';
+import { resolveDispute } from '@/app/(member)/shop/disputes/actions';
 import styles from './AdminDisputeResolver.module.css';
 
 interface Props {

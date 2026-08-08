@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Scale } from 'lucide-react';
-import { openDispute } from '@/app/(marketing)/shop/disputes/actions';
+import { openDispute } from '@/app/(member)/shop/disputes/actions';
 import styles from './OpenDisputeButton.module.css';
 
 interface Props {

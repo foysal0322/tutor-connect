@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { X, Ban } from 'lucide-react';
-import { handleReport } from '@/app/(marketing)/shop/disputes/actions';
+import { handleReport } from '@/app/(member)/shop/disputes/actions';
 import styles from './AdminReportActions.module.css';
 
 interface Props {

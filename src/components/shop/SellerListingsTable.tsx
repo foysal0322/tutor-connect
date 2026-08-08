@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { Pencil, Pause, Play, Trash2 } from 'lucide-react';
-import { updateListingStatus } from '@/app/(marketing)/shop/selling/actions';
+import { updateListingStatus } from '@/app/(member)/shop/selling/actions';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './SellerListingsTable.module.css';

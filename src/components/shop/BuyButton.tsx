@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldCheck, Lock } from 'lucide-react';
-import { placeOrder } from '@/app/(marketing)/shop/orders/actions';
+import { placeOrder } from '@/app/(member)/shop/orders/actions';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './BuyButton.module.css';
 

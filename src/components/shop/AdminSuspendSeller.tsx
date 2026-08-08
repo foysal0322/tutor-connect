@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Ban, RotateCcw } from 'lucide-react';
-import { setSellerSuspension } from '@/app/(marketing)/shop/disputes/actions';
+import { setSellerSuspension } from '@/app/(member)/shop/disputes/actions';
 import styles from './AdminSuspendSeller.module.css';
 
 interface Props {

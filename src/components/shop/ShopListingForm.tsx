@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, type SelectOption } from '@/components/ui/Select';
 import ShopImageUploader, { type UploadedImage } from '@/components/shop/ShopImageUploader';
-import { saveListing } from '@/app/(marketing)/shop/selling/actions';
+import { saveListing } from '@/app/(member)/shop/selling/actions';
 
 export interface ShopListingFormInitial {
   listingId?: string;

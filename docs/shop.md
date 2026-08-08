@@ -35,7 +35,7 @@ src/lib/shop/                          # domain logic (pure, testable)
   images.ts                            # filesystem storage abstraction
   notify.ts                            # event dispatcher (in-app + email + Discord)
 
-src/app/(marketing)/shop/              # all shop routes (AdaptiveShell wraps)
+src/app/(member)/shop/                 # all shop routes (AdaptiveShell wraps)
   page.tsx                             # public browse
   listing/[id]/page.tsx                # public detail + buy + review
   category/[slug]/page.tsx             # category browse

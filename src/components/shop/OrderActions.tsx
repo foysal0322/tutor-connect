@@ -7,7 +7,7 @@ import {
   completeOrder,
   confirmDelivery,
   markShipped,
-} from '@/app/(marketing)/shop/orders/actions';
+} from '@/app/(member)/shop/orders/actions';
 import styles from './OrderActions.module.css';
 
 type OrderStatus =

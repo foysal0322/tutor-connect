@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Star } from 'lucide-react';
 import { FormCard, FormSubmit, FormAlert, fieldClass } from '@/components/forms';
 import { Textarea } from '@/components/ui/Textarea';
-import { leaveReview } from '@/app/(marketing)/shop/actions';
+import { leaveReview } from '@/app/(member)/shop/actions';
 import styles from './ReviewForm.module.css';
 
 interface Props {

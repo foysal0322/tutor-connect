@@ -5,7 +5,7 @@ import { Bookmark } from 'lucide-react';
 import {
   saveListingAction,
   unsaveListingAction,
-} from '@/app/(marketing)/shop/actions';
+} from '@/app/(member)/shop/actions';
 import styles from './SaveButton.module.css';
 
 interface Props {

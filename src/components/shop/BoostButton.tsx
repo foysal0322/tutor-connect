@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
-import { boostListing } from '@/app/(marketing)/shop/boost/actions';
+import { boostListing } from '@/app/(member)/shop/boost/actions';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './BoostButton.module.css';
 
