@@ -319,6 +319,7 @@ export async function markShipped(formData: FormData): Promise<ActionResult> {
     if (buyer) {
       await notifyShopEvent('order:shipped', {
         orderId: result.id,
+        buyerId: result.buyerId,
         buyerEmail: buyer.email,
         buyerName: buyer.name ?? 'Buyer',
         listingTitle: result.listing.title,
@@ -390,6 +391,7 @@ export async function confirmDelivery(formData: FormData): Promise<ActionResult>
     if (seller) {
       await notifyShopEvent('order:delivered', {
         orderId: result.id,
+        sellerId: result.sellerId,
         sellerEmail: seller.email,
         sellerName: seller.name ?? 'Seller',
         listingTitle: result.listing.title,
@@ -522,6 +524,7 @@ export async function completeOrder(formData: FormData): Promise<ActionResult> {
     if (seller) {
       await notifyShopEvent('order:completed', {
         orderId: result.id,
+        sellerId: result.sellerId,
         sellerEmail: seller.email,
         sellerName: seller.name ?? 'Seller',
         payoutBdt: result.payoutBdt,
@@ -632,8 +635,11 @@ export async function cancelOrder(formData: FormData): Promise<ActionResult> {
     if (sellerUser) {
       await notifyShopEvent('order:cancelled', {
         orderId: result.id,
+        buyerId: result.buyerId,
+        sellerId: fullOrder?.sellerId,
         sellerEmail: sellerUser.email,
         sellerName: sellerUser.name ?? 'Seller',
+        subtotal: result.subtotalBdt,
         listingTitle: result.listing.title,
       });
     }
