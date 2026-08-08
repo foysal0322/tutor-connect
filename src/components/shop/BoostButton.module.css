@@ -34,6 +34,82 @@
   border: 1px solid var(--danger);
 }
 
+/* Rich insufficient-balance card — replaces the bare error string with an
+   actionable recharge CTA. Mirrors the BuyButton balance card pattern. */
+.balanceCard {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--warning-bg, #fff7ed);
+  border: 1px solid var(--warning-border, #fdba74);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+}
+
+.balanceCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: color-mix(in srgb, var(--warning-text, #b45309) 15%, transparent);
+  color: var(--warning-text, #b45309);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.balanceCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.balanceCardBody strong {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.balanceCardBody p {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.rechargeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--primary);
+  color: var(--primary-contrast, #fff);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter var(--duration-fast) var(--ease-standard);
+}
+
+.rechargeLink:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 480px) {
+  .balanceCard {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+  }
+  .rechargeLink {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
+
 .success {
   padding: 0.5rem 0.75rem;
   font-size: var(--text-xs);

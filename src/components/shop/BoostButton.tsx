@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Zap, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Zap, Sparkles, ShieldCheck, Wallet, ArrowRight } from 'lucide-react';
 import { boostListing } from '@/app/(member)/shop/boost/actions';
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './BoostButton.module.css';
 
@@ -25,21 +27,72 @@ export default function BoostButton({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [, startTransition] = useTransition();
+  const { confirm, dialog } = useConfirmDialog();
 
   const isBoosted = boostedUntil ? new Date(boostedUntil) > new Date() : false;
 
-  function handleBoost() {
+  // Detect insufficient-balance errors so we can show a richer card with a
+  // recharge CTA instead of a bare string. The server action returns a
+  // human-readable message — matching on "Insufficient wallet balance" is
+  // stable enough for this UI hint (it's set in policy.ts → canBuy).
+  const isInsufficientBalance = /insufficient wallet balance/i.test(error);
+
+  async function handleBoost() {
     setError('');
     setSuccess('');
-    if (
-      !confirm(
-        `Boost "${listingTitle}" for ${boostDays} days?\n\nCost: ${formatBDT(
-          boostFeeBdt,
-        )} — debited from your wallet instantly. Your listing stays pinned at the top of browse for the duration.`,
-      )
-    ) {
-      return;
-    }
+
+    const ok = await confirm({
+      title: isBoosted ? 'Extend your boost?' : `Boost for ${boostDays} days?`,
+      description: (
+        <div>
+          <p style={{ margin: '0 0 0.75rem' }}>
+            Your listing <strong>&ldquo;{listingTitle}&rdquo;</strong> will sort
+            above non-boosted items in browse results and show a transparent{' '}
+            <strong>Boosted</strong> badge.
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: '0.5rem 1rem',
+              padding: '0.75rem 1rem',
+              background: 'var(--surface-2)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--text-sm)',
+              marginTop: '0.5rem',
+            }}
+          >
+            <span style={{ color: 'var(--text-muted)' }}>Cost</span>
+            <strong style={{ textAlign: 'right' }}>
+              {formatBDT(boostFeeBdt)}
+            </strong>
+            <span style={{ color: 'var(--text-muted)' }}>Duration</span>
+            <strong style={{ textAlign: 'right' }}>{boostDays} days</strong>
+            <span style={{ color: 'var(--text-muted)' }}>Charged to</span>
+            <strong style={{ textAlign: 'right' }}>Your wallet</strong>
+          </div>
+          <p
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              marginTop: '0.75rem',
+              marginBottom: 0,
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <ShieldCheck size={12} aria-hidden='true' />
+            Debited instantly. Listing stays free to relist after the boost ends.
+          </p>
+        </div>
+      ),
+      confirmLabel: `Boost — ${formatBDT(boostFeeBdt)}`,
+      tone: 'primary',
+    });
+
+    if (!ok) return;
+
     setLoading(true);
     startTransition(async () => {
       const fd = new FormData();
@@ -62,7 +115,25 @@ export default function BoostButton({
           <span>Boosted until {new Date(boostedUntil!).toLocaleDateString()}</span>
         </div>
       )}
-      {error && (
+      {error && isInsufficientBalance && (
+        <div role='alert' className={styles.balanceCard}>
+          <div className={styles.balanceCardIcon}>
+            <Wallet size={18} aria-hidden='true' />
+          </div>
+          <div className={styles.balanceCardBody}>
+            <strong>Your wallet needs a top-up</strong>
+            <p>
+              Boost costs <strong>{formatBDT(boostFeeBdt)}</strong>. Recharge
+              your wallet and come back — your listing stays active in the
+              meantime.
+            </p>
+          </div>
+          <Link href='/wallet' className={styles.rechargeLink}>
+            Recharge <ArrowRight size={12} aria-hidden='true' />
+          </Link>
+        </div>
+      )}
+      {error && !isInsufficientBalance && (
         <div role='alert' className={styles.error}>
           {error}
         </div>
@@ -90,6 +161,7 @@ export default function BoostButton({
         transparent &ldquo;Boosted&rdquo; badge. Listings are still free to
         list — Boost is an optional visibility upgrade.
       </p>
+      {dialog}
     </div>
   );
 }
