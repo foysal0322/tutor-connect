@@ -81,7 +81,9 @@ export default function RequestTutorForm({
       if (res?.error) {
         setError(`Failed to submit request: ${res.error}`);
       } else if (res?.success) {
-        router.push('/student');
+        // After submitting, the student's next step is to pay (or wait for an
+        // admin match first). Land them on the payments page, not the dashboard.
+        router.push('/student/payments#pending-payments');
       }
     } catch (err) {
       const errorMessage =
