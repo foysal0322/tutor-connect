@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { ArrowLeft, MapPin, Package, ShieldCheck, Star, UserCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import BuyButton from '@/components/shop/BuyButton';
+import BoostButton from '@/components/shop/BoostButton';
 import SaveButton from '@/components/shop/SaveButton';
 import ReviewForm from '@/components/shop/ReviewForm';
 import { authOptions } from '@/lib/auth';
@@ -192,6 +193,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
           {isSignedIn && (
             <SaveButton listingId={listing.id} initiallySaved={isSaved} />
+          )}
+
+          {isOwner && (
+            <BoostButton
+              listingId={listing.id}
+              listingTitle={listing.title}
+              boostFeeBdt={100}
+              boostDays={7}
+              boostedUntil={listing.boostedUntil?.toISOString() ?? null}
+            />
           )}
 
           <div className={styles.trustNote}>

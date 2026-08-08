@@ -15,6 +15,7 @@ import {
   Store,
   ShoppingBag,
   Bookmark,
+  Scale,
   Tag,
   User,
   Wallet,
@@ -61,6 +62,7 @@ export const MEMBER_NAV: NavGroup[] = [
       { id: "shop-selling", label: "Selling", href: "/shop/selling", icon: Tag },
       { id: "shop-orders", label: "My Orders", href: "/shop/orders", icon: ShoppingBag },
       { id: "shop-saved", label: "Saved", href: "/shop/saved", icon: Bookmark },
+      { id: "shop-disputes", label: "Disputes", href: "/shop/disputes", icon: Scale },
     ],
   },
   {

@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import OrderActions from '@/components/shop/OrderActions';
+import OpenDisputeButton from '@/components/shop/OpenDisputeButton';
 import { getOrderForUser } from '@/lib/shop/orders-queries';
 import { formatBDT } from '@/lib/shop/service';
 import styles from './order.module.css';
@@ -173,6 +174,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
             status={order.status as OrderStatus}
             role={isBuyer ? 'buyer' : 'seller'}
           />
+
+          {/* Dispute entry — surface on SHIPPED/DELIVERED/COMPLETED when no
+              dispute is currently open. */}
+          {(order.status === 'SHIPPED' ||
+            order.status === 'DELIVERED' ||
+            order.status === 'COMPLETED') && <OpenDisputeButton orderId={order.id} />}
         </aside>
       </div>
     </div>

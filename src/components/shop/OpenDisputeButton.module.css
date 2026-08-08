@@ -1,0 +1,98 @@
+.openBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  background: var(--surface-2);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+  width: 100%;
+  justify-content: center;
+}
+
+.openBtn:hover:not(:disabled) {
+  background: var(--danger-bg, color-mix(in srgb, var(--danger) 10%, transparent));
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.error {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-xs);
+  background: var(--danger-bg, color-mix(in srgb, var(--danger) 10%, transparent));
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--danger);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+  color: var(--text-main);
+  font: inherit;
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.submitBtn {
+  padding: 0.5rem 0.85rem;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:disabled,
+.cancelBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

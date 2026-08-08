@@ -27,6 +27,9 @@ import {
   TicketPercent,
   Settings,
   Eye,
+  Flag,
+  Scale,
+  Tag,
   User,
   LogOut,
 } from "lucide-react";
@@ -59,6 +62,19 @@ export const ADMIN_NAV: NavGroup[] = [
       { id: "consultancy", label: "Consultancy", href: "/admin/consultancy", icon: MessageSquare, badgeKey: "consultancy" },
       { id: "support", label: "Support Tickets", href: "/admin/support", icon: LifeBuoy, badgeKey: "support" },
       { id: "shop", label: "Shop", href: "/admin/shop", icon: ShoppingBag },
+    ],
+  },
+  {
+    heading: "Shop Ops",
+    items: [
+      { id: "shop-listings", label: "Listings", href: "/admin/shop/listings", icon: Tag },
+      { id: "shop-orders", label: "Orders", href: "/admin/shop/orders", icon: ShoppingBag },
+      { id: "shop-disputes", label: "Disputes", href: "/admin/shop/disputes", icon: Scale },
+      { id: "shop-reports", label: "Reports", href: "/admin/shop/reports", icon: Flag },
+      { id: "shop-payouts", label: "Payouts", href: "/admin/shop/payouts", icon: DollarSign },
+      { id: "shop-categories", label: "Categories", href: "/admin/shop/categories", icon: BookOpen },
+      { id: "shop-sellers", label: "Sellers", href: "/admin/shop/sellers", icon: Users },
+      { id: "shop-settings", label: "Shop Settings", href: "/admin/shop/settings", icon: Settings },
     ],
   },
   {

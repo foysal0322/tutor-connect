@@ -16,6 +16,7 @@ export interface ShopListingCardData {
   status: string;
   location?: string | null;
   images?: unknown; // JSON column: [{id,url,sortOrder}]
+  boostedUntil?: string | Date | null;
   seller: {
     id: string;
     name: string;
@@ -53,6 +54,10 @@ export default function ShopListingCard({ listing }: Props) {
     listing.seller.shopSellerProfile?.storefrontName ?? listing.seller.name;
   const rating = listing.seller.shopSellerProfile?.avgRating ?? null;
   const isSoldOut = listing.quantity <= 0 || listing.status === 'SOLD';
+  const boostedDate = listing.boostedUntil
+    ? new Date(listing.boostedUntil as string | Date)
+    : null;
+  const isBoosted = boostedDate ? boostedDate > new Date() : false;
 
   return (
     <Link
@@ -115,6 +120,32 @@ export default function ShopListingCard({ listing }: Props) {
             }}
           >
             Sold out
+          </div>
+        )}
+        {isBoosted && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              padding: '3px 8px',
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              background: 'linear-gradient(135deg, var(--accent), var(--primary))',
+              color: '#fff',
+              borderRadius: 999,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+            aria-label='Boosted listing'
+          >
+            <svg width='10' height='10' viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'>
+              <path d='M13 2L4.09 12.97a.5.5 0 00.39.81H11l-2 8 9-11.5a.5.5 0 00-.39-.81H12l1-7z' />
+            </svg>
+            Boosted
           </div>
         )}
       </div>
