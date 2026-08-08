@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
+import { disputeStatusLabel } from '@/lib/shop/service';
 import styles from './disputes.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -60,15 +61,15 @@ export default async function MyDisputesPage() {
   return (
     <div className={styles.wrap}>
       <PageHeader
-        title='Disputes'
-        subtitle='Track order disputes you opened or that involve you.'
+        title='Order Issues'
+        subtitle='Problems you reported on orders, or ones that involve you.'
         icon={<Scale size={18} aria-hidden='true' />}
       />
       {disputes.length === 0 ? (
         <EmptyState
           icon={<Scale size={36} />}
-          title='No disputes'
-          description='If something goes wrong with an order, you can open a dispute from the order detail page.'
+          title='No issues reported'
+          description='If something goes wrong with an order — wrong item, never delivered, condition mismatch — you can report it from the order detail page.'
         />
       ) : (
         <ul className={styles.list}>
@@ -91,7 +92,7 @@ export default async function MyDisputesPage() {
                     <div className={styles.rowReason}>{d.reason}</div>
                   </div>
                   <Badge tone={STATUS_TONE[d.status] ?? 'neutral'}>
-                    {d.status.replace(/_/g, ' ').toLowerCase()}
+                    {disputeStatusLabel(d.status)}
                   </Badge>
                 </Link>
               </li>

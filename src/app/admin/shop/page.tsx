@@ -119,7 +119,7 @@ export default async function AdminShopOverviewPage() {
           href='/admin/shop/listings'
         />
         <KPI
-          label='Open disputes'
+          label='Open issues'
           value={String(openDisputes)}
           tone={openDisputes > 0 ? 'danger' : 'neutral'}
           icon={<Scale size={18} />}
@@ -191,11 +191,11 @@ export default async function AdminShopOverviewPage() {
 
         <section>
           <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 600, margin: '0 0 var(--space-2) 0' }}>
-            Open disputes
+            Open issues
           </h2>
           {recentDisputes.length === 0 ? (
             <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', padding: 'var(--space-3)' }}>
-              No open disputes. 🎉
+              No open issues. 🎉
             </p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

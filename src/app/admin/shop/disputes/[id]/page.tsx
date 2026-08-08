@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import AdminDisputeResolver from '@/components/shop/AdminDisputeResolver';
-import { formatBDT } from '@/lib/shop/service';
+import { formatBDT, disputeStatusLabel } from '@/lib/shop/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,10 +80,10 @@ export default async function AdminDisputeDetailPage({ params }: PageProps) {
       <PageHeader
         title={
           <Link href='/admin/shop/disputes' style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: 'var(--text-sm)', color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500 }}>
-            <ArrowLeft size={16} aria-hidden='true' /> Back to Disputes
+            <ArrowLeft size={16} aria-hidden='true' /> Back to Issues
           </Link>
         }
-        actions={<Badge tone={STATUS_TONE[dispute.status] ?? 'neutral'}>{dispute.status.replace(/_/g, ' ').toLowerCase()}</Badge>}
+        actions={<Badge tone={STATUS_TONE[dispute.status] ?? 'neutral'}>{disputeStatusLabel(dispute.status)}</Badge>}
       />
 
       <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
@@ -117,7 +117,7 @@ export default async function AdminDisputeDetailPage({ params }: PageProps) {
       </div>
 
       <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-2)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-        <Scale size={14} aria-hidden='true' /> Thread
+        <Scale size={14} aria-hidden='true' /> Conversation
       </h3>
       <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 var(--space-4) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {dispute.messages.map((m) => {

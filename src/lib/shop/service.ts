@@ -162,3 +162,43 @@ export function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.slice(0, max - 1).trimEnd() + '…';
 }
+
+/**
+ * Friendly status label for ShopOrder status badges.
+ *
+ * Most statuses map cleanly via `replace(/_/g, ' ').toLowerCase()`, but
+ * `DISPUTED` → "disputed" reads as jargon to students. This helper swaps
+ * it for "issue open". All other statuses pass through the default
+ * transformation.
+ */
+export function orderStatusLabel(status: string): string {
+  if (status === 'DISPUTED') return 'issue open';
+  return status.replace(/_/g, ' ').toLowerCase();
+}
+
+/**
+ * Friendly status label for ShopDispute status badges.
+ *
+ * Maps the internal dispute status values to student-friendly copy.
+ * Used on the disputes list + detail pages + admin.
+ */
+export function disputeStatusLabel(status: string): string {
+  switch (status) {
+    case 'OPEN':
+      return 'open';
+    case 'AWAITING_SELLER':
+      return 'waiting on seller';
+    case 'AWAITING_BUYER':
+      return 'waiting on buyer';
+    case 'RESOLVED_BUYER':
+      return 'resolved · buyer refunded';
+    case 'RESOLVED_SELLER':
+      return 'resolved · seller paid';
+    case 'ESCALATED':
+      return 'escalated';
+    case 'CLOSED':
+      return 'closed';
+    default:
+      return status.replace(/_/g, ' ').toLowerCase();
+  }
+}

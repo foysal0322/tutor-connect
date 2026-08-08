@@ -3,7 +3,7 @@ import { ShoppingBag } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
-import { formatBDT } from '@/lib/shop/service';
+import { formatBDT, orderStatusLabel } from '@/lib/shop/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,7 +99,7 @@ export default async function AdminShopOrdersPage() {
                   <td style={{ ...td, fontVariantNumeric: 'tabular-nums', color: 'var(--text-muted)' }}>{formatBDT(o.commissionBdt)}</td>
                   <td style={td}>
                     <Badge tone={STATUS_TONE[o.status] ?? 'neutral'}>
-                      {o.status.replace(/_/g, ' ').toLowerCase()}
+                      {orderStatusLabel(o.status)}
                     </Badge>
                   </td>
                   <td style={{ ...td, color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>

@@ -5,7 +5,8 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
 import {
   FormPage,
   FormCard,
@@ -28,6 +29,7 @@ export default function SignInForm() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   function validate(identifier: string, password: string): boolean {
@@ -91,6 +93,11 @@ export default function SignInForm() {
         return;
       }
 
+      // Show a dedicated "redirecting" card before navigating. Without this,
+      // the form unmounts into blank marketing chrome (just the footer) while
+      // /dashboard's server components resolve — the gap the user reported.
+      // Keeping this surface mounted bridges the route transition.
+      setRedirecting(true);
       router.push(callbackUrl);
       router.refresh();
     } catch (err) {
@@ -100,6 +107,34 @@ export default function SignInForm() {
       setLoading(false);
       console.error('Sign in error:', err);
     }
+  }
+
+  if (redirecting) {
+    return (
+      <FormPage maxWidth="narrow">
+        <FormCard
+          icon={<ShieldCheck size={28} />}
+          title="Signed in"
+          subtitle="Taking you to your dashboard…"
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '1.5rem 0 0.5rem',
+            }}
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <LoadingSpinner size="md" color="var(--primary)" />
+            <span style={{ color: 'var(--muted)' }}>
+              Securing your session and loading your dashboard.
+            </span>
+          </div>
+        </FormCard>
+      </FormPage>
+    );
   }
 
   return (

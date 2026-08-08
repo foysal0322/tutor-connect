@@ -236,8 +236,8 @@ export async function notifyShopEvent(
         if (counterpartyId) {
           await createNotification(
             counterpartyId,
-            'Dispute opened',
-            `A dispute was opened on "${p.listingTitle ?? 'an order'}". Admin will review.`,
+            'Problem reported',
+            `A problem was reported on "${p.listingTitle ?? 'an order'}". An admin will review it.`,
             actionUrl(p.orderId),
           );
         }
@@ -254,8 +254,8 @@ export async function notifyShopEvent(
         for (const uid of [p.buyerId, p.sellerId].filter(Boolean) as string[]) {
           await createNotification(
             uid,
-            'Dispute resolved',
-            `The dispute on "${p.listingTitle ?? 'an order'}" has been resolved by admin.`,
+            'Issue resolved',
+            `The issue on "${p.listingTitle ?? 'an order'}" has been resolved by admin.`,
             actionUrl(p.orderId),
           );
         }

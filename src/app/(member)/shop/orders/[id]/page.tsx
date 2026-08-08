@@ -8,7 +8,7 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import OrderActions from '@/components/shop/OrderActions';
 import OpenDisputeButton from '@/components/shop/OpenDisputeButton';
 import { getOrderForUser } from '@/lib/shop/orders-queries';
-import { formatBDT } from '@/lib/shop/service';
+import { formatBDT, orderStatusLabel } from '@/lib/shop/service';
 import styles from './order.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +80,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
         }
         actions={
           <Badge tone={STATUS_TONE[order.status] ?? 'neutral'}>
-            {order.status.replace(/_/g, ' ').toLowerCase()}
+            {orderStatusLabel(order.status)}
           </Badge>
         }
       />

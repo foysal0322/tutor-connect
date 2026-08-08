@@ -26,7 +26,7 @@ export default function OpenDisputeButton({ orderId }: Props) {
     }
     if (
       !confirm(
-        'Open a dispute?\n\nAdmin will review the order and respond. The seller will be notified.',
+        'Report this problem?\n\nAn admin will review the order and respond. The other party will be notified.',
       )
     ) {
       return;
@@ -58,7 +58,7 @@ export default function OpenDisputeButton({ orderId }: Props) {
         className={styles.openBtn}
         onClick={() => setOpen(true)}
       >
-        <Scale size={14} aria-hidden='true' /> Open a dispute
+        <Scale size={14} aria-hidden='true' /> Report a problem
       </button>
     );
   }
@@ -102,7 +102,7 @@ export default function OpenDisputeButton({ orderId }: Props) {
           onClick={handleOpen}
           disabled={loading}
         >
-          {loading ? 'Opening…' : 'Submit dispute'}
+          {loading ? 'Sending…' : 'Submit report'}
         </button>
       </div>
     </div>

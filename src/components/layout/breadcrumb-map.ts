@@ -54,7 +54,7 @@ export const ROUTE_TITLES: Record<string, string> = {
   "/shop/selling/new": "New Listing",
   "/shop/orders": "My Orders",
   "/shop/saved": "Saved",
-  "/shop/disputes": "Disputes",
+  "/shop/disputes": "Issues",
   "/shop/listing": "Listing",
   "/shop/category": "Category",
   "/shop/seller": "Seller",

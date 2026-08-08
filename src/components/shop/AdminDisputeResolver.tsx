@@ -38,7 +38,7 @@ export default function AdminDisputeResolver({ disputeId, sellerAlreadyPaid }: P
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h3 className={styles.heading}>Resolve dispute</h3>
+      <h3 className={styles.heading}>Resolve this issue</h3>
 
       {sellerAlreadyPaid && (
         <div className={styles.warn}>

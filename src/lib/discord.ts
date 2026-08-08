@@ -215,7 +215,7 @@ export const notifyShopDispute = async (details: {
 }) => {
   const emoji = details.kind === "opened" ? "⚠️" : "✅";
   const title =
-    details.kind === "opened" ? "Shop Dispute Opened" : "Shop Dispute Resolved";
+    details.kind === "opened" ? "Shop Issue Reported" : "Shop Issue Resolved";
   const color = details.kind === "opened" ? 0xf1c40f : 0x2ecc71;
   await sendWebhook(WEBHOOK_2, `${emoji} **${title}**`, [
     {

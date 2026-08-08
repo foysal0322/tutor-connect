@@ -3,6 +3,7 @@ import { Scale } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { disputeStatusLabel } from '@/lib/shop/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,15 +61,15 @@ export default async function AdminShopDisputesPage() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 var(--space-4)' }}>
       <PageHeader
-        title='Disputes'
-        subtitle='Resolve open disputes; refund buyer or pay seller.'
+        title='Issues'
+        subtitle='Resolve reported problems — refund the buyer or pay the seller.'
         icon={<Scale size={18} aria-hidden='true' />}
       />
       <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'var(--surface-2)' }}>
-              <th style={th}>Dispute</th>
+              <th style={th}>Issue</th>
               <th style={th}>Item</th>
               <th style={th}>Parties</th>
               <th style={th}>Reason</th>
@@ -108,7 +109,7 @@ export default async function AdminShopDisputesPage() {
                   </td>
                   <td style={td}>
                     <Badge tone={STATUS_TONE[d.status] ?? 'neutral'}>
-                      {d.status.replace(/_/g, ' ').toLowerCase()}
+                      {disputeStatusLabel(d.status)}
                     </Badge>
                   </td>
                   <td style={{ ...td, color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>

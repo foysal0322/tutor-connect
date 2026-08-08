@@ -67,7 +67,7 @@ export default function DisputeThread({
       <div
         className={styles.thread}
         aria-live='polite'
-        aria-label='Dispute messages'
+        aria-label='Issue conversation'
       >
         {messages.map((m) => (
           <div

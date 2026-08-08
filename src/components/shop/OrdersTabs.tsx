@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
-import { formatBDT } from '@/lib/shop/service';
+import { formatBDT, orderStatusLabel } from '@/lib/shop/service';
 import styles from './OrdersTabs.module.css';
 
 export interface OrderRow {
@@ -128,7 +128,7 @@ export default function OrdersTabs({
                 </div>
                 <div className={styles.rowSide}>
                   <Badge tone={STATUS_TONE[o.status] ?? 'neutral'}>
-                    {o.status.replace(/_/g, ' ').toLowerCase()}
+                    {orderStatusLabel(o.status)}
                   </Badge>
                   <div className={styles.rowAmount}>
                     {activeTab === 'buying'

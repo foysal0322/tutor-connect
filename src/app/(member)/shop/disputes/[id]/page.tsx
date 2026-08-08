@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import DisputeThread from '@/components/shop/DisputeThread';
+import { disputeStatusLabel } from '@/lib/shop/service';
 import styles from './dispute.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -86,12 +87,12 @@ export default async function DisputeDetailPage({ params }: PageProps) {
       <PageHeader
         title={
           <Link href='/shop/disputes' className={styles.backLink}>
-            <ArrowLeft size={16} aria-hidden='true' /> Back to Disputes
+            <ArrowLeft size={16} aria-hidden='true' /> Back to Issues
           </Link>
         }
         actions={
           <Badge tone={STATUS_TONE[dispute.status] ?? 'neutral'}>
-            {dispute.status.replace(/_/g, ' ').toLowerCase()}
+            {disputeStatusLabel(dispute.status)}
           </Badge>
         }
       />
