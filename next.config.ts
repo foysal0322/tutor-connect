@@ -61,6 +61,22 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      // Service worker: never cache the SW file itself so clients always pick up
+      // the latest version, and pin its content type. Matches the Next.js PWA
+      // guide. The global security headers above also apply to /sw.js.
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
     ];
   },
 

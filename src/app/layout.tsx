@@ -3,6 +3,7 @@ import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { ToastProvider } from "@/components/ToastProvider";
 import VisitorTracker from "@/components/VisitorTracker";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
   title: "nsuOne",
   description:
     "Find private tutors for specific courses and topics at North South University.",
-  metadataBase: new URL(process.env.NEXTAUTH_URL || "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXTAUTH_URL ||
+      "http://localhost:3000",
+  ),
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -48,6 +53,7 @@ export default function RootLayout({
           <ThemeProvider>
             <ToastProvider>
               <VisitorTracker />
+              <ServiceWorkerRegister />
               <NextTopLoader color='var(--primary)' showSpinner={false} />
               <main id='main' className='site-main'>
                 {children}
