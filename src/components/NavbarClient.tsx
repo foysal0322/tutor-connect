@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Store, Download } from "lucide-react";
+import { LayoutDashboard, Store } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import UserMenu from "./UserMenu";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -94,15 +94,6 @@ export default function NavbarClient({ session }: { session: any }) {
               Become a Tutor
             </Link>
           )}
-          <Link
-            href='/download'
-            className={activeClass("/download")}
-            aria-current={isActive("/download") ? "page" : undefined}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <Download size={14} aria-hidden='true' style={{ marginRight: 4, verticalAlign: '-2px' }} />
-            Download app
-          </Link>
           <Link
             href='/tutorial'
             className={activeClass("/tutorial")}
