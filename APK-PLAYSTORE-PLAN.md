@@ -11,6 +11,41 @@ installable Android app and publish it on the Google Play Store.
 
 ---
 
+## Direct download (interim path) — IMPLEMENTED
+
+Before going to the Play Store, the site now ships a **`/download` page** that
+hands users the Android app directly and shows the right install path for their
+device:
+
+- **Android (Chrome)** — captures `beforeinstallprompt` and shows an
+  `Install nsuOne` button; falls back to a `.apk` download link.
+- **Android (other browsers)** — direct `.apk` download + sideload steps.
+- **iOS / iPadOS** — `Add to Home Screen` instructions (no `.apk` exists).
+- **Desktop** — QR code of `/download` plus a copy-link button.
+
+Files (this repo):
+- `src/app/(marketing)/download/page.tsx` — server component, metadata,
+  canonical `/download`.
+- `src/app/(marketing)/download/DownloadClient.tsx` — device detection,
+  `beforeinstallprompt` capture, per-platform UX.
+- `src/app/(marketing)/download/download.module.css` — page styles.
+- `src/components/QRCode.tsx` — wrapper around `qrcode.react`.
+- `src/components/NavbarClient.tsx` + `src/components/Footer.tsx` —
+  `Download app` link.
+- `.env.example` — `NEXT_PUBLIC_APK_DOWNLOAD_URL`, `NEXT_PUBLIC_APP_VERSION`.
+
+How the `.apk` is sourced (external, one-time, repeat on major changes):
+1. Build the `.apk` on [PWABuilder.com](https://www.pwabuilder.com) against
+   the live URL → "Package for Stores → Android".
+2. Attach it to a **GitHub Release** on this repo (tag e.g. `android-v1.0.0`).
+3. Set `NEXT_PUBLIC_APK_DOWNLOAD_URL` in Vercel (and `.env`) to the release
+   URL; bump `NEXT_PUBLIC_APP_VERSION`.
+
+The Play Store plan below remains the eventual goal — the direct-download page
+is the interim distribution path.
+
+---
+
 ## TL;DR (the recommended path)
 
 Your app is already a responsive HTTPS web app. The easiest, cheapest, and

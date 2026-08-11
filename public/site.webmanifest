@@ -4,10 +4,12 @@
   "short_name": "nsuOne",
   "description": "Find private tutors for specific courses and topics at North South University.",
   "lang": "en",
+  "dir": "auto",
   "categories": ["education"],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#4f46e5",
   "background_color": "#ffffff",
   "icons": [
@@ -24,10 +26,45 @@
       "purpose": "any"
     },
     {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "src": "/maskable_icon.png",
+      "sizes": "538x538",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/nsuone_screenshot_1.jpg",
+      "sizes": "1260x2800",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Find a tutor for any NSU course"
+    },
+    {
+      "src": "/nsuone_screenshot_2.jpg",
+      "sizes": "1260x2800",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Browse the One Shop campus marketplace"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find a Tutor",
+      "short_name": "Find Tutor",
+      "url": "/find-tutor",
+      "description": "Search tutors by course or topic"
+    },
+    {
+      "name": "One Shop",
+      "short_name": "Shop",
+      "url": "/shop",
+      "description": "Browse the campus marketplace"
+    },
+    {
+      "name": "Free Consultancy",
+      "short_name": "Consultancy",
+      "url": "/consultancy"
     }
   ]
 }

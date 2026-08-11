@@ -44,6 +44,7 @@ const PLATFORM_LINKS: LinkItem[] = [
 ];
 
 const SUPPORT_LINKS: LinkItem[] = [
+  { label: 'Download app', href: '/download' },
   { label: 'Tutorial', href: '/tutorial' },
   { label: 'Contact Us', href: '/contact' },
   { label: 'Refund Policy', href: '/refund-policy' },
