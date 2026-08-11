@@ -3,8 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "REPLACE_WITH_PACKAGE_NAME",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_SHA256_FINGERPRINT"]
+      "package_name": "com.nsuone.www.twa",
+      "sha256_cert_fingerprints": [
+        "46:59:40:19:7D:6A:AD:F9:FA:8C:10:54:0E:5F:E8:15:05:2E:90:F4:59:5C:D5:30:8A:1C:C0:79:B4:E9:CA:C6"
+      ]
     }
   }
 ]
