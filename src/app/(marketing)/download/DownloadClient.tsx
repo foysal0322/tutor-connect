@@ -12,15 +12,15 @@ import {
   Shield,
   RefreshCw,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
 import QRCode from "@/components/QRCode";
 import s from "./download.module.css";
 
 type Platform = "android-chrome" | "android-other" | "ios" | "desktop" | "unknown";
+type MobilePlatform = "android-chrome" | "android-other" | "ios";
 
-// `beforeinstallprompt` is not in the default DOM lib types — declare a minimal
-// shape so TS is happy without pulling in @types that may not match.
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -57,7 +57,6 @@ function detectPlatform(): Platform {
   const ua = navigator.userAgent.toLowerCase();
   const isAndroid = /android/.test(ua);
   const isIOS = /iphone|ipad|ipod/.test(ua);
-  // iPadOS 13+ reports as Mac, but has no mouse pointer + multi-touch.
   const isIPadDesktop =
     /macintosh/.test(ua) && "ontouchend" in document && navigator.maxTouchPoints > 1;
 
@@ -65,9 +64,17 @@ function detectPlatform(): Platform {
     return /chrome|crios|edge/.test(ua) ? "android-chrome" : "android-other";
   }
   if (isIOS || isIPadDesktop) return "ios";
-  // Anything else with a fine pointer + not mobile → desktop.
   if (!/mobile|tablet/.test(ua)) return "desktop";
   return "unknown";
+}
+
+function isRunningStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const nav = navigator as Navigator & { standalone?: boolean };
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    nav.standalone === true
+  );
 }
 
 export default function DownloadClient() {
@@ -76,18 +83,17 @@ export default function DownloadClient() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState("");
+  const [standalone, setStandalone] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  // Detect platform once on mount (SSR-safe).
   useEffect(() => {
     setPlatform(detectPlatform());
     setPageUrl(window.location.href.split("#")[0]);
+    setStandalone(isRunningStandalone());
   }, []);
 
-  // Capture the Android-Chrome install prompt so we can trigger it from our
-  // own button instead of relying on the browser's timing.
   useEffect(() => {
     if (platform !== "android-chrome") return;
-
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallEvent(e as BeforeInstallPromptEvent);
@@ -102,6 +108,7 @@ export default function DownloadClient() {
     const choice = await installEvent.userChoice;
     if (choice.outcome === "accepted") {
       toast.success("Install started — check your home screen when it finishes.");
+      setDismissed(true);
     }
     setInstallEvent(null);
   }
@@ -125,8 +132,22 @@ export default function DownloadClient() {
     }
   }
 
+  const isMobile =
+    platform === "android-chrome" || platform === "android-other" || platform === "ios";
+  const showBanner = isMobile && !standalone && !dismissed;
+
   return (
     <div className={s.body}>
+      {showBanner && (
+        <MobileBanner
+          platform={platform as MobilePlatform}
+          canInstall={!!installEvent}
+          onInstall={handleInstallClick}
+          onApk={handleApkClick}
+          onDismiss={() => setDismissed(true)}
+        />
+      )}
+
       <Hero
         platform={platform}
         url={pageUrl}
@@ -136,21 +157,103 @@ export default function DownloadClient() {
 
       <FeatureStrip />
 
-      {/* Platform-specific CTA block. Desktop's CTA lives in the hero (QR). */}
-      {platform === "android-chrome" && (
-        <AndroidChromeBlock
-          canInstall={!!installEvent}
-          onInstall={handleInstallClick}
-          onApk={handleApkClick}
-        />
-      )}
-
-      {platform === "android-other" && <AndroidOtherBlock onApk={handleApkClick} />}
-
-      {platform === "ios" && <IosBlock />}
-
       <ApkNote />
     </div>
+  );
+}
+
+function MobileBanner({
+  platform,
+  canInstall,
+  onInstall,
+  onApk,
+  onDismiss,
+}: {
+  platform: MobilePlatform;
+  canInstall: boolean;
+  onInstall: () => void;
+  onApk: () => void;
+  onDismiss: () => void;
+}) {
+  const isAndroid = platform !== "ios";
+  const title = isAndroid ? "Install nsuOne" : "Add to Home Screen";
+  const message = isAndroid
+    ? "One tap — adds to your home screen. No Play Store visit required."
+    : "Full-screen, with its own icon — just like a native app.";
+
+  return (
+    <section className={s.banner} role="region" aria-label="Install nsuOne">
+      <span className={s.bannerGlow} aria-hidden="true" />
+
+      <button
+        type="button"
+        className={s.bannerClose}
+        onClick={onDismiss}
+        aria-label="Dismiss install banner"
+      >
+        <X size={16} />
+      </button>
+
+      <div className={s.bannerTop}>
+        <span className={s.bannerIcon} aria-hidden="true">
+          <Smartphone size={22} />
+        </span>
+        <div className={s.bannerBody}>
+          <strong className={s.bannerTitle}>{title}</strong>
+          <p className={s.bannerMessage}>{message}</p>
+        </div>
+
+        {isAndroid && (
+          <div className={s.bannerCtaWrap}>
+            {platform === "android-chrome" && canInstall ? (
+              <button type="button" onClick={onInstall} className={s.bannerCta}>
+                <Download size={16} aria-hidden="true" />
+                Install
+              </button>
+            ) : (
+              <a
+                href={APK_URL || "#"}
+                onClick={onApk}
+                download
+                className={s.bannerCta}
+              >
+                <Download size={16} aria-hidden="true" />
+                Download
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {!isAndroid && (
+        <ol className={s.bannerSteps}>
+          <li className={s.bannerStep}>
+            <span className={s.bannerStepIcon} aria-hidden="true">
+              <Share size={12} />
+            </span>
+            <span>Tap <strong>Share</strong></span>
+          </li>
+          <li className={s.bannerStepArrow} aria-hidden="true">
+            <ChevronRight size={12} />
+          </li>
+          <li className={s.bannerStep}>
+            <span className={s.bannerStepIcon} aria-hidden="true">
+              <Plus size={12} />
+            </span>
+            <span><strong>Add to Home Screen</strong></span>
+          </li>
+          <li className={s.bannerStepArrow} aria-hidden="true">
+            <ChevronRight size={12} />
+          </li>
+          <li className={s.bannerStep}>
+            <span className={s.bannerStepIcon} aria-hidden="true">
+              <Check size={12} />
+            </span>
+            <span>Tap <strong>Add</strong></span>
+          </li>
+        </ol>
+      )}
+    </section>
   );
 }
 
@@ -284,158 +387,6 @@ function FeatureStrip({ compact = false }: { compact?: boolean }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function AndroidChromeBlock({
-  canInstall,
-  onInstall,
-  onApk,
-}: {
-  canInstall: boolean;
-  onInstall: () => void;
-  onApk: () => void;
-}) {
-  return (
-    <section className={s.platformBlock}>
-      <BlockHeader
-        icon={<Download size={18} />}
-        title="Install on Android"
-        hint="Adds the app to your home screen. No Play Store visit required."
-      />
-      {canInstall ? (
-        <button
-          type="button"
-          onClick={onInstall}
-          className={`btn-primary btn-lg ${s.primaryBtn}`}
-        >
-          <Download size={18} aria-hidden="true" />
-          Install nsuOne
-        </button>
-      ) : (
-        <a
-          href={APK_URL || "#"}
-          onClick={onApk}
-          className={`btn-primary btn-lg ${s.primaryBtn}`}
-          download
-        >
-          <Download size={18} aria-hidden="true" />
-          Download the Android app
-        </a>
-      )}
-      <details className={s.fallback}>
-        <summary>Prefer the .apk file?</summary>
-        <p className={s.hint}>
-          {APK_URL ? (
-            <>
-              <a href={APK_URL} onClick={onApk} download className={s.inlineLink}>
-                Download .apk directly
-              </a>{" "}
-              — you may need to allow &ldquo;install unknown apps&rdquo; for your
-              browser in Settings.
-            </>
-          ) : (
-            <>The standalone .apk isn&rsquo;t published yet.</>
-          )}
-        </p>
-      </details>
-    </section>
-  );
-}
-
-function AndroidOtherBlock({ onApk }: { onApk: () => void }) {
-  return (
-    <section className={s.platformBlock}>
-      <BlockHeader
-        icon={<Download size={18} />}
-        title="Install on Android"
-        hint="Your browser blocks the one-tap install flow, but the .apk works the same."
-      />
-      <a
-        href={APK_URL || "#"}
-        onClick={onApk}
-        className={`btn-primary btn-lg ${s.primaryBtn}`}
-        download
-      >
-        <Download size={18} aria-hidden="true" />
-        Download the .apk
-      </a>
-      <Stepper
-        steps={[
-          { icon: <Download size={14} />, text: "Open the downloaded file." },
-          {
-            text: "If asked, allow \u201cinstall unknown apps\u201d for your browser in Settings.",
-          },
-          { text: "Tap Install." },
-        ]}
-      />
-    </section>
-  );
-}
-
-function IosBlock() {
-  return (
-    <section className={s.platformBlock}>
-      <BlockHeader
-        icon={<Smartphone size={18} />}
-        title="Add to Home Screen"
-        hint="iOS doesn't support Android apps, but nsuOne works great as a home-screen web app — full-screen, with its own icon."
-      />
-      <Stepper
-        steps={[
-          {
-            icon: <Share size={14} />,
-            text: "Tap the Share icon in Safari's toolbar.",
-          },
-          { text: "Scroll and tap Add to Home Screen." },
-          {
-            icon: <Plus size={14} />,
-            text: "Tap Add.",
-          },
-        ]}
-      />
-    </section>
-  );
-}
-
-function BlockHeader({
-  icon,
-  title,
-  hint,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  hint: string;
-}) {
-  return (
-    <div className={s.blockHeader}>
-      <span className={s.blockIcon} aria-hidden="true">
-        {icon}
-      </span>
-      <div>
-        <h2 className={s.blockTitle}>{title}</h2>
-        <p className={s.hint}>{hint}</p>
-      </div>
-    </div>
-  );
-}
-
-function Stepper({
-  steps,
-}: {
-  steps: { icon?: React.ReactNode; text: React.ReactNode }[];
-}) {
-  return (
-    <ol className={s.steps}>
-      {steps.map((step, i) => (
-        <li key={i} className={s.step}>
-          <span className={s.stepNum} aria-hidden="true">
-            {step.icon ?? i + 1}
-          </span>
-          <span className={s.stepText}>{step.text}</span>
-        </li>
-      ))}
-    </ol>
   );
 }
 
