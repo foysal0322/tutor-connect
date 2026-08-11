@@ -127,11 +127,16 @@ export default function DownloadClient() {
 
   return (
     <div className={s.body}>
-      <Hero platform={platform} />
+      <Hero
+        platform={platform}
+        url={pageUrl}
+        copied={copied}
+        onCopy={handleCopyLink}
+      />
 
       <FeatureStrip />
 
-      {/* Platform-specific CTA block. */}
+      {/* Platform-specific CTA block. Desktop's CTA lives in the hero (QR). */}
       {platform === "android-chrome" && (
         <AndroidChromeBlock
           canInstall={!!installEvent}
@@ -144,19 +149,22 @@ export default function DownloadClient() {
 
       {platform === "ios" && <IosBlock />}
 
-      {platform === "desktop" && (
-        <DesktopBlock url={pageUrl} copied={copied} onCopy={handleCopyLink} />
-      )}
-
-      {/* Desktop also gets a hint about sharing, mobile doesn't need it twice. */}
-      {platform === "desktop" && <FeatureStrip compact />}
-
       <ApkNote />
     </div>
   );
 }
 
-function Hero({ platform }: { platform: Platform }) {
+function Hero({
+  platform,
+  url,
+  copied,
+  onCopy,
+}: {
+  platform: Platform;
+  url: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
   const label = platformLabel(platform);
 
   return (
@@ -175,8 +183,45 @@ function Hero({ platform }: { platform: Platform }) {
         </p>
       </div>
 
-      <PhoneMockup />
+      {platform === "desktop" ? (
+        <QrFocus url={url} copied={copied} onCopy={onCopy} />
+      ) : (
+        <PhoneMockup />
+      )}
     </header>
+  );
+}
+
+function QrFocus({
+  url,
+  copied,
+  onCopy,
+}: {
+  url: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className={s.qrFocus}>
+      <div className={s.qrFocusFrame}>
+        <span /><span /><span /><span />
+        <div className={s.qrFocusInner}>
+          {url ? (
+            <QRCode value={url} size={220} />
+          ) : (
+            <div className={s.qrPlaceholder} aria-hidden="true" />
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onCopy}
+        className={`btn-secondary ${s.copyBtn}`}
+      >
+        {copied ? <Check size={16} /> : <Copy size={16} />}
+        {copied ? "Copied" : "Copy link instead"}
+      </button>
+    </div>
   );
 }
 
@@ -349,52 +394,6 @@ function IosBlock() {
           },
         ]}
       />
-    </section>
-  );
-}
-
-function DesktopBlock({
-  url,
-  copied,
-  onCopy,
-}: {
-  url: string;
-  copied: boolean;
-  onCopy: () => void;
-}) {
-  return (
-    <section className={`${s.platformBlock} ${s.desktopBlock}`}>
-      <BlockHeader
-        icon={<Smartphone size={18} />}
-        title="Get it on your phone"
-        hint="Scan the code with your phone camera to open this page on mobile, then install from there."
-      />
-      <div className={s.desktopBody}>
-        <div className={s.qrWrap}>
-          {url ? (
-            <QRCode value={url} size={176} />
-          ) : (
-            <div className={s.qrPlaceholder} aria-hidden="true" />
-          )}
-        </div>
-        <div className={s.desktopRight}>
-          <div className={s.qrCorners} aria-hidden="true">
-            <span /><span /><span /><span />
-          </div>
-          <p className={s.qrCaption}>
-            Point your camera at the code. The link opens this page on your phone —
-            no cable or account needed.
-          </p>
-          <button
-            type="button"
-            onClick={onCopy}
-            className={`btn-secondary ${s.copyBtn}`}
-          >
-            {copied ? <Check size={16} /> : <Copy size={16} />}
-            {copied ? "Copied" : "Copy this page link"}
-          </button>
-        </div>
-      </div>
     </section>
   );
 }
