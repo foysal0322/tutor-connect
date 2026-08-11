@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Share, Plus, Copy, Check, ChevronRight } from "lucide-react";
+import {
+  Download,
+  Share,
+  Plus,
+  Copy,
+  Check,
+  Smartphone,
+  Zap,
+  Shield,
+  RefreshCw,
+  ChevronRight,
+} from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
 import QRCode from "@/components/QRCode";
 import s from "./download.module.css";
@@ -17,6 +28,29 @@ type BeforeInstallPromptEvent = Event & {
 
 const APK_URL = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ?? "";
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+
+const FEATURES = [
+  {
+    icon: Zap,
+    title: "Instant",
+    blurb: "Loads in under a second",
+  },
+  {
+    icon: Smartphone,
+    title: "Full-screen",
+    blurb: "Native-feeling, no browser chrome",
+  },
+  {
+    icon: RefreshCw,
+    title: "Always up to date",
+    blurb: "New features land automatically",
+  },
+  {
+    icon: Shield,
+    title: "Lightweight",
+    blurb: "Tiny install, easy on storage",
+  },
+] as const;
 
 function detectPlatform(): Platform {
   if (typeof window === "undefined") return "unknown";
@@ -91,17 +125,13 @@ export default function DownloadClient() {
     }
   }
 
-  // Don't flash platform-specific UI during SSR/first paint.
-  if (platform === "unknown") {
-    return (
-      <div className={s.body}>
-        <ApkNote />
-      </div>
-    );
-  }
-
   return (
     <div className={s.body}>
+      <Hero platform={platform} />
+
+      <FeatureStrip />
+
+      {/* Platform-specific CTA block. */}
       {platform === "android-chrome" && (
         <AndroidChromeBlock
           canInstall={!!installEvent}
@@ -118,8 +148,97 @@ export default function DownloadClient() {
         <DesktopBlock url={pageUrl} copied={copied} onCopy={handleCopyLink} />
       )}
 
+      {/* Desktop also gets a hint about sharing, mobile doesn't need it twice. */}
+      {platform === "desktop" && <FeatureStrip compact />}
+
       <ApkNote />
     </div>
+  );
+}
+
+function Hero({ platform }: { platform: Platform }) {
+  const label = platformLabel(platform);
+
+  return (
+    <header className={s.hero}>
+      <div className={s.heroContent}>
+        <span className={s.badge}>
+          <span className={s.badgeDot} aria-hidden="true" />
+          {label}
+        </span>
+        <h1 className={s.title}>
+          Get the <span className={s.titleAccent}>nsuOne</span> app
+        </h1>
+        <p className={s.subtitle}>
+          Faster, full-screen, and built for your phone. Install in seconds — no app
+          store detour required.
+        </p>
+      </div>
+
+      <PhoneMockup />
+    </header>
+  );
+}
+
+function platformLabel(platform: Platform): string {
+  switch (platform) {
+    case "android-chrome":
+    case "android-other":
+      return "Android detected";
+    case "ios":
+      return "iPhone / iPad detected";
+    case "desktop":
+      return "Desktop — send to your phone";
+    default:
+      return "Install nsuOne";
+  }
+}
+
+function PhoneMockup() {
+  return (
+    <div className={s.phoneWrap} aria-hidden="true">
+      <div className={s.phone}>
+        <div className={s.phoneNotch} />
+        <div className={s.phoneScreen}>
+          <div className={s.phoneAppIcon}>
+            <Smartphone size={28} />
+          </div>
+          <div className={s.phoneAppName}>nsuOne</div>
+          <div className={s.phoneAppTag}>Campus marketplace</div>
+
+          <div className={s.phoneTileRow}>
+            <div className={s.phoneTile} />
+            <div className={s.phoneTile} />
+          </div>
+          <div className={s.phoneTileRow}>
+            <div className={s.phoneTile} />
+            <div className={s.phoneTile} />
+          </div>
+
+          <div className={s.phoneFAB}>
+            <Download size={16} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureStrip({ compact = false }: { compact?: boolean }) {
+  return (
+    <ul className={`${s.features} ${compact ? s.featuresCompact : ""}`}>
+      {FEATURES.map(({ icon: Icon, title, blurb }) => (
+        <li key={title} className={s.feature}>
+          <span className={s.featureIcon}>
+            <Icon size={18} aria-hidden="true" />
+          </span>
+          <span className={s.featureText}>
+            <span className={s.featureTitle}>{title}</span>
+            <span className={s.featureBlurb}>{blurb}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -134,26 +253,25 @@ function AndroidChromeBlock({
 }) {
   return (
     <section className={s.platformBlock}>
-      <h2 className={s.blockTitle}>Install on Android</h2>
+      <BlockHeader
+        icon={<Download size={18} />}
+        title="Install on Android"
+        hint="Adds the app to your home screen. No Play Store visit required."
+      />
       {canInstall ? (
-        <>
-          <button
-            type="button"
-            onClick={onInstall}
-            className={`btn-primary ${s.primaryBtn}`}
-          >
-            <Download size={18} aria-hidden="true" />
-            Install nsuOne
-          </button>
-          <p className={s.hint}>
-            Adds the app to your home screen. No Play Store visit required.
-          </p>
-        </>
+        <button
+          type="button"
+          onClick={onInstall}
+          className={`btn-primary btn-lg ${s.primaryBtn}`}
+        >
+          <Download size={18} aria-hidden="true" />
+          Install nsuOne
+        </button>
       ) : (
         <a
           href={APK_URL || "#"}
           onClick={onApk}
-          className={`btn-primary ${s.primaryBtn}`}
+          className={`btn-primary btn-lg ${s.primaryBtn}`}
           download
         >
           <Download size={18} aria-hidden="true" />
@@ -165,7 +283,7 @@ function AndroidChromeBlock({
         <p className={s.hint}>
           {APK_URL ? (
             <>
-              <a href={APK_URL} onClick={onApk} download>
+              <a href={APK_URL} onClick={onApk} download className={s.inlineLink}>
                 Download .apk directly
               </a>{" "}
               — you may need to allow &ldquo;install unknown apps&rdquo; for your
@@ -183,24 +301,29 @@ function AndroidChromeBlock({
 function AndroidOtherBlock({ onApk }: { onApk: () => void }) {
   return (
     <section className={s.platformBlock}>
-      <h2 className={s.blockTitle}>Install on Android</h2>
+      <BlockHeader
+        icon={<Download size={18} />}
+        title="Install on Android"
+        hint="Your browser blocks the one-tap install flow, but the .apk works the same."
+      />
       <a
         href={APK_URL || "#"}
         onClick={onApk}
-        className={`btn-primary ${s.primaryBtn}`}
+        className={`btn-primary btn-lg ${s.primaryBtn}`}
         download
       >
         <Download size={18} aria-hidden="true" />
         Download the .apk
       </a>
-      <ol className={s.steps}>
-        <li>Open the downloaded file.</li>
-        <li>
-          If asked, allow <strong>install unknown apps</strong> for your browser
-          in Settings.
-        </li>
-        <li>Tap Install.</li>
-      </ol>
+      <Stepper
+        steps={[
+          { icon: <Download size={14} />, text: "Open the downloaded file." },
+          {
+            text: "If asked, allow \u201cinstall unknown apps\u201d for your browser in Settings.",
+          },
+          { text: "Tap Install." },
+        ]}
+      />
     </section>
   );
 }
@@ -208,21 +331,24 @@ function AndroidOtherBlock({ onApk }: { onApk: () => void }) {
 function IosBlock() {
   return (
     <section className={s.platformBlock}>
-      <h2 className={s.blockTitle}>Add to Home Screen (iPhone / iPad)</h2>
-      <p className={s.hint}>
-        iOS doesn&rsquo;t support Android apps, but nsuOne works great as a
-        home-screen web app — full-screen, with its own icon.
-      </p>
-      <ol className={s.steps}>
-        <li>
-          <Share size={16} aria-hidden="true" /> Tap the <strong>Share</strong>{" "}
-          icon in Safari&rsquo;s toolbar.
-        </li>
-        <li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
-        <li>
-          <Plus size={16} aria-hidden="true" /> Tap <strong>Add</strong>.
-        </li>
-      </ol>
+      <BlockHeader
+        icon={<Smartphone size={18} />}
+        title="Add to Home Screen"
+        hint="iOS doesn't support Android apps, but nsuOne works great as a home-screen web app — full-screen, with its own icon."
+      />
+      <Stepper
+        steps={[
+          {
+            icon: <Share size={14} />,
+            text: "Tap the Share icon in Safari's toolbar.",
+          },
+          { text: "Scroll and tap Add to Home Screen." },
+          {
+            icon: <Plus size={14} />,
+            text: "Tap Add.",
+          },
+        ]}
+      />
     </section>
   );
 }
@@ -237,34 +363,89 @@ function DesktopBlock({
   onCopy: () => void;
 }) {
   return (
-    <section className={s.platformBlock}>
-      <h2 className={s.blockTitle}>Get it on your phone</h2>
-      <p className={s.hint}>
-        Scan the code below with your phone camera to open this page on mobile.
-      </p>
-      <div className={s.qrWrap}>
-        {url ? (
-          <QRCode value={url} size={176} />
-        ) : (
-          <div className={s.qrPlaceholder} aria-hidden="true" />
-        )}
+    <section className={`${s.platformBlock} ${s.desktopBlock}`}>
+      <BlockHeader
+        icon={<Smartphone size={18} />}
+        title="Get it on your phone"
+        hint="Scan the code with your phone camera to open this page on mobile, then install from there."
+      />
+      <div className={s.desktopBody}>
+        <div className={s.qrWrap}>
+          {url ? (
+            <QRCode value={url} size={176} />
+          ) : (
+            <div className={s.qrPlaceholder} aria-hidden="true" />
+          )}
+        </div>
+        <div className={s.desktopRight}>
+          <div className={s.qrCorners} aria-hidden="true">
+            <span /><span /><span /><span />
+          </div>
+          <p className={s.qrCaption}>
+            Point your camera at the code. The link opens this page on your phone —
+            no cable or account needed.
+          </p>
+          <button
+            type="button"
+            onClick={onCopy}
+            className={`btn-secondary ${s.copyBtn}`}
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+            {copied ? "Copied" : "Copy this page link"}
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        onClick={onCopy}
-        className={`btn-secondary ${s.copyBtn}`}
-      >
-        {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
-        {copied ? "Copied" : "Copy this page link"}
-      </button>
     </section>
+  );
+}
+
+function BlockHeader({
+  icon,
+  title,
+  hint,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <div className={s.blockHeader}>
+      <span className={s.blockIcon} aria-hidden="true">
+        {icon}
+      </span>
+      <div>
+        <h2 className={s.blockTitle}>{title}</h2>
+        <p className={s.hint}>{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function Stepper({
+  steps,
+}: {
+  steps: { icon?: React.ReactNode; text: React.ReactNode }[];
+}) {
+  return (
+    <ol className={s.steps}>
+      {steps.map((step, i) => (
+        <li key={i} className={s.step}>
+          <span className={s.stepNum} aria-hidden="true">
+            {step.icon ?? i + 1}
+          </span>
+          <span className={s.stepText}>{step.text}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
 function ApkNote() {
   return (
     <div className={s.note}>
-      <ChevronRight size={14} aria-hidden="true" />
+      <span className={s.noteIcon} aria-hidden="true">
+        <ChevronRight size={14} />
+      </span>
       <span>
         The Android app is the same site you&rsquo;re looking at now, wrapped to
         launch full-screen. Web updates appear instantly — no reinstall needed.
