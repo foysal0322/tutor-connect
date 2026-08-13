@@ -63,7 +63,8 @@
   max-width: 760px;
   margin: 0 auto;
   text-align: center;
-  padding: clamp(1.5rem, 3vw, 2.25rem) 1.5rem;
+  /* Fluid padding: tighter on small screens */
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 1.5rem);
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -130,8 +131,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  flex: 1 1 260px;
+  /* Prefer to grow while allowing the control to shrink; avoid a fixed
+     flex-basis so it is never reinterpreted as height in a column layout. */
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
 }
 
 .searchBox {
@@ -233,7 +237,8 @@
 .content {
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: 0 1.5rem 3rem;
+  /* Fluid horizontal padding to reduce space on smaller screens */
+  padding: 0 clamp(0.5rem, 3vw, 1.5rem) clamp(1rem, 4vw, 3rem);
 }
 
 /* ---------------------------------------------------------------------
@@ -257,7 +262,8 @@
   gap: var(--space-3);
   margin-top: -12px;
   background: #f8fafc;
-  padding: 10px;
+  /* fluid padding to reduce space on small devices */
+  padding: clamp(6px, 1.6vw, 12px);
 }
 
 .toolbarMain {
@@ -379,6 +385,30 @@
   color: var(--primary-hover);
 }
 
+/* Responsive adjustments for small screens: allow filter selects to shrink
+   and sit side-by-side so the placeholder/selected label remains readable. */
+@media (max-width: 520px) {
+  .toolbarControls {
+    padding: 8px;
+  }
+
+  .filters {
+    gap: 0.5rem;
+  }
+
+  .filterField {
+    flex: 1 1 48%;
+    min-width: 0; /* allow the child .form-select to shrink */
+  }
+
+  .filterField :global(.form-select),
+  .filterField :global(.form-input) {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 .clearAll {
   height: 44px;
   display: inline-flex;
@@ -425,7 +455,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: clamp(0.6rem, 1.2vw, 1.5rem);
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -1232,8 +1262,101 @@
     width: 100%;
     justify-content: center;
   }
-}
 
+  /* Make the tutor cards more compact and readable on small screens */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .cardTop {
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+  }
+
+  .tutorName {
+    font-size: 1rem;
+  }
+
+  .tutorDept {
+    font-size: 0.85rem;
+  }
+
+  .courseBlock {
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .courseName {
+    font-size: 0.95rem;
+  }
+
+  .stats {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.4rem;
+  }
+
+  .statCell {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .statLabel {
+    font-size: 0.68rem;
+  }
+
+  .statValue {
+    font-size: 0.85rem;
+  }
+
+  .trustRow {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+  }
+
+  .availFee {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .avail, .fee {
+    font-size: 0.9rem;
+  }
+
+  .cardFooter {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .cta {
+    font-size: 0.92rem;
+    padding: 0.45rem 0.6rem;
+  }
+
+  .reviewsBtn {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+}
 @media (max-width: 480px) {
   .heroTitle {
     font-size: 1.5rem;
@@ -1244,6 +1367,77 @@
   }
   .cgpaBadge {
     padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Small-device tweaks to undo over-compression and allow wrapping */
+@media (max-width: 500px) {
+  .card {
+    padding: 0.95rem;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tutorName,
+  .courseName,
+  .tutorDept {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .tutorName {
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+
+  .courseName,
+  .tutorDept {
+    font-size: 0.92rem;
+  }
+
+  .stats {
+    gap: 0.5rem;
+  }
+
+  /* Stack availability + fee to avoid cramped horizontal space */
+  .availFee {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  /* Make CTAs full-width to avoid overflow */
+  .cta,
+  .reviewsBtn,
+  .clearAll {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 0.75rem;
+  }
+
+  .tutorName {
+    font-size: 0.98rem;
+  }
+
+  .courseName {
+    font-size: 0.9rem;
+  }
+
+  .statLabel {
+    font-size: 0.66rem;
+  }
+
+  .cta {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
   }
 }
 
@@ -1291,6 +1485,92 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ---------------------------------------------------------------------
+   Fluid responsive adjustments (no explicit breakpoints)
+
+   These rules use `clamp`, flexible box wrapping and line-clamp to allow
+   the card layout to compress/grow automatically as the viewport changes
+   without depending on media query breakpoints. They intentionally live
+   after the other module rules so they override earlier hard values.
+--------------------------------------------------------------------- */
+
+/* Card sizing and spacing */
+.card {
+  padding: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+
+.grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: clamp(0.75rem, 1.6vw, 1.5rem);
+}
+
+/* Avatar and identity */
+.avatar {
+  width: clamp(36px, 6vw, 48px);
+  height: clamp(36px, 6vw, 48px);
+  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
+}
+
+.cardTop { gap: clamp(0.45rem, 1.2vw, 0.85rem); }
+
+/* Allow names and course titles to wrap up to 2 lines fluidly */
+.tutorName,
+.courseName {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  font-size: clamp(0.98rem, 1.2vw, 1.15rem);
+}
+
+.tutorDept {
+  font-size: clamp(0.8rem, 1vw, 0.95rem);
+  color: var(--text-muted);
+}
+
+/* Stats and meta — allow wrapping instead of forcing a single line */
+.stats {
+  display: flex;
+  gap: clamp(0.5rem, 1.2vw, 0.8rem);
+  flex-wrap: wrap;
+}
+.statCell { flex: 1 1 auto; min-width: 0; }
+.statLabel { font-size: clamp(0.62rem, 0.9vw, 0.78rem); }
+.statValue { font-size: clamp(0.82rem, 1vw, 0.95rem); }
+
+/* Availability + fee: prefer a horizontal layout but allow wrapping */
+.availFee {
+  display: flex;
+  gap: clamp(0.4rem, 1vw, 0.7rem);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.avail, .fee { font-size: clamp(0.86rem, 1vw, 1rem); }
+
+/* Footer actions: let buttons shrink and wrap; on narrow widths they
+   become full-width naturally because of available space. */
+.cardFooter {
+  display: flex;
+  gap: clamp(0.4rem, 1vw, 0.6rem);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cta, .reviewsBtn { min-width: 0; }
+
+/* Make selects and inputs flexible so they don't force large minimums */
+.filterField :global(.form-select),
+.filterField :global(.form-input),
+.searchInput {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Keep chips compact */
+.chip { padding: 0.25rem 0.45rem; font-size: clamp(0.72rem, 0.9vw, 0.9rem); }
+
 
 @keyframes pulse {
   0%,
