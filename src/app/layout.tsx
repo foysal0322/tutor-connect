@@ -4,6 +4,7 @@ import NextTopLoader from "nextjs-toploader";
 import { ToastProvider } from "@/components/ToastProvider";
 import VisitorTracker from "@/components/VisitorTracker";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import GlobalInstallBanner from "@/components/GlobalInstallBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
               <VisitorTracker />
               <ServiceWorkerRegister />
               <NextTopLoader color='var(--primary)' showSpinner={false} />
+              <GlobalInstallBanner />
               <main id='main' className='site-main'>
                 {children}
               </main>

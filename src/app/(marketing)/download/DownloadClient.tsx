@@ -17,17 +17,16 @@ import {
 import { useToast } from "@/components/ToastProvider";
 import QRCode from "@/components/QRCode";
 import s from "./download.module.css";
-
-type Platform = "android-chrome" | "android-other" | "ios" | "desktop" | "unknown";
-type MobilePlatform = "android-chrome" | "android-other" | "ios";
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
-const APK_URL = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ?? "";
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+import {
+  APK_URL,
+  APP_VERSION,
+  detectPlatform,
+  isMobilePlatform,
+  isRunningStandalone,
+  type MobilePlatform,
+  type Platform,
+} from "@/lib/platform";
+import { useBeforeInstallPrompt } from "@/hooks/useBeforeInstallPrompt";
 
 const FEATURES = [
   {
@@ -52,39 +51,15 @@ const FEATURES = [
   },
 ] as const;
 
-function detectPlatform(): Platform {
-  if (typeof window === "undefined") return "unknown";
-  const ua = navigator.userAgent.toLowerCase();
-  const isAndroid = /android/.test(ua);
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isIPadDesktop =
-    /macintosh/.test(ua) && "ontouchend" in document && navigator.maxTouchPoints > 1;
-
-  if (isAndroid) {
-    return /chrome|crios|edge/.test(ua) ? "android-chrome" : "android-other";
-  }
-  if (isIOS || isIPadDesktop) return "ios";
-  if (!/mobile|tablet/.test(ua)) return "desktop";
-  return "unknown";
-}
-
-function isRunningStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    nav.standalone === true
-  );
-}
-
 export default function DownloadClient() {
   const { toast } = useToast();
   const [platform, setPlatform] = useState<Platform>("unknown");
-  const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [copied, setCopied] = useState(false);
   const [pageUrl, setPageUrl] = useState("");
   const [standalone, setStandalone] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+
+  const { installEvent, promptInstall } = useBeforeInstallPrompt(platform);
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -92,25 +67,12 @@ export default function DownloadClient() {
     setStandalone(isRunningStandalone());
   }, []);
 
-  useEffect(() => {
-    if (platform !== "android-chrome") return;
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setInstallEvent(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, [platform]);
-
   async function handleInstallClick() {
-    if (!installEvent) return;
-    await installEvent.prompt();
-    const choice = await installEvent.userChoice;
-    if (choice.outcome === "accepted") {
+    const outcome = await promptInstall();
+    if (outcome === "accepted") {
       toast.success("Install started — check your home screen when it finishes.");
       setDismissed(true);
     }
-    setInstallEvent(null);
   }
 
   function handleApkClick() {
@@ -132,8 +94,7 @@ export default function DownloadClient() {
     }
   }
 
-  const isMobile =
-    platform === "android-chrome" || platform === "android-other" || platform === "ios";
+  const isMobile = isMobilePlatform(platform);
   const showBanner = isMobile && !standalone && !dismissed;
 
   return (
