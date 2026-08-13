@@ -347,6 +347,13 @@
   color: var(--surface-6);
 }
 
+/* The toolbar selects render with an empty <label> (label="") since the
+   visible affordance lives in the trigger itself. Without this the empty
+   label still reserves a line of vertical space above each select. */
+.filterLabel:empty {
+  display: none;
+}
+
 /* Toolbar dropdown trigger — override the shared .form-select / .form-input
    base so the trigger keeps the premium 44px card look while the popup uses
    the unified themed panel. Scoped under .filterField for specificity. */
@@ -1194,6 +1201,12 @@
   }
   .searchWrap {
     max-width: none;
+    /* The desktop `flex: 1 1 260px` sets a 260px WIDTH basis, but this
+       column layout reinterprets that 260px as HEIGHT — so the wrapper
+       becomes a 260px-tall box with the 44px input pinned at the top and
+       ~216px of empty space below (very visible against the toolbar's
+       #f8fafc background). Shrink to content height. */
+    flex: 0 0 auto;
   }
   .filters {
     width: 100%;
