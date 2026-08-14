@@ -48,6 +48,8 @@ export interface NavItem {
 export interface NavGroup {
   heading: string | null;
   items: NavItem[];
+  /** Collapsible group: starts collapsed; heading click toggles (member sidebar). */
+  collapsible?: boolean;
 }
 
 export const ADMIN_NAV: NavGroup[] = [

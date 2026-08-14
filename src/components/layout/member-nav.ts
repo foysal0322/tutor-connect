@@ -39,7 +39,7 @@ export const MEMBER_NAV: NavGroup[] = [
       { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       // Unified Money hub — carries the payments-due badge so members still
       // get pinged about action (Policy #35).
-      { id: "money", label: "Money", href: "/wallet", icon: Wallet, badgeKey: "paymentsDue" },
+      { id: "money", label: "Payment", href: "/wallet", icon: Wallet, badgeKey: "paymentsDue" },
     ],
   },
   {
@@ -57,6 +57,7 @@ export const MEMBER_NAV: NavGroup[] = [
   },
   {
     heading: "Shop",
+    collapsible: true,
     items: [
       { id: "shop-browse", label: "Browse Shop", href: "/shop", icon: Store },
       { id: "shop-selling", label: "Selling", href: "/shop/selling", icon: Tag },

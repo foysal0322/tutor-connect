@@ -78,6 +78,24 @@
   color: var(--text-main);
 }
 
+/* Collapsible group (e.g. Shop): heading is a collapse toggle with a
+   chevron that rotates when collapsed. */
+.navHeadingCollapseToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.navHeadingChevron {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.navHeadingChevronCollapsed {
+  transform: rotate(-90deg);
+}
+
 .navGroupFocused > .navHeadingInteractive {
   color: var(--primary);
   opacity: 1;

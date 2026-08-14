@@ -22,7 +22,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { ADMIN_NAV, type NavItem } from './admin-nav';
 import { MEMBER_NAV } from './member-nav';
 import {
@@ -70,6 +70,38 @@ export default function Sidebar({
   const groups = role === 'ADMIN' ? ADMIN_NAV : MEMBER_NAV;
   const badgeStorageKey =
     role === 'ADMIN' ? 'adminSeenCounts' : 'studentSeenCounts';
+
+  // Collapsible groups (e.g. Shop) start collapsed; clicking the heading
+  // toggles them. Member sidebar only — admin ignores the flag.
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>(() =>
+    groups
+      .filter((g) => g.collapsible && g.heading)
+      .map((g) => g.heading as string),
+  );
+
+  const toggleGroup = (heading: string) => {
+    setCollapsedGroups((prev) =>
+      prev.includes(heading)
+        ? prev.filter((h) => h !== heading)
+        : [...prev, heading],
+    );
+  };
+
+  // Auto-expand a collapsed group when the current route is inside it, so
+  // the active item stays visible on direct navigation.
+  useEffect(() => {
+    const active = groups.find(
+      (g) =>
+        g.collapsible &&
+        g.heading &&
+        g.items.some(
+          (it) => pathname === it.href || pathname.startsWith(`${it.href}/`),
+        ),
+    );
+    if (active?.heading) {
+      setCollapsedGroups((prev) => prev.filter((h) => h !== active.heading));
+    }
+  }, [pathname, groups]);
 
   // Member-only focus hint (blueprint §8). Read on mount + subscribe to
   // cross-component changes (DashboardContent writes it on tab change; we
@@ -281,12 +313,20 @@ export default function Sidebar({
         {filteredGroups.map((group, gi) => {
           const showHeading = group.heading && !collapsed;
           const focused = groupMatchesFocus(group.heading ?? null);
-          const headingInteractive =
+          const focusToggle =
             !!group.heading &&
             !collapsed &&
             role !== 'ADMIN' &&
             (group.heading.toLowerCase() === 'learning' ||
               group.heading.toLowerCase() === 'teaching');
+          const groupCollapsible =
+            !!group.collapsible && !!group.heading && !collapsed && role !== 'ADMIN';
+          // Stay expanded while filtering so search can reach the items.
+          const groupCollapsed =
+            groupCollapsible &&
+            !query.trim() &&
+            collapsedGroups.includes(group.heading as string);
+          const headingInteractive = focusToggle || groupCollapsible;
           return (
             <div
               key={group.heading ?? `group-${gi}`}
@@ -298,26 +338,40 @@ export default function Sidebar({
                 <div
                   className={`${styles.navHeading} ${
                     headingInteractive ? styles.navHeadingInteractive : ''
-                  }`}
+                  } ${groupCollapsible ? styles.navHeadingCollapseToggle : ''}`}
                   onClick={
-                    headingInteractive && group.heading
-                      ? () => handleHeadingClick(group.heading!)
-                      : undefined
+                    groupCollapsible && group.heading
+                      ? () => toggleGroup(group.heading!)
+                      : focusToggle && group.heading
+                        ? () => handleHeadingClick(group.heading!)
+                        : undefined
                   }
                   role={
                     headingInteractive ? 'button' : undefined
                   }
                   tabIndex={headingInteractive ? 0 : undefined}
                   title={
-                    headingInteractive
-                      ? `Focus on ${group.heading}`
-                      : undefined
+                    groupCollapsible
+                      ? `${groupCollapsed ? 'Expand' : 'Collapse'} ${group.heading}`
+                      : focusToggle
+                        ? `Focus on ${group.heading}`
+                        : undefined
                   }
                 >
                   {group.heading}
+                  {groupCollapsible && (
+                    <ChevronDown
+                      size={14}
+                      aria-hidden="true"
+                      className={`${styles.navHeadingChevron} ${
+                        groupCollapsed ? styles.navHeadingChevronCollapsed : ''
+                      }`}
+                    />
+                  )}
                 </div>
               )}
-              {group.items.map((item) => {
+              {!groupCollapsed &&
+                group.items.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item);
                 return (
