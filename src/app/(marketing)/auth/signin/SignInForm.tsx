@@ -87,6 +87,15 @@ export default function SignInForm() {
           router.push(`/auth/verify?userId=${m[1]}`);
           return;
         }
+        // PENDING_REGISTRATION:<token> — credentials match an unverified
+        // pending registration (e.g. the user left the verify page and
+        // lost its link). Route them back; the verify page auto-sends a
+        // fresh code on mount.
+        const p = err.match(/^PENDING_REGISTRATION:(.+)$/);
+        if (p) {
+          router.push(`/auth/verify?token=${p[1]}`);
+          return;
+        }
         // Map next-auth's opaque default to a friendlier message.
         setError(err === 'CredentialsSignin' ? 'Incorrect email/NSU ID or password.' : err);
         setLoading(false);

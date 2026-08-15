@@ -54,6 +54,31 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
+          // No User row — but the credentials may belong to a registration
+          // that was started and never verified (the user left the verify
+          // page and lost its ?token link). Verify the password against the
+          // pending row and, on match, route them back to verification via
+          // a PENDING_REGISTRATION:<token> sentinel instead of a dead-end
+          // "invalid credentials" message.
+          // Admin sign-in can't be mid-registration (pending rows are
+          // STUDENT/TUTOR) — skip the lookup so the sentinel never leaks
+          // as a raw error string on the admin form.
+          if (credentials.role !== 'ADMIN') {
+            const pending = await prisma.pendingRegistration.findFirst({
+              where: {
+                OR: [
+                  { email: credentials.identifier },
+                  { nsuId: credentials.identifier }
+                ],
+                status: "PENDING",
+                expiresAt: { gt: new Date() },
+              },
+              select: { id: true, hashedPassword: true },
+            });
+            if (pending && (await bcrypt.compare(credentials.password, pending.hashedPassword))) {
+              throw new Error(`PENDING_REGISTRATION:${pending.id}`);
+            }
+          }
           // Generic message — do not leak whether the email/NSU ID exists.
           throw new Error("Invalid credentials");
         }
