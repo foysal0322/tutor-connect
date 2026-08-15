@@ -1,0 +1,21 @@
+Tutor Connect - Updates (August 15, 2026)
+==========================================
+
+Sign Up & Sign In:
+- After verifying email, users are now signed in automatically (no need to log in again)
+- If a user signs in without verifying their email, they are taken back to the verification page
+- Added loading indicators so pages don't feel frozen while signing in
+- Fixed the name field example text to show a Bangladeshi name
+
+General:
+- All "Register" buttons across the site now go to one single sign-up page
+- Sidebar menu: "Money" is now called "Payment"
+- Sidebar menu: new collapsible "Shop" section
+
+Profile Page:
+- Profile page now shows a checklist explaining what the completion percentage means, with links to finish the missing steps
+- Students can now also edit their CGPA (previously tutors only); clearing the field removes it
+- Profile updates now refresh the completion score on the profile and dashboard immediately
+
+Next / To Do:
+-

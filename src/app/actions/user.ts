@@ -29,11 +29,11 @@ export async function updateUserProfile(formData: FormData) {
     updateData.departmentId = departmentId;
   }
 
-  if (role === 'TUTOR') {
+  // CGPA is editable for every member (the profile-completion KPI counts it
+  // for students too). An empty field clears the stored value.
+  if (role === 'STUDENT' || role === 'TUTOR') {
     const cgpa = formData.get('cgpa');
-    if (cgpa) {
-      updateData.cgpa = parseFloat(cgpa as string);
-    }
+    updateData.cgpa = cgpa ? parseFloat(cgpa as string) : null;
     updateData.hideCgpa = formData.get('hideCgpa') === 'on';
   }
 
@@ -63,7 +63,11 @@ export async function updateUserProfile(formData: FormData) {
     return { error: 'Failed to update profile.' };
   }
 
-  revalidatePath(`/${role.toLowerCase()}/profile`);
+  // The profile page lives at /profile (legacy role routes just redirect
+  // there) — revalidate the real path so the completion KPI refreshes.
+  // /dashboard renders the same 5-field heuristic, so refresh it too.
+  revalidatePath('/profile');
+  revalidatePath('/dashboard');
   return { success: true };
 }
 
