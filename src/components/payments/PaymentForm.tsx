@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react';
 import { submitPayment } from '@/app/(member)/student/actions';
 import { useToast } from '@/components/ToastProvider';
-import { MfsProviderSelect } from '@/components/MfsProviderSelect';
+import { MfsProviderSelect, MFS_LABEL } from '@/components/MfsProviderSelect';
 import { Input } from '@/components/ui/Input';
 import { fieldClass } from '@/components/forms';
 import { bdPhoneFieldProps, onBdPhoneChange } from '@/lib/phone';
@@ -104,11 +104,11 @@ export default function PaymentForm({
       formData.append('transactionId', `WLT-${Date.now()}`);
     } else {
       if (!mfsType || !accountNumber || !transactionId) {
-        toast.error('Please fill in all MFS payment details for the remaining balance.');
+        toast.error('Please fill in all bKash / Nagad / Rocket payment details for the remaining balance.');
         return;
       }
       if (accountNumber.length !== 11) {
-        toast.error('MFS Account Number must be exactly 11 digits.');
+        toast.error('Your bKash / Nagad / Rocket number must be exactly 11 digits.');
         return;
       }
       formData.append('mfsType', mfsType);
@@ -158,7 +158,7 @@ export default function PaymentForm({
         gap: '1rem',
       }}
     >
-      <h4 style={{ margin: 0 }}>MFS Payment Info</h4>
+      <h4 style={{ margin: 0 }}>bKash / Nagad / Rocket Payment</h4>
 
       {/* Breakdown section */}
       <div
@@ -260,12 +260,12 @@ export default function PaymentForm({
             <div style={{ fontSize: '0.85rem', color: '#15803d', paddingLeft: '1.7rem' }}>
               {userBalance >= totalPayable ? (
                 <span>
-                  Your wallet covers 100% of this tuition! <strong>No MFS transfer needed.</strong>
+                  Your wallet covers 100% of this tuition! <strong>No bKash / Nagad / Rocket payment needed.</strong>
                 </span>
               ) : (
                 <span>
                   Wallet covers -{userBalance.toFixed(2)} BDT. You will pay the remaining{' '}
-                  <strong>{(totalPayable - userBalance).toFixed(2)} BDT</strong> via MFS below.
+                  <strong>{(totalPayable - userBalance).toFixed(2)} BDT</strong> with bKash / Nagad / Rocket below.
                 </span>
               )}
             </div>
@@ -342,7 +342,8 @@ export default function PaymentForm({
               containerClassName={fieldClass}
               id={`account-${requestId}`}
               {...bdPhoneFieldProps}
-              label="MFS Account Number"
+              label={`Your ${MFS_LABEL[mfsType]} Number`}
+              hint="The number you sent money from"
               required
               value={accountNumber}
               onChange={onBdPhoneChange((e) => setAccountNumber(e.target.value))}
@@ -364,7 +365,8 @@ export default function PaymentForm({
               containerClassName={fieldClass}
               id={`txn-${requestId}`}
               type="text"
-              label="Transaction ID"
+              label="Transaction ID (TrxID)"
+              hint={`The TrxID from your ${MFS_LABEL[mfsType]} confirmation SMS`}
               required
               placeholder="e.g. TRX847927"
               value={transactionId}

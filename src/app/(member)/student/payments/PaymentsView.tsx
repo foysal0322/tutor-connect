@@ -75,7 +75,7 @@ export default function PaymentsView({
       ),
     },
     {
-      header: 'MFS Account',
+      header: 'Account Number',
       accessorKey: 'payment.accountNumber',
       cell: (r) => r.payment.accountNumber,
     },

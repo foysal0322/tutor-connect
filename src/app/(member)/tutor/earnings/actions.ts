@@ -58,7 +58,7 @@ export async function submitWithdrawalRequest(formData: FormData) {
     transferType = parsed.data.transferType || 'SEND_MONEY';
 
     if (!mfsType || !accountNumber || !transferType) {
-      return { error: 'All MFS fields are required.' };
+      return { error: 'All bKash / Nagad / Rocket fields are required.' };
     }
   }
 

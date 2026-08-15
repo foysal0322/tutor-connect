@@ -31,6 +31,13 @@ export const MFS_PROVIDERS: readonly MfsProviderMeta[] = [
   { id: 'ROCKET', label: 'Rocket', brand: '#8c2a8c', brandSoft: '#faf5ff' },
 ] as const;
 
+/** Display name for a provider id, e.g. BKASH → "bKash" (for dynamic labels). */
+export const MFS_LABEL: Record<MfsProvider, string> = {
+  BKASH: 'bKash',
+  NAGAD: 'Nagad',
+  ROCKET: 'Rocket',
+};
+
 interface Props {
   value: MfsProvider | null;
   onChange: (provider: MfsProvider) => void;

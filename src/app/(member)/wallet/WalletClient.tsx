@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { KPI } from "@/components/ui/KPI";
-import { MfsProviderSelect, MfsProvider } from "@/components/MfsProviderSelect";
+import { MfsProviderSelect, MfsProvider, MFS_LABEL } from "@/components/MfsProviderSelect";
 import { FormSubmit, FormAlert, fieldClass } from "@/components/forms";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import s from "./wallet.module.css";
@@ -225,7 +225,7 @@ export default function WalletClient({
           </div>
           <p className={s.balanceHint}>
             Use it for instant tuition payments or request a withdrawal to your
-            MFS account.
+            bKash / Nagad / Rocket or bank account.
           </p>
         </div>
         <div
@@ -314,8 +314,9 @@ export default function WalletClient({
             <h2 className={s.formTitle}>Deposit Funds</h2>
           </div>
           <p className={s.formSub}>
-            Choose your MFS provider, enter the amount and transaction ID to top
-            up your balance.
+            Send Money from your bKash, Nagad, or Rocket account, then submit
+            the amount and TrxID below. Your wallet is credited after an admin
+            verifies the transaction.
           </p>
 
           {state?.error && <FormAlert>{state.error}</FormAlert>}
@@ -332,7 +333,7 @@ export default function WalletClient({
 
             {/* MFS provider */}
             <div>
-              <label className={s.fieldLabel}>Select MFS Provider</label>
+              <label className={s.fieldLabel}>Send Money From (bKash / Nagad / Rocket)</label>
               <MfsProviderSelect
                 value={mfsType}
                 onChange={setMfsType}
@@ -375,7 +376,8 @@ export default function WalletClient({
                 name="accountNumber"
                 {...bdPhoneFieldProps}
                 required
-                label="Your MFS Number"
+                label={`Your ${MFS_LABEL[mfsType]} Number`}
+                hint="The number you sent money from"
                 onChange={onBdPhoneChange()}
               />
               <Input
@@ -384,6 +386,7 @@ export default function WalletClient({
                 type="text"
                 required
                 label="Transaction ID (TrxID)"
+                hint={`The TrxID from your ${MFS_LABEL[mfsType]} confirmation SMS`}
                 placeholder="e.g. 9J8H7G6F21"
               />
             </div>

@@ -6,7 +6,7 @@ import { submitWithdrawalRequest } from "./actions";
 import { Input } from "@/components/ui/Input";
 import { KPI } from "@/components/ui/KPI";
 import DataGrid, { type ColumnDef } from "@/components/ui/DataGrid";
-import { MfsProviderSelect } from "@/components/MfsProviderSelect";
+import { MfsProviderSelect, MFS_LABEL } from "@/components/MfsProviderSelect";
 import { FormCard, FormSubmit, FormAlert, fieldClass } from "@/components/forms";
 import { bdPhoneFieldProps, onBdPhoneChange } from "@/lib/phone";
 
@@ -66,7 +66,7 @@ export default function EarningsClient({
       return;
     }
     if (method === "MFS" && (!accountNumber || accountNumber.length !== 11)) {
-      setError("MFS Account Number must be exactly 11 digits.");
+      setError("Your bKash / Nagad / Rocket number must be exactly 11 digits.");
       return;
     }
     if (method === "BANK") {
@@ -452,7 +452,7 @@ export default function EarningsClient({
           className="lg:col-span-1"
           icon={<Wallet size={28} />}
           title="Request Withdrawal"
-          subtitle="Transfer available earnings to your MFS or bank account."
+          subtitle="Transfer available earnings to your bKash / Nagad / Rocket or bank account."
         >
           <form onSubmit={handleWithdrawSubmit} className="flex flex-col gap-4">
             {/* Withdrawal method selector */}
@@ -533,7 +533,7 @@ export default function EarningsClient({
             {method === "MFS" ? (
               <>
                 <div className={`form-group mb-0 ${fieldClass}`}>
-                  <label className="form-label font-bold">MFS Provider</label>
+                  <label className="form-label font-bold">bKash / Nagad / Rocket</label>
                   <div className="mt-1.5">
                     <MfsProviderSelect value={mfsType} onChange={setMfsType} />
                   </div>
@@ -544,7 +544,8 @@ export default function EarningsClient({
                   name="accountNumber"
                   {...bdPhoneFieldProps}
                   required
-                  label="MFS Account Number"
+                  label={`Your ${MFS_LABEL[mfsType]} Number`}
+                  hint="Your earnings will be sent to this number"
                   value={accountNumber}
                   onChange={onBdPhoneChange((e) => setAccountNumber(e.target.value))}
                 />

@@ -48,5 +48,10 @@ Performance / Technical (2):
 - Fixed deposit form acting erratically if submitted before the page fully loaded
 - Fixed errors for users whose account no longer exists (they now get a clear "sign in again" message instead of a failure)
 
+Clearer Payment Wording:
+- Replaced technical terms like "MFS" and "MFS Account Number" with familiar names — bKash / Nagad / Rocket — on the deposit, withdrawal, and tuition payment forms
+- After selecting a provider, the number field label updates automatically (e.g. "Your bKash Number")
+- Added helpful hints, e.g. the Transaction ID field now says the TrxID comes from the confirmation SMS
+
 Next / To Do:
 -
