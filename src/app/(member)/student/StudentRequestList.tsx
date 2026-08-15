@@ -445,7 +445,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                     className="btn-primary"
                     style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
                   >
-                    Pay with bKash / Nagad / Rocket
+                    Complete Payment
                   </button>
                 )}
                 {req.status === 'ACCEPTED' && !isRefunded && (

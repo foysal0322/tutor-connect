@@ -45,8 +45,12 @@ export default function PaymentForm({
   const [mfsType, setMfsType] = useState<'BKASH' | 'NAGAD' | 'ROCKET'>('BKASH');
   const [accountNumber, setAccountNumber] = useState('');
   const [transactionId, setTransactionId] = useState('');
-  const [useWallet, setUseWallet] = useState(false);
+  const [payMethod, setPayMethod] = useState<'WALLET' | 'MFS'>('MFS');
   const [couponCode, setCouponCode] = useState('');
+
+  // Wallet chosen via the radio cards above. Derived (not stored) so the
+  // submit logic below stays unchanged.
+  const useWallet = payMethod === 'WALLET';
 
   // Fee config — fetched from /api/settings/fees so admins can change
   // rates without code changes. Falls back to the schema defaults during
@@ -140,7 +144,7 @@ export default function PaymentForm({
         });
         setAccountNumber('');
         setTransactionId('');
-        setUseWallet(false);
+        setPayMethod('MFS');
         setCouponCode('');
       }
     });
@@ -158,7 +162,7 @@ export default function PaymentForm({
         gap: '1rem',
       }}
     >
-      <h4 style={{ margin: 0 }}>bKash / Nagad / Rocket Payment</h4>
+      <h4 style={{ margin: 0 }}>Complete Your Payment</h4>
 
       {/* Breakdown section */}
       <div
@@ -225,50 +229,108 @@ export default function PaymentForm({
         />
       </div>
 
-      {userBalance > 0 && (
+      {/* ---------- How would you like to pay? ---------- */}
+      <div>
+        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          Pay with your Campus Wallet, or pay with bKash / Nagad / Rocket — select one to continue.
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Payment method"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}
+        >
+          {/* Campus Wallet option */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={payMethod === 'WALLET'}
+            disabled={userBalance <= 0}
+            onClick={() => setPayMethod('WALLET')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: '0.15rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              cursor: userBalance <= 0 ? 'not-allowed' : 'pointer',
+              opacity: userBalance <= 0 ? 0.55 : 1,
+              border:
+                payMethod === 'WALLET'
+                  ? '2px solid #16a34a'
+                  : '1px solid var(--border-color)',
+              background: payMethod === 'WALLET' ? '#f0fdf4' : 'var(--card-bg)',
+              color: 'var(--text-main)',
+              textAlign: 'left',
+              font: 'inherit',
+            }}
+          >
+            <span style={{ fontWeight: 700, color: payMethod === 'WALLET' ? '#166534' : 'inherit' }}>
+              Campus Wallet
+            </span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              {userBalance > 0
+                ? `${userBalance.toFixed(2)} BDT available — instant verification`
+                : 'No balance — top up your wallet first'}
+            </span>
+          </button>
+
+          {/* bKash / Nagad / Rocket option */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={payMethod === 'MFS'}
+            onClick={() => setPayMethod('MFS')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: '0.15rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              border:
+                payMethod === 'MFS'
+                  ? '2px solid #ea580c'
+                  : '1px solid var(--border-color)',
+              background: payMethod === 'MFS' ? '#fff7ed' : 'var(--card-bg)',
+              color: 'var(--text-main)',
+              textAlign: 'left',
+              font: 'inherit',
+            }}
+          >
+            <span style={{ fontWeight: 700, color: payMethod === 'MFS' ? '#9a3412' : 'inherit' }}>
+              bKash / Nagad / Rocket
+            </span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Send Money + TrxID — verified by admin
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Wallet details — only when that option is selected */}
+      {payMethod === 'WALLET' && (
         <div
           style={{
             backgroundColor: '#f0fdf4',
             border: '1px solid #86efac',
             padding: '1rem',
             borderRadius: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
+            fontSize: '0.9rem',
+            color: '#15803d',
           }}
         >
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontWeight: 600,
-              color: '#166534',
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={useWallet}
-              onChange={(e) => setUseWallet(e.target.checked)}
-              style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
-            />
-            Use Campus Wallet Balance ({userBalance.toFixed(2)} BDT available)
-          </label>
-          {useWallet && (
-            <div style={{ fontSize: '0.85rem', color: '#15803d', paddingLeft: '1.7rem' }}>
-              {userBalance >= totalPayable ? (
-                <span>
-                  Your wallet covers 100% of this tuition! <strong>No bKash / Nagad / Rocket payment needed.</strong>
-                </span>
-              ) : (
-                <span>
-                  Wallet covers -{userBalance.toFixed(2)} BDT. You will pay the remaining{' '}
-                  <strong>{(totalPayable - userBalance).toFixed(2)} BDT</strong> with bKash / Nagad / Rocket below.
-                </span>
-              )}
-            </div>
+          {userBalance >= totalPayable ? (
+            <span>
+              Your wallet covers 100% of this tuition!{' '}
+              <strong>No bKash / Nagad / Rocket payment needed.</strong>
+            </span>
+          ) : (
+            <span>
+              Wallet covers -{userBalance.toFixed(2)} BDT. You will pay the remaining{' '}
+              <strong>{(totalPayable - userBalance).toFixed(2)} BDT</strong> with bKash / Nagad / Rocket below.
+            </span>
           )}
         </div>
       )}
@@ -399,7 +461,7 @@ export default function PaymentForm({
           type="button"
           onClick={() => {
             onCancel();
-            setUseWallet(false);
+            setPayMethod('MFS');
           }}
           className="btn"
           style={{ padding: '0.5rem 1rem', background: '#e2e8f0', color: 'var(--text-main)', borderRadius: '6px' }}

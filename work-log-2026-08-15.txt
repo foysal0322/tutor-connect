@@ -53,5 +53,11 @@ Clearer Payment Wording:
 - After selecting a provider, the number field label updates automatically (e.g. "Your bKash Number")
 - Added helpful hints, e.g. the Transaction ID field now says the TrxID comes from the confirmation SMS
 
+Payment Page — Choose How to Pay:
+- The tuition payment form now starts with a clear instruction: pay with your Campus Wallet, or pay with bKash / Nagad / Rocket
+- Two selectable options shown as cards — clicking one shows only that option's steps and details
+- Campus Wallet card shows your available balance (greyed out if the wallet is empty)
+- If the wallet doesn't cover the full amount, the remaining balance is automatically calculated for the bKash / Nagad / Rocket payment
+
 Next / To Do:
 -
