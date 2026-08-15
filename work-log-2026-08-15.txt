@@ -39,6 +39,7 @@ Wallet Deposits — Now Verified by Admin (Important Change):
 
 Small Fixes (2):
 - Request-a-Tutor form: date and time fields no longer overflow on small screens
+- Request-a-Tutor form: the pre-selected tutor box is now a compact one-line summary instead of a large block
 - Scrolling over the deposit amount field no longer accidentally changes the value
 - Shortened the welcome text on the dashboard for new users
 

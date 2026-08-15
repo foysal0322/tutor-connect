@@ -105,19 +105,16 @@ export default function RequestTutorForm({
       {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
-        <div className="mb-6 p-3 sm:p-4 bg-primary-light text-primary border border-primary rounded-md">
-          <h3 className="text-base sm:text-lg font-semibold mb-2">Requesting Pre-Selected Tutor</h3>
-          <div className="space-y-1 text-sm break-words">
-            <p>
-              Tutor: <strong>{selectedTutor.name}</strong> (CGPA: {selectedTutor.cgpa?.toFixed(2) || 'N/A'})
-            </p>
-            <p>
-              Course: <strong>{selectedCourseName}</strong>
-            </p>
-            <p>
-              Session Fee: <strong>{defaultFee} BDT / Session</strong> (Locked)
-            </p>
-          </div>
+        <div className="mb-4 p-3 bg-primary-light text-primary border border-primary rounded-md">
+          <p className="text-xs uppercase tracking-wide font-semibold opacity-75 mb-1">
+            Pre-selected tutor
+          </p>
+          <p className="text-sm font-semibold break-words">
+            {selectedTutor.name} · {selectedCourseName}
+          </p>
+          <p className="text-xs opacity-80 mt-0.5">
+            CGPA {selectedTutor.cgpa?.toFixed(2) || 'N/A'} · {defaultFee} BDT/session
+          </p>
         </div>
       )}
 
