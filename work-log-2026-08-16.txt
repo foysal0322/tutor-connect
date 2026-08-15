@@ -1,0 +1,5 @@
+Tutor Connect - Updates (August 16, 2026)
+==========================================
+
+Project Updates:
+- Daily progress updates now post automatically to a Discord channel, so you can follow what was done each day without touching any code
