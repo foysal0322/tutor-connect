@@ -8,7 +8,7 @@ import { revalidatePath, updateTag } from 'next/cache';
 import { dispatch } from '@/lib/notifications/service';
 import { DEFAULT_SETTINGS } from '@/lib/cache';
 import { sendNoReplyEmail } from '@/lib/mail';
-import { parseFormData, adjustWalletSchema } from '@/lib/validation';
+import { parseFormData, adjustWalletSchema, reviewDepositSchema } from '@/lib/validation';
 
 export async function adminUpdateUser(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -454,6 +454,114 @@ export async function adjustUserBalance(formData: FormData) {
     }
     console.error('Adjust wallet balance error:', err);
     return { error: 'Failed to adjust wallet balance.' };
+  }
+}
+
+/**
+ * Approve or reject a member's PENDING wallet deposit (RECHARGE) after
+ * verifying the MFS TrxID. Approval is the only step that credits the
+ * balance — rechargeWallet itself never touches it.
+ */
+export async function reviewDeposit(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== 'ADMIN') {
+    return { error: 'Not authorized.' };
+  }
+  const adminId = (session.user as any).id;
+
+  const parsed = parseFormData(formData, reviewDepositSchema);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+  const { transactionId, decision } = parsed.data;
+  const approve = decision === 'APPROVE';
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const txn = await tx.walletTransaction.findUnique({
+        where: { id: transactionId },
+        include: { user: { select: { id: true, name: true, email: true, role: true } } },
+      });
+      if (!txn || txn.type !== 'RECHARGE') {
+        throw new Error('NOT_FOUND');
+      }
+
+      // Atomically claim the PENDING row (updateMany with a status filter) so
+      // two admins clicking at once can't double-credit the same deposit.
+      const claimed = await tx.walletTransaction.updateMany({
+        where: { id: transactionId, status: 'PENDING' },
+        data: { status: approve ? 'APPROVED' : 'REJECTED' },
+      });
+      if (claimed.count === 0) {
+        throw new Error('ALREADY_REVIEWED');
+      }
+
+      let newBalance: number | null = null;
+      if (approve) {
+        const updated = await tx.user.update({
+          where: { id: txn.userId },
+          data: { balance: { increment: txn.amount } },
+          select: { balance: true },
+        });
+        newBalance = updated.balance;
+      }
+      return { txn, newBalance };
+    });
+
+    // Notify the member of the decision (push + email). Fire-and-forget.
+    try {
+      await dispatch({
+        event: approve ? 'wallet.deposit.approved' : 'wallet.deposit.rejected',
+        userId: result.txn.userId,
+        title: approve ? 'Deposit Approved' : 'Deposit Rejected',
+        message: approve
+          ? `Your deposit of ${result.txn.amount} BDT has been verified and credited to your wallet.`
+          : `Your deposit of ${result.txn.amount} BDT could not be verified and was rejected. Contact support if you believe this is a mistake.`,
+        actionUrl: '/wallet',
+        type: approve ? 'SUCCESS' : 'WARNING',
+        category: 'WALLET',
+        priority: 'HIGH',
+        actorUserId: adminId,
+        recipientRoleHint: result.txn.user.role === 'TUTOR' ? 'TUTOR' : 'STUDENT',
+        metadata: { amount: result.txn.amount, transactionId: result.txn.referenceId ?? undefined },
+      });
+    } catch (err) {
+      console.error('Failed to notify user of deposit review:', err);
+    }
+
+    try {
+      await sendNoReplyEmail({
+        to: result.txn.user.email,
+        subject: `Deposit ${approve ? 'Approved' : 'Rejected'} — NSUone`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: ${approve ? '#10b981' : '#ef4444'};">Deposit ${approve ? 'Approved' : 'Rejected'}</h2>
+            <p>Hello ${result.txn.user.name},</p>
+            ${approve
+              ? `<p>Your wallet deposit has been verified and credited.</p>
+                 <p><strong>Amount:</strong> ${result.txn.amount} BDT</p>
+                 <p><strong>New balance:</strong> ${result.newBalance} BDT</p>`
+              : `<p>Your wallet deposit could not be verified and was rejected.</p>
+                 <p><strong>Amount:</strong> ${result.txn.amount} BDT</p>`}
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+            <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.error('Failed to send deposit review email:', mailErr);
+    }
+
+    revalidatePath('/admin/wallets');
+    revalidatePath('/wallet');
+    return { success: true, newBalance: result.newBalance ?? undefined };
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === 'NOT_FOUND') return { error: 'Deposit request not found.' };
+      if (err.message === 'ALREADY_REVIEWED') return { error: 'This deposit has already been reviewed.' };
+    }
+    console.error('Review deposit error:', err);
+    return { error: 'Failed to review deposit.' };
   }
 }
 

@@ -105,17 +105,19 @@ export default function RequestTutorForm({
       {error && <FormAlert>{error}</FormAlert>}
 
       {selectedTutor && (
-        <div className="mb-6 p-4 bg-primary-light text-primary border border-primary rounded-md">
-          <h3 className="text-lg font-semibold mb-2">Requesting Pre-Selected Tutor</h3>
-          <p className="text-sm mb-1">
-            Tutor: <strong>{selectedTutor.name}</strong> (CGPA: {selectedTutor.cgpa?.toFixed(2) || 'N/A'})
-          </p>
-          <p className="text-sm mb-1">
-            Course: <strong>{selectedCourseName}</strong>
-          </p>
-          <p className="text-sm text-primary">
-            Session Fee: <strong>{defaultFee} BDT / Session</strong> (Locked)
-          </p>
+        <div className="mb-6 p-3 sm:p-4 bg-primary-light text-primary border border-primary rounded-md">
+          <h3 className="text-base sm:text-lg font-semibold mb-2">Requesting Pre-Selected Tutor</h3>
+          <div className="space-y-1 text-sm break-words">
+            <p>
+              Tutor: <strong>{selectedTutor.name}</strong> (CGPA: {selectedTutor.cgpa?.toFixed(2) || 'N/A'})
+            </p>
+            <p>
+              Course: <strong>{selectedCourseName}</strong>
+            </p>
+            <p>
+              Session Fee: <strong>{defaultFee} BDT / Session</strong> (Locked)
+            </p>
+          </div>
         </div>
       )}
 
@@ -162,27 +164,26 @@ export default function RequestTutorForm({
             error={form.errors.preferredMode}
           />
 
-          <div className={fieldClass} style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <Input
-                name="preferredDate"
-                type="date"
-                label="Preferred Date (Optional)"
-                min={todayStr}
-                value={preferredDate}
-                onChange={(e) => setPreferredDate(e.target.value)}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Input
-                name="preferredTime"
-                type="time"
-                label="Preferred Time (Optional)"
-                min={minTime}
-                value={preferredTime}
-                onChange={(e) => setPreferredTime(e.target.value)}
-              />
-            </div>
+          {/* Stack on mobile so each picker gets full width; sit side-by-side
+              from sm up. Inline `display: flex` (the old version) never wraps,
+              which made these two fields overflow small viewports. */}
+          <div className={`${fieldClass} grid grid-cols-1 sm:grid-cols-2 sm:gap-3`}>
+            <Input
+              name="preferredDate"
+              type="date"
+              label="Preferred Date (Optional)"
+              min={todayStr}
+              value={preferredDate}
+              onChange={(e) => setPreferredDate(e.target.value)}
+            />
+            <Input
+              name="preferredTime"
+              type="time"
+              label="Preferred Time (Optional)"
+              min={minTime}
+              value={preferredTime}
+              onChange={(e) => setPreferredTime(e.target.value)}
+            />
           </div>
 
           {!selectedTutor && (

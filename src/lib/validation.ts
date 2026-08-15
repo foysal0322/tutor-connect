@@ -106,6 +106,11 @@ export const rechargeWalletSchema = z.object({
   transactionId: nonEmpty('Transaction ID', 100).optional().or(z.literal('')),
 });
 
+export const reviewDepositSchema = z.object({
+  transactionId: idSchema,
+  decision: z.enum(['APPROVE', 'REJECT']),
+});
+
 export const verifyWithdrawalSchema = z.object({
   withdrawId: idSchema,
   approve: z.enum(['true', 'false']).transform((v) => v === 'true'),

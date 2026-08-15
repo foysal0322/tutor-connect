@@ -80,9 +80,7 @@ export default function OnboardingGuide({ firstName }: { firstName: string }) {
           Welcome to nsuOne, {firstName}.
         </h2>
         <p className={styles.onboardLede}>
-          nsuOne is a peer tutoring marketplace. Request help with any course,
-          earn by teaching what you know, or do both. Pick a path below to get
-          started.
+          Pick a path below to explore what nsuOne can do for you.
         </p>
       </div>
 

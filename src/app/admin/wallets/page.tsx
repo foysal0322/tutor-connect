@@ -19,6 +19,32 @@ export default async function AdminWalletsPage({
 
   const { userId: focusUserId } = await searchParams;
 
+  // Member-submitted deposits awaiting TrxID verification. Approval (in
+  // reviewDeposit) is what credits the balance.
+  const pendingDepositRows = await prisma.walletTransaction.findMany({
+    where: { type: 'RECHARGE', status: 'PENDING' },
+    orderBy: { createdAt: 'asc' },
+    take: 50,
+    select: {
+      id: true,
+      amount: true,
+      description: true,
+      referenceId: true,
+      createdAt: true,
+      user: { select: { name: true, nsuId: true } },
+    },
+  });
+
+  const pendingDeposits = pendingDepositRows.map((d) => ({
+    id: d.id,
+    amount: d.amount,
+    description: d.description,
+    trxId: d.referenceId,
+    createdAt: d.createdAt.toISOString(),
+    userName: d.user.name,
+    userNsuId: d.user.nsuId,
+  }));
+
   // Members only — admin wallets are intentionally not adjustable from here.
   const users = await prisma.user.findMany({
     where: { role: { in: ['STUDENT', 'TUTOR'] } },
@@ -78,6 +104,7 @@ export default async function AdminWalletsPage({
       <WalletManager
         users={users}
         adjustments={adjustments}
+        pendingDeposits={pendingDeposits}
         focusUserId={focusUserId}
       />
     </div>

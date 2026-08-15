@@ -412,6 +412,10 @@ model WalletTransaction {
   type        String // RECHARGE, TUITION_PAYMENT, EARNING_CREDIT, WITHDRAWAL, REFUND, ADMIN_ADJUSTMENT, CONSULTANCY_PAYMENT
   description String
   referenceId String? // MFS transaction ID or TutorRequest ID
+  // COMPLETED for system-generated txns. Member MFS deposits start PENDING
+  // (no balance credit yet) and move to APPROVED (credited) or REJECTED by
+  // an admin after TrxID verification.
+  status      String   @default("COMPLETED") // COMPLETED | PENDING | APPROVED | REJECTED
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -6,7 +6,24 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { parseFormData, rechargeWalletSchema } from '@/lib/validation';
 
-export async function rechargeWallet(formData: FormData) {
+/**
+ * State shape returned by the deposit form's server action (used with
+ * useActionState in WalletClient). `timestamp` is a nonce so the client can
+ * distinguish a new success from a re-render of the previous one.
+ */
+export interface RechargeWalletState {
+  error?: string;
+  success?: boolean;
+  amount?: number;
+  mfsType?: string;
+  transactionId?: string | null;
+  timestamp?: number;
+}
+
+export async function rechargeWallet(
+  _prev: RechargeWalletState | null,
+  formData: FormData,
+): Promise<RechargeWalletState> {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return { error: 'Not authorized. Please sign in.' };
@@ -20,38 +37,41 @@ export async function rechargeWallet(formData: FormData) {
 
   const userId = (session.user as any).id;
 
-  try {
-    // Increment user balance
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        balance: {
-          increment: amount
-        }
-      }
-    });
+  // The session is a JWT that may outlive the DB row (e.g. after a DB reset
+  // or account deletion). Writes would throw P2025 ("Record to update not
+  // found"), so verify the user exists and tell them to sign in again.
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!user) {
+    return { error: 'Your account could not be found. Please sign out and sign in again.' };
+  }
 
-    // Create wallet transaction record
-    const isDemo = mfsType === 'DEMO';
+  try {
+    // Deposits are NOT credited here. We record a PENDING transaction and an
+    // admin verifies the MFS TrxID; only approval credits the balance. This
+    // prevents fake TrxIDs from minting wallet money instantly.
     await prisma.walletTransaction.create({
       data: {
         userId,
         amount,
         type: 'RECHARGE',
-        description: isDemo
-          ? 'Wallet recharge (Demo — instant test credit)'
-          : `Wallet recharge via ${mfsType} (${accountNumber})`,
-        referenceId: transactionId || null
+        description: `Wallet recharge via ${mfsType} (${accountNumber})`,
+        referenceId: transactionId || null,
+        status: 'PENDING',
       }
     });
 
     revalidatePath('/wallet');
-    revalidatePath('/student');
-    revalidatePath('/tutor');
-    return { success: true, newBalance: updatedUser.balance };
+    revalidatePath('/admin/wallets');
+    return {
+      success: true,
+      amount,
+      mfsType,
+      transactionId: transactionId || null,
+      timestamp: Date.now(),
+    };
   } catch (err) {
     console.error('Wallet recharge error:', err);
-    return { error: 'Failed to recharge wallet. Please try again later.' };
+    return { error: 'Failed to submit deposit request. Please try again later.' };
   }
 }
 
@@ -67,6 +87,13 @@ export async function getWalletData() {
     select: { balance: true }
   });
 
+  // Ghost session: the JWT references a user that no longer exists (DB reset,
+  // account deletion). The wallet page redirects to force-signout on error,
+  // which clears the stale cookie.
+  if (!user) {
+    return { error: 'Account not found' };
+  }
+
   const transactions = await prisma.walletTransaction.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
@@ -75,15 +102,20 @@ export async function getWalletData() {
 
   // Derive financial KPIs from the existing WalletTransaction rows.
   // Only RECHARGE (+) and TUITION_PAYMENT (−) types are written today, so we
-  // aggregate those. Earning/withdrawal totals are intentionally NOT computed
-  // here — they live on /tutor/earnings (sourced from TutorRequest +
-  // WithdrawalRequest) and duplicating them would mislead students and
-  // diverge from the earnings page's own calc.
+  // aggregate those. Deposits only count once APPROVED (legacy rows default
+  // to COMPLETED); PENDING/REJECTED requests never touched the balance.
+  // Earning/withdrawal totals are intentionally NOT computed here — they
+  // live on /tutor/earnings (sourced from TutorRequest + WithdrawalRequest)
+  // and duplicating them would mislead students and diverge from the
+  // earnings page's own calc.
   let totalDeposited = 0;
   let totalSpent = 0;
   for (const t of transactions) {
-    if (t.type === 'RECHARGE') totalDeposited += t.amount;
-    else if (t.type === 'TUITION_PAYMENT') totalSpent += Math.abs(t.amount);
+    if (t.type === 'RECHARGE' && t.status !== 'PENDING' && t.status !== 'REJECTED') {
+      totalDeposited += t.amount;
+    } else if (t.type === 'TUITION_PAYMENT') {
+      totalSpent += Math.abs(t.amount);
+    }
   }
 
   // Surface the member's recent withdrawal requests so tutors can see

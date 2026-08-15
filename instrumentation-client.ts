@@ -6,20 +6,26 @@
 
 import * as Sentry from '@sentry/nextjs';
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+// Skip Sentry entirely when no DSN is configured (local dev without Sentry
+// env vars) — the browser SDK would otherwise POST telemetry to the
+// /monitoring tunnel on every page load.
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // 100% in dev so test errors always land; 10% of production traffic.
-  tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+    // Tracing sampled only in production; tracing every request in dev made
+    // local development noticeably slower. Errors are still captured in dev.
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0,
 
-  // Session Replay: 10% of all sessions, 100% of sessions with errors.
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+    // Session Replay: 10% of all sessions, 100% of sessions with errors.
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
 
-  enableLogs: true,
+    enableLogs: true,
 
-  integrations: [Sentry.replayIntegration()],
-});
+    integrations: [Sentry.replayIntegration()],
+  });
+}
 
 // Hook App Router navigation transitions for navigation spans.
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

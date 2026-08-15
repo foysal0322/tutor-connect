@@ -12,8 +12,11 @@ import {
   AlertCircle,
   Plus,
   Minus,
+  Clock,
+  BadgeCheck,
+  XCircle,
 } from 'lucide-react';
-import { adjustUserBalance } from '@/app/actions/admin';
+import { adjustUserBalance, reviewDeposit } from '@/app/actions/admin';
 import { useToast } from '@/components/ToastProvider';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/Input';
@@ -45,9 +48,20 @@ interface Adjustment {
   adminName: string;
 }
 
+interface PendingDeposit {
+  id: string;
+  amount: number;
+  description: string;
+  trxId: string | null;
+  createdAt: string;
+  userName: string;
+  userNsuId: string;
+}
+
 interface Props {
   users: WalletUser[];
   adjustments: Adjustment[];
+  pendingDeposits: PendingDeposit[];
   focusUserId?: string;
 }
 
@@ -67,8 +81,10 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export default function WalletManager({ users, adjustments, focusUserId }: Props) {
+export default function WalletManager({ users, adjustments, pendingDeposits, focusUserId }: Props) {
   const [userList, setUserList] = useState(users);
+  const [depositQueue, setDepositQueue] = useState(pendingDeposits);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [activeUserId, setActiveUserId] = useState<string | null>(focusUserId ?? null);
@@ -116,6 +132,37 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
   const avgBalance = totalMembers ? totalLiability / totalMembers : 0;
 
   const activeUser = userList.find((u) => u.id === activeUserId) ?? null;
+
+  // Approve/reject a pending deposit. The balance credit happens server-side
+  // in reviewDeposit; here we just remove the row and toast the outcome.
+  const handleReview = (depositId: string, decision: 'APPROVE' | 'REJECT') => {
+    const deposit = depositQueue.find((d) => d.id === depositId);
+    setReviewingId(depositId);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('transactionId', depositId);
+    formData.append('decision', decision);
+
+    startTransition(async () => {
+      const res = await reviewDeposit(formData);
+      if (res?.error) {
+        toast.error(res.error);
+        // Already-reviewed rows should still leave the queue.
+        if (res.error.includes('already been reviewed')) {
+          setDepositQueue((prev) => prev.filter((d) => d.id !== depositId));
+        }
+      } else {
+        toast.success(
+          decision === 'APPROVE'
+            ? `Deposit approved — ${formatBDT(deposit?.amount ?? 0)} BDT credited to ${deposit?.userName ?? 'user'}.`
+            : `Deposit from ${deposit?.userName ?? 'user'} rejected.`,
+        );
+        setDepositQueue((prev) => prev.filter((d) => d.id !== depositId));
+      }
+      setReviewingId(null);
+    });
+  };
 
   const resetForm = () => {
     setDirection('CREDIT');
@@ -232,6 +279,223 @@ export default function WalletManager({ users, adjustments, focusUserId }: Props
           hint='Admin-initiated'
         />
       </div>
+
+      {/* Pending deposit approvals — deposits only credit the balance here. */}
+      <section
+        className='card'
+        style={{ padding: 0, overflow: 'hidden' }}
+        aria-label='Pending deposit approvals'
+      >
+        <header
+          style={{
+            padding: 'var(--space-4) var(--space-5)',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-3)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 'var(--text-base)',
+                fontWeight: 700,
+                color: 'var(--text-main)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+              }}
+            >
+              <Clock size={16} aria-hidden='true' /> Pending Deposit Approvals
+            </h2>
+            <p style={{ margin: '2px 0 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+              Verify the MFS TrxID against your provider statement. Approving credits the wallet;
+              nothing is credited until then.
+            </p>
+          </div>
+          {depositQueue.length > 0 && (
+            <span
+              className='badge badge-primary'
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {depositQueue.length} awaiting review
+            </span>
+          )}
+        </header>
+
+        {depositQueue.length === 0 ? (
+          <EmptyState
+            icon={<BadgeCheck size={32} aria-hidden='true' />}
+            title='No pending deposits'
+            description='Member deposit requests will appear here for verification.'
+          />
+        ) : (
+          <div className='data-grid-container'>
+            {/* Desktop / tablet */}
+            <table className='data-grid' style={{ display: 'table' }}>
+              <thead>
+                <tr>
+                  <th style={{ width: '24%' }}>Member</th>
+                  <th style={{ width: '12%' }}>Amount</th>
+                  <th style={{ width: '24%' }}>Provider / Account</th>
+                  <th style={{ width: '16%' }}>TrxID</th>
+                  <th style={{ width: '10%' }}>When</th>
+                  <th style={{ width: '14%', textAlign: 'right' }}>Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                {depositQueue.map((d) => (
+                  <tr key={d.id}>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{d.userName}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                        {d.userNsuId}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--success)' }}>
+                      +{formatBDT(d.amount)} BDT
+                    </td>
+                    <td style={{ fontSize: 'var(--text-sm)' }}>{d.description}</td>
+                    <td style={{ fontSize: 'var(--text-sm)', fontVariantNumeric: 'tabular-nums' }}>
+                      {d.trxId || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>none</span>}
+                    </td>
+                    <td style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      {new Date(d.createdAt).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <button
+                        type='button'
+                        onClick={() => handleReview(d.id, 'APPROVE')}
+                        disabled={isPending && reviewingId === d.id}
+                        style={{
+                          border: 'none',
+                          background: 'var(--success)',
+                          color: 'white',
+                          cursor: 'pointer',
+                          padding: '6px 12px',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: 'var(--text-xs)',
+                          fontWeight: 700,
+                          marginRight: 6,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <BadgeCheck size={13} aria-hidden='true' /> Approve
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => handleReview(d.id, 'REJECT')}
+                        disabled={isPending && reviewingId === d.id}
+                        style={{
+                          border: '1px solid var(--danger)',
+                          background: 'transparent',
+                          color: 'var(--danger)',
+                          cursor: 'pointer',
+                          padding: '6px 12px',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: 'var(--text-xs)',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <XCircle size={13} aria-hidden='true' /> Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile cards */}
+            <div
+              className='md:hidden'
+              style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--border-color)' }}
+            >
+              {depositQueue.map((d) => (
+                <div
+                  key={d.id}
+                  style={{
+                    background: 'var(--card-bg)',
+                    padding: 'var(--space-3)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--space-2)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-main)' }}>{d.userName}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.userNsuId}</div>
+                    </div>
+                    <span style={{ fontWeight: 700, color: 'var(--success)', fontVariantNumeric: 'tabular-nums', fontSize: 'var(--text-sm)' }}>
+                      +{formatBDT(d.amount)} BDT
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                    {d.description} · TrxID: {d.trxId || 'none'} ·{' '}
+                    {new Date(d.createdAt).toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button
+                      type='button'
+                      onClick={() => handleReview(d.id, 'APPROVE')}
+                      disabled={isPending && reviewingId === d.id}
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        background: 'var(--success)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        padding: '8px 0',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => handleReview(d.id, 'REJECT')}
+                      disabled={isPending && reviewingId === d.id}
+                      style={{
+                        flex: 1,
+                        border: '1px solid var(--danger)',
+                        background: 'transparent',
+                        color: 'var(--danger)',
+                        cursor: 'pointer',
+                        padding: '8px 0',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Wallets table */}
       <section

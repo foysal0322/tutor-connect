@@ -30,5 +30,22 @@ Small Fixes:
 - After saving the profile, the success/error message now scrolls into view on mobile so users can see the result
 - Account menu stays compact on small phone screens (shows only the avatar initials)
 
+Wallet Deposits — Now Verified by Admin (Important Change):
+- Deposits are no longer added to the balance instantly. When a user submits a deposit, it waits as "Pending" until an admin verifies the transaction ID
+- Users see a confirmation popup after submitting, and can track the deposit status (Pending / Approved / Rejected) in their transaction history
+- New admin section "Pending Deposit Approvals" where admins verify the transaction ID and Approve or Reject each deposit (works on mobile too)
+- Users get a notification and an email when their deposit is approved or rejected
+- Total Deposited on the wallet page now only counts approved deposits
+
+Small Fixes (2):
+- Request-a-Tutor form: date and time fields no longer overflow on small screens
+- Scrolling over the deposit amount field no longer accidentally changes the value
+- Shortened the welcome text on the dashboard for new users
+
+Performance / Technical (2):
+- Error monitoring (Sentry) is now completely disabled when not configured, and no longer slows down local development
+- Fixed deposit form acting erratically if submitted before the page fully loaded
+- Fixed errors for users whose account no longer exists (they now get a clear "sign in again" message instead of a failure)
+
 Next / To Do:
 -

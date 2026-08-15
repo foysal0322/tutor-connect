@@ -49,11 +49,19 @@ const REFUND_STATUS: ToneMap<string> = {
   RESOLVED: { label: 'Resolved', tone: 'success' },
 };
 
+const DEPOSIT_STATUS: ToneMap<string> = {
+  PENDING: { label: 'Pending Review', tone: 'warning' },
+  APPROVED: { label: 'Approved', tone: 'success' },
+  REJECTED: { label: 'Rejected', tone: 'danger' },
+  COMPLETED: { label: 'Completed', tone: 'success' },
+};
+
 const DOMAINS = {
   request: REQUEST_STATUS,
   payment: PAYMENT_METHOD,
   withdrawal: WITHDRAWAL_STATUS,
   refund: REFUND_STATUS,
+  deposit: DEPOSIT_STATUS,
 } as const;
 
 export type StatusDomain = keyof typeof DOMAINS;
