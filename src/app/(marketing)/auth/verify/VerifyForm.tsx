@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { MailCheck, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import {
   requestEmailVerification,
@@ -10,6 +12,7 @@ import {
   verifyUserEmail,
 } from '../actions/emailVerification';
 import { Input } from '@/components/ui/Input';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import {
   FormPage,
   FormCard,
@@ -22,6 +25,7 @@ import {
 } from '@/components/forms';
 
 export default function VerifyForm({ token, userId }: { token?: string; userId?: string }) {
+  const router = useRouter();
   const [step, setStep] = useState<'VERIFY' | 'SUCCESS'>('VERIFY');
   const [otp, setOtp] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
@@ -32,6 +36,7 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
   // so the button can't be spammed and the mailbox doesn't get flooded.
   const [cooldown, setCooldown] = useState(0);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
   const sentOnMount = useRef(false);
 
   const RESEND_COOLDOWN_SEC = 60;
@@ -78,6 +83,31 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
     if (res.success) {
       setStep('SUCCESS');
       setMessage({ type: 'success', text: res.message });
+      // Freshly verified — exchange the short-lived auto-login token for a
+      // session and land straight in the dashboard instead of making the
+      // user type their password again. Falls back to the "Sign in now"
+      // link below if the exchange fails for any reason.
+      const autoLoginToken = 'autoLoginToken' in res ? res.autoLoginToken : undefined;
+      if (autoLoginToken) {
+        setLoading(true);
+        setSigningIn(true);
+        try {
+          const login = await signIn('credentials', {
+            redirect: false,
+            identifier: 'auto-login',
+            autoLoginToken,
+          });
+          if (login?.ok && !login.error) {
+            router.push('/dashboard');
+            router.refresh();
+            return;
+          }
+        } catch {
+          // Non-fatal — the manual sign-in link remains available.
+        }
+        setSigningIn(false);
+        setLoading(false);
+      }
     } else {
       setMessage({ type: 'error', text: res.message });
     }
@@ -94,7 +124,9 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
             ? maskedEmail
               ? `Enter the 6-digit code sent to ${maskedEmail}.`
               : 'Enter the 6-digit code we sent to your email.'
-            : 'Your account is now active. You can sign in to continue.'
+            : signingIn
+              ? 'Your account is now active. Signing you in…'
+              : 'Your account is now active. You can sign in to continue.'
         }
         footer={
           step !== 'SUCCESS' ? (
@@ -162,9 +194,13 @@ export default function VerifyForm({ token, userId }: { token?: string; userId?:
 
         {step === 'SUCCESS' && (
           <div style={{ textAlign: 'center' }}>
-            <Link href="/auth/signin" className={homeLinkClass}>
-              Sign in now
-            </Link>
+            {signingIn ? (
+              <LoadingSpinner size="md" color="var(--primary)" />
+            ) : (
+              <Link href="/auth/signin" className={homeLinkClass}>
+                Sign in now
+              </Link>
+            )}
           </div>
         )}
       </FormCard>

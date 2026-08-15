@@ -10,6 +10,7 @@ import {
   OTP_ISSUE_RATE_LIMIT,
   OTP_VERIFY_RATE_LIMIT,
 } from '@/lib/rateLimit';
+import { signAutoLoginToken } from '@/lib/autoLoginToken';
 
 const OTP_TTL_MS = 15 * 60 * 1000;
 
@@ -192,7 +193,13 @@ export async function verifyUserEmail(userId: string, otp: string) {
       }),
     ]);
 
-    return { success: true, message: 'Your email has been verified! You can now sign in.' };
+    // Auto-login token so the verify page can sign the user straight in
+    // instead of bouncing them through the sign-in form again.
+    return {
+      success: true,
+      message: 'Your email has been verified!',
+      autoLoginToken: signAutoLoginToken(userId),
+    };
   } catch (error: any) {
     console.error('User email verification error:', error);
     return { success: false, message: 'An error occurred while verifying your email.' };
@@ -230,7 +237,7 @@ export async function verifyEmail(token: string, otp: string) {
     // P2002 — we surface a friendly error and void the pending row so the
     // user can restart instead of retrying into the same wall.
     try {
-      await prisma.$transaction([
+      const [createdUser] = await prisma.$transaction([
         prisma.user.create({
           data: {
             role: pending.role,
@@ -244,12 +251,20 @@ export async function verifyEmail(token: string, otp: string) {
             password: pending.hashedPassword,
             emailVerified: new Date(),
           },
+          select: { id: true },
         }),
         prisma.pendingRegistration.update({
           where: { id: pending.id },
           data: { status: 'RESOLVED' },
         }),
       ]);
+      // Auto-login token so the verify page can sign the user straight in
+      // instead of bouncing them through the sign-in form again.
+      return {
+        success: true,
+        message: 'Your email has been verified!',
+        autoLoginToken: signAutoLoginToken(createdUser.id),
+      };
     } catch (err: any) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         await prisma.pendingRegistration.update({
@@ -260,8 +275,6 @@ export async function verifyEmail(token: string, otp: string) {
       }
       throw err;
     }
-
-    return { success: true, message: 'Your email has been verified! You can now sign in.' };
   } catch (error: any) {
     console.error('Email verification error:', error);
     return { success: false, message: 'An error occurred while verifying your email.' };

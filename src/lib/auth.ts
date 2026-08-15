@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { rateLimit, LOGIN_RATE_LIMIT } from "./rateLimit";
+import { verifyAutoLoginToken } from "./autoLoginToken";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -17,9 +18,50 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         identifier: { label: "Email or NSU ID", type: "text" },
         password: { label: "Password", type: "password" },
-        role: { label: "Role", type: "text" }
+        role: { label: "Role", type: "text" },
+        autoLoginToken: { label: "Auto-login token", type: "text" }
       },
       async authorize(credentials) {
+        // Auto-login right after email verification: a short-lived signed
+        // token stands in for identifier+password. See src/lib/autoLoginToken.ts.
+        if (credentials?.autoLoginToken) {
+          const rl = rateLimit(
+            `auto-login:${credentials.autoLoginToken.slice(0, 64)}`,
+            LOGIN_RATE_LIMIT.limit,
+            LOGIN_RATE_LIMIT.windowMs,
+          );
+          if (!rl.ok) {
+            throw new Error("Too many attempts. Please try again later.");
+          }
+          const userId = verifyAutoLoginToken(credentials.autoLoginToken);
+          if (!userId) {
+            throw new Error("AUTO_LOGIN_EXPIRED");
+          }
+          const verified = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              nsuId: true,
+              role: true,
+              isBlocked: true,
+              emailVerified: true,
+            },
+          });
+          // The token is only honored for a live, verified, unblocked account.
+          if (!verified || !verified.emailVerified || verified.isBlocked) {
+            throw new Error("AUTO_LOGIN_EXPIRED");
+          }
+          return {
+            id: verified.id,
+            name: verified.name,
+            email: verified.email,
+            role: verified.role as 'STUDENT' | 'TUTOR' | 'ADMIN',
+            nsuId: verified.nsuId,
+          };
+        }
+
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error("Missing credentials");
         }
