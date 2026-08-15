@@ -94,7 +94,7 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
               name="name"
               type="text"
               label="Full Name"
-              placeholder="John Doe"
+              placeholder="Rakib Hasan"
               required
               error={form.errors.name}
               onChange={form.onChange("name")}
