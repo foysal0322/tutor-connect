@@ -93,7 +93,7 @@ export default async function LearningPanel({
         />
         <KPI
           label="Wallet Balance"
-          value={`৳${userBalance.toLocaleString()}`}
+          value={`${userBalance.toLocaleString()} TK`}
           icon={<History size={14} />}
           tone="info"
           hint="Available to spend or withdraw"

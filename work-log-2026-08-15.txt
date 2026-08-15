@@ -22,5 +22,13 @@ Performance / Technical:
 - Fixed the app sometimes showing old content after an update (service worker cache now refreshes properly)
 - Push notifications no longer run in the development environment, which was causing broken pages during development
 
+Wallet & Payments:
+- All money amounts now show as "TK" (e.g. "500 TK") instead of the "৳ BDT" style, across the wallet, dashboard, and admin pages
+- Deposit form: "TK" now appears after the amount, which reads more naturally
+
+Small Fixes:
+- After saving the profile, the success/error message now scrolls into view on mobile so users can see the result
+- Account menu stays compact on small phone screens (shows only the avatar initials)
+
 Next / To Do:
 -

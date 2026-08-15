@@ -253,7 +253,7 @@ export default function TeachingPanelView({ data }: { data: TeachingData }) {
         />
         <KPI
           label="Total Earnings"
-          value={`৳${t.totalEarnings.toLocaleString()}`}
+          value={`${t.totalEarnings.toLocaleString()} TK`}
           icon={<DollarSign size={14} />}
           tone="success"
           hint="From completed sessions"

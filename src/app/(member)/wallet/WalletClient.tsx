@@ -141,7 +141,7 @@ export default function WalletClient({
     } else if (res?.success && res.newBalance !== undefined) {
       const addedAmount = parseFloat(formData.get('amount') as string);
       setBalance(res.newBalance);
-      toast.success(`Deposited ৳${addedAmount.toLocaleString()} BDT successfully.`);
+      toast.success(`Deposited ${addedAmount.toLocaleString()} TK successfully.`);
 
       const newTxn: WalletTransaction = {
         id: `temp-${Date.now()}`,
@@ -184,9 +184,8 @@ export default function WalletClient({
         <div className={s.balanceMain}>
           <span className={s.balanceLabel}>Available Balance</span>
           <div className={s.balanceValue}>
-            <span aria-hidden="true">৳</span>
             <span>{formatBDT(balance)}</span>
-            <span className={s.currency}>BDT</span>
+            <span className={s.currency}>TK</span>
           </div>
           <p className={s.balanceHint}>
             Use it for instant tuition payments or request a withdrawal to your MFS account.
@@ -206,14 +205,14 @@ export default function WalletClient({
       >
         <KPI
           label="Total Deposited"
-          value={`৳${formatBDT(totalDeposited)}`}
+          value={`${formatBDT(totalDeposited)} TK`}
           icon={<ArrowDownLeft size={14} />}
           tone="success"
           hint="Lifetime wallet top-ups"
         />
         <KPI
           label="Total Spent (Tuition)"
-          value={`৳${formatBDT(totalSpent)}`}
+          value={`${formatBDT(totalSpent)} TK`}
           icon={<ArrowUpRight size={14} />}
           tone="danger"
           hint="Paid toward tutoring sessions"
@@ -221,7 +220,7 @@ export default function WalletClient({
         {pendingWithdrawals.length > 0 && (
           <KPI
             label={`Pending Withdrawal${pendingWithdrawals.length > 1 ? 's' : ''}`}
-            value={`৳${formatBDT(pendingWithdrawals.reduce((s2, w) => s2 + w.amount, 0))}`}
+            value={`${formatBDT(pendingWithdrawals.reduce((s2, w) => s2 + w.amount, 0))} TK`}
             icon={<Clock size={14} />}
             tone="info"
             hint={`${pendingWithdrawals.length} awaiting review`}
@@ -245,7 +244,7 @@ export default function WalletClient({
               <li key={w.id} className={s.withdrawalRow}>
                 <div className={s.withdrawalInfo}>
                   <span className={s.withdrawalAmount}>
-                    ৳{formatBDT(w.amount)} <span className={s.muted}>· net ৳{formatBDT(w.netAmount)}</span>
+                    {formatBDT(w.amount)} TK <span className={s.muted}>· net {formatBDT(w.netAmount)} TK</span>
                   </span>
                   <span className={s.withdrawalMeta}>
                     {w.mfsType ?? "BANK"} · ••••{(w.accountNumber ?? "").slice(-4)} · {(w.transferType ?? "SEND_MONEY").replace('_', ' ').toLowerCase()} · {formatDate(w.createdAt)}
@@ -285,7 +284,7 @@ export default function WalletClient({
                 Deposit Amount (Min 50 BDT)
               </label>
               <div style={{ position: 'relative' }}>
-                <span className={s.amountPrefix} aria-hidden="true">৳</span>
+                <span className={s.amountPrefix} aria-hidden="true">TK</span>
                 <input
                   id="wallet-amount"
                   name="amount"
@@ -390,7 +389,7 @@ export default function WalletClient({
                       className={isIn ? s.txnAmountIn : s.txnAmountOut}
                       title={isIn ? 'Credit' : 'Debit'}
                     >
-                      {isIn ? '+' : '−'}৳{formatBDT(txn.amount)}
+                      {isIn ? '+' : '−'}{formatBDT(txn.amount)} TK
                     </span>
                   </li>
                 );

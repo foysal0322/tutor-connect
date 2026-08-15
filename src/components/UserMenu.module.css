@@ -271,10 +271,14 @@
   color: var(--danger);
 }
 
-/* Hide the name label on very tight widths to avoid overflow; avatar still
-   communicates the trigger. */
-@media (max-width: 380px) {
+/* Tight widths: avatar-initials only — hide the full name so the trigger
+   stays compact. */
+@media (max-width: 400px) {
   .triggerName {
     display: none;
+  }
+
+  .trigger {
+    padding: 0.15rem;
   }
 }

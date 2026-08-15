@@ -184,7 +184,7 @@ export default async function TeachingPanel({
     ...recentWithdrawalsRaw.map((w) => ({
       id: w.id,
       kind: "withdrawal" as const,
-      title: `Withdrawal ${w.status.toLowerCase()} — ৳${w.netAmount.toLocaleString()} net`,
+      title: `Withdrawal ${w.status.toLowerCase()} — ${w.netAmount.toLocaleString()} TK net`,
       at: w.createdAt,
     })),
   ]
@@ -225,7 +225,7 @@ export default async function TeachingPanel({
   if (userBalance > 0) {
     actionItems.push({
       id: "withdraw",
-      text: `Withdraw ৳${userBalance.toLocaleString()} in available earnings`,
+      text: `Withdraw ${userBalance.toLocaleString()} TK in available earnings`,
       href: "/tutor/earnings",
       icon: "withdraw",
       iconTone: "success",

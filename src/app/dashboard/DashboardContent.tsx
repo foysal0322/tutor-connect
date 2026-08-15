@@ -64,10 +64,10 @@ export default function DashboardContent({
               <span className={styles.balanceIcon}>
                 <Wallet size={12} />
               </span>
+              <span className={styles.balanceLabel}>Balance:</span>
               <span className={styles.balanceAmount}>
-                ৳{userBalance.toLocaleString()}
+                {userBalance.toLocaleString()} TK
               </span>
-              <span className={styles.balanceLabel}>balance</span>
             </span>
             <Link
               href="/profile"

@@ -139,7 +139,7 @@ export default function DashboardContent({ data, refreshedAt }: { data: Dashboar
             {stats.pendingWithdrawalsCount > 0 && (
               <Link href="/admin/withdrawals" className={`${styles.bannerBtn} ${styles.bannerBtnAccent}`}>
                 <CreditCard size={14} aria-hidden="true" />
-                {stats.pendingWithdrawalsCount} Withdrawals (৳{stats.pendingWithdrawalsAmount.toLocaleString()})
+                {stats.pendingWithdrawalsCount} Withdrawals ({stats.pendingWithdrawalsAmount.toLocaleString()} TK)
               </Link>
             )}
             {stats.pendingRefunds > 0 && (
@@ -180,7 +180,7 @@ export default function DashboardContent({ data, refreshedAt }: { data: Dashboar
         />
         <KPI
           label="Tuition Volume"
-          value={`৳${stats.totalBudget.toLocaleString()}`}
+          value={`${stats.totalBudget.toLocaleString()} TK`}
           icon={<DollarSign size={16} aria-hidden="true" />}
           tone="accent"
           variant="accent"
@@ -202,7 +202,7 @@ export default function DashboardContent({ data, refreshedAt }: { data: Dashboar
           icon={<CreditCard size={16} aria-hidden="true" />}
           tone="accent"
           variant="accent"
-          hint={`৳${stats.pendingWithdrawalsAmount.toLocaleString()} queued`}
+          hint={`${stats.pendingWithdrawalsAmount.toLocaleString()} TK queued`}
           href="/admin/withdrawals"
         />
         <KPI

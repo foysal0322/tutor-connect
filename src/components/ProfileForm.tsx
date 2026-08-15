@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { updateUserProfile } from '@/app/actions/user';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -37,6 +37,15 @@ export default function ProfileForm({
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLDivElement | null>(null);
+
+  // On mobile the submit button is below the fold — the result alert renders
+  // at the top of the card, so without this the save feels like a no-op.
+  useEffect(() => {
+    if (error || success) {
+      alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error, success]);
 
   // Baseline snapshot from the user prop — used to detect unsaved changes.
   const baseline = useMemo(() => ({
@@ -105,8 +114,10 @@ export default function ProfileForm({
       title="Profile"
       subtitle="Update your personal, academic, and security details."
     >
-      {error && <FormAlert>{error}</FormAlert>}
-      {success && <FormAlert tone="success">Profile updated successfully!</FormAlert>}
+      <div ref={alertRef}>
+        {error && <FormAlert>{error}</FormAlert>}
+        {success && <FormAlert tone="success">Profile updated successfully!</FormAlert>}
+      </div>
 
       {/* Dirty-tracking status pill */}
       <div
