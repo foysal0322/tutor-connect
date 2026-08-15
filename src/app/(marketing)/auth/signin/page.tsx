@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
+import FormLoading from '@/components/ui/FormLoading';
 import SignInForm from './SignInForm';
 
 export default async function SignInPage() {
@@ -16,7 +17,15 @@ export default async function SignInPage() {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <FormLoading
+          variant='inline'
+          title='One moment…'
+          message='Preparing the sign-in form for you.'
+        />
+      }
+    >
       <SignInForm />
     </Suspense>
   );
