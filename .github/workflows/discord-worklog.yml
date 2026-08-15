@@ -1,0 +1,71 @@
+name: Discord Work Log
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Post new work-log entries to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret is not set. Skipping (no notification sent)."
+            exit 0
+          fi
+
+          TODAY=$(TZ=Asia/Dhaka date +%F)
+          f="work-log-${TODAY}.txt"
+
+          if [ ! -f "$f" ]; then
+            echo "No ${f} in the repo. Nothing to send."
+            exit 0
+          fi
+
+          # Only send lines added to today's log since the previous push
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ] \
+             || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            echo "No valid previous commit found — sending the full log."
+            added=$(cat "$f")
+          else
+            added=$(git diff "$BEFORE" "$AFTER" -- "$f" | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//' | grep -v '^[[:space:]]*$' || true)
+          fi
+
+          if [ -z "$added" ]; then
+            echo "Nothing new in ${f}. No notification sent."
+            exit 0
+          fi
+
+          echo "Sending new entries:"
+
+          send() {
+            payload=$(jq -n --arg c "$1" '{content: $c}')
+            curl -sf --retry 3 --retry-delay 2 -X POST \
+              -H "Content-Type: application/json" \
+              -d "$payload" "$DISCORD_WEBHOOK_URL"
+            sleep 1
+          }
+
+          chunk=""
+          while IFS= read -r line || [ -n "$chunk" ]; do
+            if [ -n "$chunk" ] && [ $(( ${#chunk} + ${#line} + 1 )) -ge 1900 ]; then
+              send "$chunk"
+              chunk="$line"
+            else
+              chunk="${chunk}${chunk:+$'\n'}$line"
+            fi
+          done <<< "$added"
+          if [ -n "$chunk" ]; then
+            send "$chunk"
+          fi
+
+          echo "Done."

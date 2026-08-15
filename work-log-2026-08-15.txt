@@ -64,6 +64,3 @@ Payment History — Mobile Friendly:
 - The Transaction ID is a slim tap-to-copy button, so it's easy to share when contacting support
 - The full table is unchanged on desktop
 - Fixed a CSS bug that could break the switch between the desktop table and the mobile cards
-
-Next / To Do:
--
