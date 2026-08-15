@@ -36,7 +36,12 @@ export function usePushNotifications() {
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
-      void registerServiceWorker();
+      // Dev skips SW registration — a dev service worker serves stale chunks
+      // after .next is wiped and breaks Turbopack module resolution.
+      // Mirrors ServiceWorkerRegister.tsx. Test push via a production build.
+      if (process.env.NODE_ENV === "production") {
+        void registerServiceWorker();
+      }
     }
   }, []);
 

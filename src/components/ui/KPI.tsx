@@ -29,7 +29,8 @@ type Variant = "default" | "accent" | "plain";
 
 export interface KPIProps {
   label: string;
-  value: string | number;
+  /** Plain metric, or a node (e.g. value + inline info trigger). */
+  value: React.ReactNode;
   icon?: React.ReactNode;
   tone?: Tone;
   variant?: Variant;
@@ -189,20 +190,11 @@ export function KPI({
     );
   }
 
+  // Non-interactive KPIs render as a <div> — a <button disabled> here would
+  // swallow clicks on any interactive element placed inside `value`.
   return (
-    <button
-      type="button"
-      className={className}
-      style={{
-        ...sharedStyle,
-        textAlign: "left",
-        font: "inherit",
-        width: "100%",
-      }}
-      onClick={onClick}
-      disabled={!onClick}
-    >
+    <div className={className} style={sharedStyle} onClick={onClick}>
       {inner}
-    </button>
+    </div>
   );
 }

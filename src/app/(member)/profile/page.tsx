@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { getDepartments } from '@/lib/cache';
 import ProfileForm from '@/components/ProfileForm';
+import CompletionChecklist from './CompletionChecklist';
 import { requireRole } from '@/lib/server/auth-gate';
 import { KPI } from '@/components/ui/KPI';
-import { GraduationCap, Star, CheckCircle2, Circle, BookOpenCheck, ArrowRight, TrendingUp } from 'lucide-react';
+import { GraduationCap, Star, CheckCircle2, BookOpenCheck, ArrowRight, TrendingUp } from 'lucide-react';
 
 /**
  * Unified member profile. The same `ProfileForm` is used for every member —
@@ -69,23 +70,35 @@ export default async function ProfilePage() {
   const filledCount = Object.values(profileFields).filter(Boolean).length;
   const profilePercent = Math.round((filledCount / 5) * 100);
 
-  // What the percentage is made of — surfaced so the number isn't a mystery.
-  const completionItems: { done: boolean; label: string; href?: string }[] = [
+  // What the percentage is made of — surfaced via the "What counts?" modal
+  // so the number isn't a mystery.
+  const completionItems = [
     { done: profileFields.hasGender, label: 'Add your gender' },
     { done: profileFields.hasDepartment, label: 'Select your department' },
     { done: profileFields.hasCgpa, label: 'Add your CGPA' },
-    { done: profileFields.hasAnyExpertise, label: 'Add at least one subject you can teach', href: '/tutor/expertise' },
-    { done: profileFields.hasActiveExpertise, label: 'Keep one subject actively listed', href: '/tutor/expertise' },
+    { done: profileFields.hasAnyExpertise, label: 'Add at least one subject you can teach', href: '/tutor/expertise', tutorOnly: true },
+    { done: profileFields.hasActiveExpertise, label: 'Keep one subject actively listed', href: '/tutor/expertise', tutorOnly: true },
   ];
 
   return (
     <div className="max-w-2xl flex flex-col gap-5">
       <h1 className="mb-0">My Profile</h1>
 
-      {/* ---------- Profile completion KPI ---------- */}
+      {/* ---------- Profile completion KPI (info trigger inline) ---------- */}
       <KPI
         label="Profile Completion"
-        value={`${profilePercent}%`}
+        value={
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+            }}
+          >
+            {`${profilePercent}%`}
+            <CompletionChecklist items={completionItems} isTutor={isTutor} />
+          </span>
+        }
         icon={<TrendingUp size={14} />}
         tone={profilePercent >= 80 ? 'success' : profilePercent >= 50 ? 'primary' : 'accent'}
         variant="accent"
@@ -95,39 +108,6 @@ export default async function ProfilePage() {
             : 'Boost visibility by completing your profile.'
         }
       />
-
-      {/* ---------- Completion checklist (what the % is made of) ---------- */}
-      {profilePercent < 100 && (
-        <section
-          className="card"
-          style={{ padding: 'var(--space-4) var(--space-5)' }}
-          aria-label="How to complete your profile"
-        >
-          <p style={{ margin: '0 0 var(--space-3)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Your completion score is based on these five steps:
-          </p>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            {completionItems.map((item) => (
-              <li key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '0.875rem' }}>
-                {item.done ? (
-                  <CheckCircle2 size={16} style={{ color: 'var(--success)', flexShrink: 0 }} aria-hidden="true" />
-                ) : (
-                  <Circle size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} aria-hidden="true" />
-                )}
-                {item.done ? (
-                  <span style={{ color: 'var(--text-muted)' }}>
-                    <s>{item.label}</s>
-                  </span>
-                ) : item.href ? (
-                  <Link href={item.href}>{item.label}</Link>
-                ) : (
-                  <span>{item.label}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* ---------- Read-only Tutor section (only when isTutor) ---------- */}
       {isTutor && (

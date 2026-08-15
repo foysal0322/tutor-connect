@@ -16,6 +16,11 @@ Profile Page:
 - Profile page now shows a checklist explaining what the completion percentage means, with links to finish the missing steps
 - Students can now also edit their CGPA (previously tutors only); clearing the field removes it
 - Profile updates now refresh the completion score on the profile and dashboard immediately
+- The completion checklist now opens from a small "info" icon next to the percentage (no longer takes up space on the page), and tutor-only steps are hidden from students
+
+Performance / Technical:
+- Fixed the app sometimes showing old content after an update (service worker cache now refreshes properly)
+- Push notifications no longer run in the development environment, which was causing broken pages during development
 
 Next / To Do:
 -

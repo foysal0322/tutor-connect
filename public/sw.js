@@ -14,7 +14,7 @@
 // Bump CACHE_VERSION when you change precaching or the fetch strategy so old
 // caches are cleaned up on activate.
 
-var CACHE_VERSION = 'v1';
+var CACHE_VERSION = 'v2';
 var CACHE_NAME = 'nsuone-shell-' + CACHE_VERSION;
 var PRECACHE_URLS = [
   '/',
@@ -129,13 +129,23 @@ self.addEventListener('fetch', function (event) {
   }
 
   // Hashed build assets under /_next/static/ are immutable: cache-first.
+  // Dev servers reuse these URLs across restarts and send no `immutable`
+  // Cache-Control header, so we only cache responses the server explicitly
+  // marked immutable — otherwise dev would serve stale chunks forever.
   if (url.pathname.indexOf('/_next/static/') === 0) {
     event.respondWith(
       caches.match(request).then(function (cached) {
         if (cached) return cached;
         return fetch(request)
           .then(function (response) {
-            if (response && response.status === 200) {
+            var cacheControl =
+              response && response.headers.get('Cache-Control');
+            if (
+              response &&
+              response.status === 200 &&
+              cacheControl &&
+              cacheControl.indexOf('immutable') !== -1
+            ) {
               var copy = response.clone();
               caches.open(CACHE_NAME).then(function (cache) {
                 cache.put(request, copy).catch(function () {});
