@@ -123,6 +123,9 @@ interface DataGridProps<T> {
   onRowClick?: (item: T) => void;
   editingRowId?: string | null;
   renderEditableRow?: (item: T) => React.ReactNode;
+  /** Bespoke mobile card (md and below). Falls back to the generic
+      label-per-column dump when not provided. */
+  renderMobileCard?: (item: T) => React.ReactNode;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -528,6 +531,7 @@ export default function DataGrid<T extends Record<string, any>>({
   onRowClick,
   editingRowId = null,
   renderEditableRow,
+  renderMobileCard,
 }: DataGridProps<T>) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortStack, setSortStack] = useState<SortEntry[]>([]);
@@ -831,6 +835,10 @@ export default function DataGrid<T extends Record<string, any>>({
             paginatedData.map((item, rowIndex) => {
               const rowId = rowIdFn(item, rowIndex);
               const isEditing = editingRowId === rowId;
+              // Bespoke mobile card replaces the generic card entirely.
+              if (!isEditing && renderMobileCard) {
+                return <div key={rowId}>{renderMobileCard(item)}</div>;
+              }
               return (
                 <div
                   key={rowId}
@@ -856,6 +864,8 @@ export default function DataGrid<T extends Record<string, any>>({
                     <div className="flex flex-col gap-2">
                       {renderEditableRow(item)}
                     </div>
+                  ) : renderMobileCard ? (
+                    renderMobileCard(item)
                   ) : (
                     columns.map((col, colIndex) => (
                       <div

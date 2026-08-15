@@ -1,11 +1,29 @@
 'use client';
 
-import { Wallet, Clock, CheckCircle2, ReceiptText, ArrowUpRight } from 'lucide-react';
+import { Wallet, Clock, CheckCircle2, ReceiptText, ArrowUpRight, Copy } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
+import { useToast } from '@/components/ToastProvider';
 import { KPI } from '@/components/ui/KPI';
 import DataGrid, { type ColumnDef } from '@/components/ui/DataGrid';
 import PendingPaymentsSection from './PendingPaymentsSection';
 import s from './payments.module.css';
+
+function formatPaymentDate(d: string | Date): string {
+  return new Date(d).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Dhaka',
+  });
+}
+
+function providerBadgeClass(mfsType: string): string {
+  return mfsType === 'BKASH'
+    ? 'badge-danger'
+    : mfsType === 'NAGAD'
+      ? 'badge-warning'
+      : 'badge-info';
+}
 
 /**
  * Reusable render of the student Payments view (balance hero + KPIs +
@@ -37,6 +55,8 @@ export default function PaymentsView({
 
   // Only rows with a payment record go into the history DataGrid.
   const paidRequests = requests.filter((r) => r.payment);
+
+  const { toast } = useToast();
 
   const columns: ColumnDef<any>[] = [
     {
@@ -92,13 +112,7 @@ export default function PaymentsView({
       header: 'Date',
       accessorKey: 'payment.createdAt',
       sortable: true,
-      cell: (r) =>
-        new Date(r.payment.createdAt).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          timeZone: 'Asia/Dhaka',
-        }),
+      cell: (r) => formatPaymentDate(r.payment.createdAt),
     },
     {
       header: 'Status',
@@ -189,6 +203,88 @@ export default function PaymentsView({
           searchKeys={['course.name', 'payment.mfsType', 'payment.transactionId']}
           itemsPerPage={10}
           emptyMessage="No payments found."
+          renderMobileCard={(r) => {
+            const isVerified = r.status !== 'PAYMENT_PENDING' && r.status !== 'MATCHED';
+            return (
+              <div
+                className="card p-4 flex flex-col gap-3"
+                style={{ borderLeft: `6px solid ${isVerified ? 'var(--success)' : '#1d4ed8'}` }}
+              >
+                {/* Course + status */}
+                <div className="flex items-start justify-between gap-2">
+                  <div style={{ minWidth: 0 }}>
+                    <h3 className="m-0" style={{ fontSize: '1rem', overflowWrap: 'anywhere' }}>
+                      {r.course.name}
+                    </h3>
+                    <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+                      {formatPaymentDate(r.payment.createdAt)}
+                      {r.assignedTutor ? ` · ${r.assignedTutor.name}` : ''}
+                    </span>
+                  </div>
+                  <span className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`} style={{ whiteSpace: 'nowrap' }}>
+                    {isVerified ? 'VERIFIED' : 'PENDING'}
+                  </span>
+                </div>
+
+                {/* Amount row */}
+                <div className="flex items-end justify-between gap-2">
+                  <div>
+                    <div
+                      className="text-muted"
+                      style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                    >
+                      Total Paid
+                    </div>
+                    <strong style={{ fontSize: '1.2rem', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatBDT(r.payment.amount)} BDT
+                    </strong>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      Tuition {formatBDT(r.budget)} BDT
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`badge ${providerBadgeClass(r.payment.mfsType)}`}>
+                      {r.payment.mfsType === 'CAMPUS_WALLET' ? 'WALLET' : r.payment.mfsType}
+                    </span>
+                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      ••••{(r.payment.accountNumber ?? '').slice(-4)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* TrxID — tap to copy */}
+                {r.payment.transactionId && r.payment.transactionId !== 'WALLET' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(r.payment.transactionId);
+                      toast.success('TrxID copied to clipboard!');
+                    }}
+                    className="flex items-center justify-between gap-2"
+                    style={{
+                      font: 'inherit',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--card-bg)',
+                      color: 'var(--text-main)',
+                    }}
+                    aria-label="Copy transaction ID"
+                  >
+                    <span style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
+                      <Copy size={13} aria-hidden="true" style={{ flexShrink: 0 }} />
+                      <span style={{ overflowWrap: 'anywhere' }}>TrxID {r.payment.transactionId}</span>
+                    </span>
+                    <span className="text-muted" style={{ fontSize: '0.7rem', flexShrink: 0 }}>
+                      TAP TO COPY
+                    </span>
+                  </button>
+                )}
+              </div>
+            );
+          }}
         />
       )}
     </div>

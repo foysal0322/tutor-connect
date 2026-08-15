@@ -59,5 +59,10 @@ Payment Page — Choose How to Pay:
 - Campus Wallet card shows your available balance (greyed out if the wallet is empty)
 - If the wallet doesn't cover the full amount, the remaining balance is automatically calculated for the bKash / Nagad / Rocket payment
 
+Payment History — Mobile Friendly:
+- On phones, each payment now shows as a clean card instead of a cramped table: course name and status on top, the paid amount in large text, provider (bKash/Nagad/Rocket), date, and masked account number
+- The Transaction ID is a tap-to-copy button, so it's easy to share when contacting support
+- The full table is unchanged on desktop
+
 Next / To Do:
 -
