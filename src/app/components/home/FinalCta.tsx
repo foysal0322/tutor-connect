@@ -22,7 +22,7 @@ export default function FinalCta() {
             Find a Tutor
             <ArrowRight size={18} aria-hidden="true" />
           </Link>
-          <Link href="/auth/tutor-register" className={styles.ctaSecondary}>
+          <Link href="/auth/register" className={styles.ctaSecondary}>
             <GraduationCap size={18} aria-hidden="true" />
             Become a Tutor
           </Link>

@@ -29,7 +29,7 @@ export default function RequestedCoursesPreview({ requests }: { requests: Reques
               Real, open requests from NSUers. Register as a tutor to apply.
             </p>
           </div>
-          <Link href="/auth/tutor-register" className={styles.linkAction}>
+          <Link href="/auth/register" className={styles.linkAction}>
             Become a Tutor to Apply
             <ArrowRight size={16} aria-hidden="true" />
           </Link>

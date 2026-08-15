@@ -84,10 +84,10 @@ export default function NavbarClient({ session }: { session: any }) {
           </Link>
           {!session && (
             <Link
-              href='/auth/tutor-register'
-              className={activeClass("/auth/tutor-register")}
+              href='/auth/register'
+              className={activeClass("/auth/register")}
               aria-current={
-                isActive("/auth/tutor-register") ? "page" : undefined
+                isActive("/auth/register") ? "page" : undefined
               }
               onClick={() => setIsMobileMenuOpen(false)}
             >

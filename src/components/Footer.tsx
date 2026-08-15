@@ -38,7 +38,7 @@ type LinkItem = {
 
 const PLATFORM_LINKS: LinkItem[] = [
   { label: 'Find a Tutor', href: '/find-tutor' },
-  { label: 'Become a Tutor', href: '/auth/tutor-register' },
+  { label: 'Become a Tutor', href: '/auth/register' },
   { label: 'Get Consultancy', href: '/consultancy' },
   { label: 'One Shop', soon: true },
 ];

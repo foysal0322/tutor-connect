@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
+import FormLoading from '@/components/ui/FormLoading';
 
 export default async function RegisterPage() {
   // Authenticated users have no business on the registration page — bounce
@@ -16,7 +17,15 @@ export default async function RegisterPage() {
   const departments = await getDepartments();
 
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <FormLoading
+          variant='inline'
+          title='One moment…'
+          message='Preparing the form for you.'
+        />
+      }
+    >
       <RegisterForm departments={departments} />
     </Suspense>
   );

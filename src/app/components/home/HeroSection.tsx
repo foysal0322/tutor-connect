@@ -28,7 +28,7 @@ export default function HeroSection() {
               Find a Tutor
               <ArrowRight size={18} aria-hidden='true' />
             </Link>
-            <Link href='/auth/tutor-register' className='btn-outline'>
+            <Link href='/auth/register' className='btn-outline'>
               <GraduationCap size={18} aria-hidden='true' />
               Become a Tutor
             </Link>

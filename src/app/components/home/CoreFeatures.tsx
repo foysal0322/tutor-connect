@@ -22,7 +22,7 @@ const features: Feature[] = [
     text: 'Struggling with a course? Browse verified NSU tutors who already aced it. Filter by department, course, or preferred session mode.',
   },
   {
-    href: '/auth/tutor-register',
+    href: '/auth/register',
     icon: <GraduationCap size={22} />,
     iconBg: 'color-mix(in srgb, var(--success) 12%, transparent)',
     iconColor: 'var(--success)',
