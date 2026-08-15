@@ -60,9 +60,10 @@ Payment Page — Choose How to Pay:
 - If the wallet doesn't cover the full amount, the remaining balance is automatically calculated for the bKash / Nagad / Rocket payment
 
 Payment History — Mobile Friendly:
-- On phones, each payment now shows as a clean card instead of a cramped table: course name and status on top, the paid amount in large text, provider (bKash/Nagad/Rocket), date, and masked account number
-- The Transaction ID is a tap-to-copy button, so it's easy to share when contacting support
+- On phones, each payment now shows as a clean card instead of a cramped table: course name and status on top, then a tidy 2x2 grid — Total Paid, Tuition, Provider (bKash/Nagad/Rocket), and masked account number (••••1234)
+- The Transaction ID is a slim tap-to-copy button, so it's easy to share when contacting support
 - The full table is unchanged on desktop
+- Fixed a CSS bug that could break the switch between the desktop table and the mobile cards
 
 Next / To Do:
 -

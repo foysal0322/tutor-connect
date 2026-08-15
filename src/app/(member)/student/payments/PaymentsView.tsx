@@ -25,6 +25,13 @@ function providerBadgeClass(mfsType: string): string {
       : 'badge-info';
 }
 
+/** Uppercase micro-label used above each value in the mobile card fact grid. */
+const microLabel: React.CSSProperties = {
+  fontSize: '0.65rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+};
+
 /**
  * Reusable render of the student Payments view (balance hero + KPIs +
  * pending payments + history table). Extracted from /student/payments/page.tsx
@@ -207,52 +214,82 @@ export default function PaymentsView({
             const isVerified = r.status !== 'PAYMENT_PENDING' && r.status !== 'MATCHED';
             return (
               <div
-                className="card p-4 flex flex-col gap-3"
-                style={{ borderLeft: `6px solid ${isVerified ? 'var(--success)' : '#1d4ed8'}` }}
+                className="card"
+                style={{
+                  padding: '0.75rem 0.875rem',
+                  borderLeft: `4px solid ${isVerified ? 'var(--success)' : '#1d4ed8'}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.6rem',
+                }}
               >
-                {/* Course + status */}
-                <div className="flex items-start justify-between gap-2">
+                {/* Header: course · date/tutor … status */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
                   <div style={{ minWidth: 0 }}>
-                    <h3 className="m-0" style={{ fontSize: '1rem', overflowWrap: 'anywhere' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.3, overflowWrap: 'anywhere' }}>
                       {r.course.name}
                     </h3>
-                    <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+                    <span className="text-muted" style={{ fontSize: '0.7rem' }}>
                       {formatPaymentDate(r.payment.createdAt)}
                       {r.assignedTutor ? ` · ${r.assignedTutor.name}` : ''}
                     </span>
                   </div>
-                  <span className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`} style={{ whiteSpace: 'nowrap' }}>
+                  <span
+                    className={`badge ${isVerified ? 'badge-success' : 'badge-info'}`}
+                    style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                  >
                     {isVerified ? 'VERIFIED' : 'PENDING'}
                   </span>
                 </div>
 
-                {/* Amount row */}
-                <div className="flex items-end justify-between gap-2">
+                <div style={{ borderTop: '1px solid var(--border-color)' }} role="presentation" />
+
+                {/* Facts — 2×2 grid with micro-labels so each value reads as its own cell */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem 0.75rem',
+                  }}
+                >
                   <div>
-                    <div
-                      className="text-muted"
-                      style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                    >
-                      Total Paid
+                    <div className="text-muted" style={microLabel}>
+                      Total paid
                     </div>
-                    <strong style={{ fontSize: '1.2rem', fontVariantNumeric: 'tabular-nums' }}>
+                    <strong style={{ fontSize: '0.95rem', fontVariantNumeric: 'tabular-nums' }}>
                       {formatBDT(r.payment.amount)} BDT
                     </strong>
-                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                      Tuition {formatBDT(r.budget)} BDT
-                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`badge ${providerBadgeClass(r.payment.mfsType)}`}>
+                  <div>
+                    <div className="text-muted" style={microLabel}>
+                      Tuition
+                    </div>
+                    <span style={{ fontSize: '0.85rem', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatBDT(r.budget)} BDT
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-muted" style={microLabel}>
+                      Provider
+                    </div>
+                    <span
+                      className={`badge ${providerBadgeClass(r.payment.mfsType)}`}
+                      style={{ fontSize: '0.65rem' }}
+                    >
                       {r.payment.mfsType === 'CAMPUS_WALLET' ? 'WALLET' : r.payment.mfsType}
                     </span>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  </div>
+                  <div>
+                    <div className="text-muted" style={microLabel}>
+                      Account
+                    </div>
+                    <span style={{ fontSize: '0.85rem', fontVariantNumeric: 'tabular-nums' }}>
                       ••••{(r.payment.accountNumber ?? '').slice(-4)}
                     </span>
                   </div>
                 </div>
 
-                {/* TrxID — tap to copy */}
+                {/* TrxID — slim tap-to-copy row */}
                 {r.payment.transactionId && r.payment.transactionId !== 'WALLET' && (
                   <button
                     type="button"
@@ -260,25 +297,26 @@ export default function PaymentsView({
                       navigator.clipboard.writeText(r.payment.transactionId);
                       toast.success('TrxID copied to clipboard!');
                     }}
-                    className="flex items-center justify-between gap-2"
                     style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
                       font: 'inherit',
                       textAlign: 'left',
                       cursor: 'pointer',
-                      padding: '0.5rem 0.75rem',
+                      padding: '0.35rem 0.6rem',
                       borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--card-bg)',
+                      border: '1px dashed var(--border-color)',
+                      background: 'var(--surface-1)',
                       color: 'var(--text-main)',
+                      fontSize: '0.75rem',
                     }}
                     aria-label="Copy transaction ID"
                   >
-                    <span style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
-                      <Copy size={13} aria-hidden="true" style={{ flexShrink: 0 }} />
-                      <span style={{ overflowWrap: 'anywhere' }}>TrxID {r.payment.transactionId}</span>
-                    </span>
-                    <span className="text-muted" style={{ fontSize: '0.7rem', flexShrink: 0 }}>
-                      TAP TO COPY
+                    <Copy size={12} aria-hidden="true" style={{ flexShrink: 0 }} />
+                    <span style={{ overflowWrap: 'anywhere' }}>TrxID {r.payment.transactionId}</span>
+                    <span className="text-muted" style={{ marginLeft: 'auto', fontSize: '0.65rem', flexShrink: 0 }}>
+                      COPY
                     </span>
                   </button>
                 )}

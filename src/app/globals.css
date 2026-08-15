@@ -329,6 +329,12 @@ button:disabled,
   grid-column: span 2 / span 2;
 }
 
+/* Display utility — used by DataGrid to swap the desktop table for mobile
+   cards below 768px (paired with .md\:table above). */
+.hidden {
+  display: none !important;
+}
+
 @media (min-width: 640px) {
   .sm\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -348,7 +354,7 @@ button:disabled,
   .md\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .hidden\.md\:table {
+  .md\:table {
     display: table !important;
   }
   .md\:hidden {
