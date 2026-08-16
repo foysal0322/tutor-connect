@@ -294,6 +294,12 @@
 /* Main Content Wrapper */
 .mainWrapper {
   flex: 1;
+  /* Flex items default to min-width: auto, which floors this wrapper at its
+     content's intrinsic width (wide native inputs, tables). That overflows
+     narrow viewports instead of letting children shrink, so allow it to
+     compress; grids/flex lists inside pages opt out individually via
+     min-width: 0 on their items. */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -533,5 +539,14 @@
   }
   .content {
     padding: 1rem;
+  }
+  /* One mobile gutter, not two. .content pads 1rem, and the global
+     .container stacks its own 1.5rem per side on top — 40px total,
+     ~21% of a 375px viewport. Zero the container's side padding inside
+     the dashboard shell only; marketing pages outside the shell keep
+     the .container gutter as their only one. */
+  .content :global(.container) {
+    padding-left: 0;
+    padding-right: 0;
   }
 }

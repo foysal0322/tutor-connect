@@ -321,19 +321,14 @@ export default function WalletClient({
 
           {state?.error && <FormAlert>{state.error}</FormAlert>}
 
-          <form
-            ref={formRef}
-            action={formAction}
-            className="flex flex-col"
-            style={{ gap: "var(--space-5)" }}
-          >
+          <form ref={formRef} action={formAction} className={s.depositForm}>
             {/* Included as a hidden field so the server action receives it even
                 on a pre-hydration (progressively enhanced) submit. */}
             <input type="hidden" name="mfsType" value={mfsType} />
 
             {/* MFS provider */}
             <div>
-              <label className={s.fieldLabel}>Send Money From (bKash / Nagad / Rocket)</label>
+              <label className={s.fieldLabel}>Send Money From</label>
               <MfsProviderSelect
                 value={mfsType}
                 onChange={setMfsType}

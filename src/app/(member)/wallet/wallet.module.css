@@ -162,6 +162,15 @@
   align-items: start;
 }
 
+/* Grid items default to min-width: auto, so a card cannot shrink below its
+   content's intrinsic width. The deposit form's native inputs are
+   intrinsically ~320px (size=20 at their font size), which pinned both
+   cards at ~402px and overflowed viewports narrower than that. */
+.twoCol > *,
+.verifyGrid > * {
+  min-width: 0;
+}
+
 @media (min-width: 1024px) {
   .twoCol {
     grid-template-columns: 7fr 5fr;
@@ -180,6 +189,12 @@
 }
 
 /* ---------- Deposit form ---------- */
+
+.depositForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
 
 .formHead {
   display: flex;
@@ -499,5 +514,63 @@
   .withdrawalRow {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* Mobile: the two cards are the whole screen. Tighter surfaces, tighter
+     field rhythm, and a calmer amount field keep the form scannable without
+     shrinking any input below 16px (iOS zooms on focus below that). */
+  .twoCol {
+    gap: var(--space-4);
+  }
+
+  .depositCol,
+  .historyCol {
+    padding: var(--space-4);
+  }
+
+  .formTitle {
+    font-size: var(--text-lg);
+  }
+
+  .formSub {
+    margin-bottom: var(--space-3);
+  }
+
+  .depositForm {
+    gap: var(--space-4);
+  }
+
+  .verifyGrid {
+    gap: var(--space-3);
+  }
+
+  .amountInput {
+    font-size: var(--text-lg);
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+
+  /* Mobile: no nested scroll-inside-scroll — the list flows with the page
+     and rows breathe with fuller descriptions (2-line clamp instead of a
+     single truncated line, so payment details stay readable). */
+  .historyCol {
+    min-height: 0;
+  }
+
+  .txnList {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .txnRow {
+    padding: var(--space-3) 0;
+  }
+
+  .txnDesc {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
   }
 }
