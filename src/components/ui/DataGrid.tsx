@@ -717,15 +717,16 @@ export default function DataGrid<T extends Record<string, any>>({
       )}
 
       {searchable && (
-        <div className="flex justify-end mb-4">
-          <div className="relative w-full max-w-sm">
+        <div className={styles.searchWrap}>
+          <div className={styles.searchBox}>
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+              className={styles.searchIcon}
               size={18}
+              aria-hidden="true"
             />
             <input
               type="text"
-              className="form-input pl-10"
+              className={`form-input ${styles.searchInput}`}
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => {

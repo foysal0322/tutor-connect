@@ -48,6 +48,35 @@
   gap: 0.25rem;
 }
 
+/* ---------------- Search box ---------------- */
+/* Self-contained: does not rely on the global utility classes
+   (.flex/.relative/etc.) so positioning can't break if those change. */
+.searchWrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-4);
+}
+
+.searchBox {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* form-input's 1rem left padding clears the 18px icon at --space-3. */
+.searchInput {
+  padding-left: calc(var(--space-3) + 22px);
+}
+
 /* ---------------- Filter menu ---------------- */
 .filterTrigger {
   display: inline-flex;
