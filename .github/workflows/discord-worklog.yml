@@ -7,41 +7,112 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Turn the pushed commits into plain-language lines and append them to
+      # the day's work log, so the log stays current even when the push did
+      # not touch it by hand. Client-facing words, no commit jargon.
+      - name: Update work log from pushed commits
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          TODAY=$(TZ=Asia/Dhaka date +%F)
+          f="work-log-${TODAY}.txt"
+
+          # Range of commits introduced by this push (whole history if the
+          # previous sha is missing or invalid).
+          range="$AFTER"
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] \
+             && git cat-file -e "$BEFORE" 2>/dev/null; then
+            range="$BEFORE..$AFTER"
+          fi
+
+          # Conventional-commit subject -> client-friendly line.
+          plain() {
+            sed -E \
+              -e 's/^feat(\([^)]*\))?: /[Added] /' \
+              -e 's/^fix(\([^)]*\))?: /[Fixed] /' \
+              -e 's/^docs(\([^)]*\))?: /[Documented] /' \
+              -e 's/^refactor(\([^)]*\))?: /[Improved] /' \
+              -e 's/^test(\([^)]*\))?: /[Tested] /' \
+              -e 's/^style(\([^)]*\))?: /[Polished] /' \
+              -e 's/^perf(\([^)]*\))?: /[Sped up] /' \
+              -e 's/^chore(\([^)]*\))?: /[Maintenance] /' \
+              -e 's/^ci(\([^)]*\))?: /[Automation] /' \
+              -e 's/^[a-z]+(\([^)]*\))?: /[Updated] /' \
+              | awk '{ if (match($0, /^\[[^]]+\] [a-z]/)) { cap=toupper(substr($0, RSTART+RLENGTH-1, 1)); $0 = substr($0, 1, RSTART+RLENGTH-2) cap substr($0, RSTART+RLENGTH); } print }'
+          }
+
+          # Auto lines: one per commit. Skip merges and work-log bookkeeping
+          # so the client log stays about product changes.
+          auto=$(git log --format='%s' "$range" 2>/dev/null \
+            | grep -vE '^Merge ' \
+            | grep -vE '^docs\(work-log\)' \
+            | plain \
+            | sed 's/^/- /' || true)
+
+          # Manual lines: entries a human added to today's log in this push
+          # (they are already in the file — only forwarded to Discord).
+          manual=""
+          if [ -f "$f" ]; then
+            if [ "$range" = "$AFTER" ]; then
+              manual=$(grep -E '^- ' "$f" || true)
+            else
+              manual=$(git diff "$BEFORE" "$AFTER" -- "$f" \
+                | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//' \
+                | grep -v '^[[:space:]]*$' \
+                | grep -vE '^Tutor Connect - |^=====$|^Project Updates:$' || true)
+            fi
+          fi
+
+          # Append the auto lines to the log (manual ones are already there).
+          if [ -n "$auto" ]; then
+            if [ ! -f "$f" ]; then
+              {
+                echo "Tutor Connect - Updates ($(TZ=Asia/Dhaka date '+%B %-d, %Y'))"
+                echo "=========================================="
+                echo ""
+                echo "Project Updates:"
+              } > "$f"
+            fi
+            [ -n "$(tail -c 1 "$f")" ] && echo "" >> "$f"
+            printf '%s\n' "$auto" >> "$f"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$f"
+            git commit -m "docs(work-log): record ${TODAY} updates [skip ci]"
+            # Retry once in case another push landed in the meantime.
+            git push || (git pull --rebase origin main && git push)
+          fi
+
+          # Combined new content for the Discord step (same runner, same
+          # workspace, so a temp file carries it across steps).
+          {
+            [ -n "$manual" ] && printf '%s\n' "$manual"
+            [ -n "$auto" ] && printf '%s\n' "$auto"
+          } > /tmp/worklog-new.txt
+
+          echo "--- new work-log content ---"
+          cat /tmp/worklog-new.txt
+
       - name: Post new work-log entries to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.sha }}
         run: |
           if [ -z "$DISCORD_WEBHOOK_URL" ]; then
             echo "DISCORD_WEBHOOK_URL secret is not set. Skipping (no notification sent)."
             exit 0
           fi
 
-          TODAY=$(TZ=Asia/Dhaka date +%F)
-          f="work-log-${TODAY}.txt"
-
-          if [ ! -f "$f" ]; then
-            echo "No ${f} in the repo. Nothing to send."
-            exit 0
-          fi
-
-          # Only send lines added to today's log since the previous push
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ] \
-             || ! git cat-file -e "$BEFORE" 2>/dev/null; then
-            echo "No valid previous commit found — sending the full log."
-            added=$(cat "$f")
-          else
-            added=$(git diff "$BEFORE" "$AFTER" -- "$f" | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//' | grep -v '^[[:space:]]*$' || true)
-          fi
-
-          if [ -z "$added" ]; then
-            echo "Nothing new in ${f}. No notification sent."
+          if [ ! -s /tmp/worklog-new.txt ]; then
+            echo "Nothing new in the work log. No notification sent."
             exit 0
           fi
 
@@ -63,7 +134,7 @@ jobs:
             else
               chunk="${chunk}${chunk:+$'\n'}$line"
             fi
-          done <<< "$added"
+          done < /tmp/worklog-new.txt
           if [ -n "$chunk" ]; then
             send "$chunk"
           fi
