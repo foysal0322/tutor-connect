@@ -4,7 +4,7 @@ Tutor Connect - Updates (August 16, 2026)
 Project Updates:
 - Daily progress updates now post automatically to a Discord channel, so you can follow what was done each day without touching any code
 - The daily work log now also updates itself in plain words on every push, so summaries reach you even on busy days
-- Fixed the search icon in table search boxes; it now sits properly centered inside the field instead of the top corner
 - Fixed wallet and other member pages sticking out past the screen edge on phones narrower than 580px; cards now resize smoothly to fit
-- Improved the Deposit Funds and Transaction History cards on mobile: compact spacing, full payment details visible, and the page scrolls naturally instead of inside a small inner box
+- Fixed the search icon in table search boxes; it now sits properly centered inside the field instead of the top corner
 - Reduced the extra side spacing on mobile screens so content uses more of the display
+- Improved the Deposit Funds and Transaction History cards on mobile: compact spacing, full payment details visible, and the page scrolls naturally instead of inside a small inner box
