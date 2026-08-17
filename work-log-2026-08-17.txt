@@ -3,3 +3,4 @@ Tutor Connect - Updates (August 17, 2026)
 
 Project Updates:
 - [Fixed] Mobile topbar overflow - single-line breadcrumb and compact right cluster
+- [Fixed] Stacked two-line breadcrumb on mobile topbar
