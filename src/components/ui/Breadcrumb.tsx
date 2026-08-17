@@ -32,6 +32,13 @@ export interface BreadcrumbProps {
    * crumbs shrink first.
    */
   singleLine?: boolean;
+  /**
+   * Two-line layout: ancestor trail on a small muted eyebrow row, current
+   * page below it in title weight. The Topbar swaps to this on phones,
+   * where a single-row "Dashboard > Tuition Requests" would ellipsize
+   * into an unreadable sliver.
+   */
+  stacked?: boolean;
   className?: string;
 }
 
@@ -39,12 +46,102 @@ export function Breadcrumb({
   items,
   hideLast = false,
   singleLine = false,
+  stacked = false,
   className = "",
 }: BreadcrumbProps) {
   if (!items.length) return null;
 
   const visible = hideLast ? items.slice(0, -1) : items;
   if (!visible.length) return null;
+
+  if (stacked) {
+    const ancestors = visible.slice(0, -1);
+    const current = visible[visible.length - 1];
+    return (
+      <nav aria-label="Breadcrumb" className={className}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: "1px",
+            minWidth: 0,
+            lineHeight: 1.2,
+          }}
+        >
+          {ancestors.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "nowrap",
+                gap: "var(--space-1)",
+                minWidth: 0,
+                overflow: "hidden",
+                fontSize: "0.68rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              {ancestors.map((item, i) => (
+                <React.Fragment key={`${item.label}-${i}`}>
+                  {i > 0 && (
+                    <ChevronRight
+                      size={10}
+                      aria-hidden="true"
+                      style={{ opacity: 0.6, flexShrink: 0 }}
+                    />
+                  )}
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      style={{
+                        color: "var(--text-muted)",
+                        textDecoration: "none",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "1px var(--space-1)",
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span
+                      style={{
+                        padding: "1px var(--space-1)",
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+          <span
+            aria-current={hideLast ? undefined : "page"}
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              fontSize: "var(--text-sm)",
+              fontWeight: 600,
+              color: "var(--text-main)",
+              padding: "1px 0",
+            }}
+          >
+            {current.label}
+          </span>
+        </div>
+      </nav>
+    );
+  }
 
   const truncationStyle = singleLine
     ? { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }

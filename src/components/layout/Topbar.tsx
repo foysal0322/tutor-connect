@@ -291,10 +291,19 @@ export default function Topbar({
             )}
           </button>
 
+          {/* Desktop: single-row trail with ellipsis. Phones swap to the
+              stacked variant below via the 640px media query in
+              layout.module.css. The hidden one is display:none, so screen
+              readers only ever see one breadcrumb. */}
           <Breadcrumb
             items={crumbs}
-            className={styles.breadcrumb}
+            className={`${styles.breadcrumb} ${styles.breadcrumbDesktop}`}
             singleLine
+          />
+          <Breadcrumb
+            items={crumbs}
+            className={`${styles.breadcrumb} ${styles.breadcrumbMobile}`}
+            stacked
           />
         </div>
 

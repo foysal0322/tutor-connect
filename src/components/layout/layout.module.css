@@ -401,6 +401,24 @@
   white-space: nowrap;
 }
 
+/* Phone breadcrumb swap: below 640px the single-row trail is replaced by
+   the stacked variant (ancestor path above, current page below) so
+   "Dashboard > Tuition Requests" reads as two clean lines instead of an
+   ellipsized sliver. */
+.breadcrumbMobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .breadcrumbDesktop {
+    display: none;
+  }
+
+  .breadcrumbMobile {
+    display: block;
+  }
+}
+
 /* Collapse-to-rail toggle — desktop only. The off-canvas drawer handles
    mobile, so hide this control below the desktop breakpoint. */
 .collapseToggle {
@@ -554,6 +572,14 @@
 @media (max-width: 640px) {
   .searchBar {
     display: none; /* Hide search on mobile for now */
+  }
+
+  /* Phones: drop the command-palette trigger too. It opens a
+     keyboard-driven palette (no shortcut exists on touch), and its 40px
+     is what the stacked breadcrumb needs to show the full page title —
+     "Tuition Requests" measured 113px vs 95px available with it present. */
+  .kbutton {
+    display: none;
   }
   .content {
     padding: 1rem;
