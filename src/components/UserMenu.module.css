@@ -271,9 +271,13 @@
   color: var(--danger);
 }
 
-/* Tight widths: avatar-initials only — hide the full name so the trigger
-   stays compact. */
-@media (max-width: 400px) {
+/* Phone widths: avatar-initials only — hide the full name so the trigger
+   stays compact. The full name + email remain available in the dropdown
+   header and in the mobile drawer's inline variant. 480px (not 400px)
+   because the Topbar also carries the hamburger, breadcrumb, search,
+   bell, and theme toggle — at 12ch the name alone crowded all of them
+   off a 375-414px viewport. */
+@media (max-width: 480px) {
   .triggerName {
     display: none;
   }

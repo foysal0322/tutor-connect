@@ -533,6 +533,24 @@
   }
 }
 
+@media (max-width: 768px) {
+  /* Touch widths: the kbd hint and divider are desktop affordances. On a
+     ~375px viewport the right cluster (kbd hint + divider + bell + theme
+     + user chip) alone exceeded the available width and shoved the
+     breadcrumb off-screen — drop them so everything fits on one row. */
+  .kbd {
+    display: none;
+  }
+
+  .kbutton {
+    padding: 0; /* icon-only; min-width from .iconButton keeps the target */
+  }
+
+  .topbarDivider {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .searchBar {
     display: none; /* Hide search on mobile for now */

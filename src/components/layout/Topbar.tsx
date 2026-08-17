@@ -291,7 +291,11 @@ export default function Topbar({
             )}
           </button>
 
-          <Breadcrumb items={crumbs} className={styles.breadcrumb} />
+          <Breadcrumb
+            items={crumbs}
+            className={styles.breadcrumb}
+            singleLine
+          />
         </div>
 
         <div className={styles.topbarRight}>
