@@ -79,16 +79,32 @@
 }
 
 /* Collapsible group (e.g. Shop): heading is a collapse toggle with a
-   chevron that rotates when collapsed. */
+   chevron that rotates when collapsed. Styled as a full-row button so it
+   reads as clickable — a resting pill tint (like a subdued navItem), hover
+   fill identical to the items below it, and a boxed chevron affordance. */
 .navHeadingCollapseToggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.navHeadingInteractive.navHeadingCollapseToggle:hover {
+  background-color: var(--bg-color);
+  color: var(--text-main);
 }
 
 .navHeadingChevron {
   flex-shrink: 0;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
   transition: transform var(--duration-fast) var(--ease-standard);
 }
 
