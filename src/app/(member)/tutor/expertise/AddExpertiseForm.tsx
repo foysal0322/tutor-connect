@@ -292,7 +292,7 @@ export default function AddExpertiseForm({
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                   selectedDays.includes(day)
                     ? "bg-primary border-primary text-white shadow-md"
-                    : "border-color text-main hover:border-primary/50"
+                    : "bg-transparent border-color text-main hover:border-primary/50"
                 } ${isAllDay ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 {day}

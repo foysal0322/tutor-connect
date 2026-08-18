@@ -760,6 +760,9 @@ h4 {
 .bg-primary {
   background-color: var(--primary);
 }
+.bg-transparent {
+  background-color: transparent;
+}
 .bg-success {
   background-color: var(--success);
   color: white;
@@ -1483,6 +1486,10 @@ input:checked + .w3-slider:before {
    each surface has been audited (Phases 6–11).
    ========================================================================== */
 [data-theme="dark"] {
+  /* Render native control chrome (time/date picker popups, select dropdowns,
+     scrollbars) in the OS dark theme instead of defaulting to light. */
+  color-scheme: dark;
+
   --primary: #6366f1; /* indigo-500 — slightly brighter for dark contrast */
   --primary-hover: #818cf8; /* indigo-400 */
   --primary-light: rgba(99, 102, 241, 0.16);
