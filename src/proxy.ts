@@ -10,9 +10,14 @@ import { getToken } from "next-auth/jwt";
  * Two cases, both additive on top of the existing layout-level guards
  * (requireRole in admin/layout.tsx is still the source of truth):
  *
- *   1. ADMIN user hitting `/` → skip the marketing site, go straight to
- *      `/admin/dashboard`. No flash of the landing page (this runs before
- *      any HTML is sent).
+ *   1. Logged-in user hitting `/` → skip the marketing site, go straight
+ *      to their app entry point (`/admin/dashboard` for ADMIN,
+ *      `/dashboard` for everyone else). No flash of the landing page
+ *      (this runs before any HTML is sent).
+ *
+ *      Escape hatch: `/?home=1` bypasses the redirect so a signed-in
+ *      user can still view the marketing page (the navbar Home link
+ *      uses this).
  *
  *   2. Anyone without the ADMIN role hitting `/admin/*` → redirect to
  *      `/auth/admin-signin?callbackUrl=<original>`. Today this redirect
@@ -38,7 +43,7 @@ import { getToken } from "next-auth/jwt";
  * supported in proxy). `next-auth/jwt` works on nodejs.
  */
 
-const ADMIN_COOKIE_NAME = "next-auth.session-token.tutor-connect";
+const SESSION_COOKIE_NAME = "next-auth.session-token.tutor-connect";
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -49,7 +54,7 @@ export async function proxy(request: NextRequest) {
     token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName: ADMIN_COOKIE_NAME,
+      cookieName: SESSION_COOKIE_NAME,
     });
   } catch {
     token = null;
@@ -57,10 +62,11 @@ export async function proxy(request: NextRequest) {
 
   const isAdmin = token?.role === "ADMIN";
 
-  // Case 1: admin user hitting the landing page → skip to admin app.
-  if (pathname === "/" && isAdmin) {
+  // Case 1: logged-in user hitting the landing page → skip to their app.
+  // `?home=1` is the explicit "I want the marketing page" escape hatch.
+  if (pathname === "/" && token && request.nextUrl.searchParams.get("home") !== "1") {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/dashboard";
+    url.pathname = isAdmin ? "/admin/dashboard" : "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }

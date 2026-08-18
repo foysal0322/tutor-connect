@@ -27,6 +27,10 @@ export default function NavbarClient({ session }: { session: any }) {
   const dashboardHref =
     session?.user?.role === "ADMIN" ? "/admin/dashboard" : "/dashboard";
 
+  // Signed-in users get bounced from `/` to their dashboard by src/proxy.ts;
+  // `?home=1` is the escape hatch that lets them view the marketing page.
+  const homeHref = session ? "/?home=1" : "/";
+
   // A nav item is active when we are on its exact route or a child of it.
   // "/" is exact-only so it never matches every page.
   const isActive = (href: string) => {
@@ -58,7 +62,7 @@ export default function NavbarClient({ session }: { session: any }) {
           aria-label='Main navigation'
         >
           <Link
-            href='/'
+            href={homeHref}
             className={activeClass("/")}
             aria-current={isActive("/") ? "page" : undefined}
             onClick={() => setIsMobileMenuOpen(false)}
