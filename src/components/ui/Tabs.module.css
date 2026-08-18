@@ -31,6 +31,15 @@
     box-shadow 0.15s ease, transform 0.15s ease;
 }
 
+/* The label (icon + text) is wrapped in a single <span>; make that span a
+   flex row so the icon centers vertically with the text instead of sitting
+   on the text baseline as inline content. */
+.tab > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .tab svg {
   flex-shrink: 0;
 }
