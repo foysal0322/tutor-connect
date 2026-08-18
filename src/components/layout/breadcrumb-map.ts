@@ -38,7 +38,7 @@ export const ROUTE_TITLES: Record<string, string> = {
 
   // Member shell
   "/dashboard": "Dashboard",
-  "/wallet": "Money",
+  "/wallet": "Payment",
   "/find-tutor": "Find a Tutor",
   "/student/request-tutor": "Tuition Requests",
   "/student/payments": "Payments",
