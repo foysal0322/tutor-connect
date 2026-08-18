@@ -98,7 +98,9 @@ const columns: ColumnDef<any>[] = [
     header: 'Date',
     accessorKey: 'createdAt',
     sortable: true,
-    cell: (r) => new Date(r.createdAt).toLocaleDateString(),
+    // Explicit locale + UTC so SSR output matches the client (hydration) and
+    // is immune to the server's timezone/locale defaults.
+    cell: (r) => new Date(r.createdAt).toLocaleDateString('en-US', { timeZone: 'UTC' }),
   },
 ];
 
@@ -280,7 +282,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                 {badge.label}
               </span>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Requested {new Date(req.createdAt).toLocaleDateString()}
+                Requested {new Date(req.createdAt).toLocaleDateString('en-US', { timeZone: 'UTC' })}
               </span>
             </div>
 
@@ -365,7 +367,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
               {req.preferredDateTime && (
                 <div>
                   <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Preferred Time</span>
-                  <strong>{new Date(req.preferredDateTime).toLocaleString()}</strong>
+                  <strong>{new Date(req.preferredDateTime).toLocaleString('en-US', { timeZone: 'UTC' })}</strong>
                 </div>
               )}
               <div>

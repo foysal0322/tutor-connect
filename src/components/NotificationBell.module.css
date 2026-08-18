@@ -50,8 +50,11 @@
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  width: 350px;
-  max-height: 400px;
+  /* The bell always renders in a right-aligned cluster, so the panel grows
+     leftward from the right edge — the viewport cap keeps it from spilling
+     past the left edge of narrow screens. */
+  width: min(350px, calc(100vw - 1.5rem));
+  max-height: min(400px, 70vh);
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;

@@ -37,6 +37,12 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  // On narrow screens the CSS dropdown (absolutely positioned against the
+  // bell, which sits inset from the viewport's right edge in the topbar)
+  // can overflow the screen. When opening on a small viewport we instead
+  // pin it to the viewport as a fixed panel just below the bell.
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>();
+  const bellRef = useRef<HTMLButtonElement>(null);
   // Phase 11: aria-busy on the dropdown during fetches so screen readers
   // announce "loading" rather than reading a stale list.
   const [isReloading, setIsReloading] = useState(false);
@@ -230,6 +236,21 @@ export default function NotificationBell() {
       // Phase 12: refresh the preview whenever the dropdown opens so the
       // user always sees current data, even if SSE has been quiet.
       void fetchPreview();
+      // Mobile: anchor the panel to the viewport, not the bell — see
+      // the comment on dropdownStyle above.
+      const rect = bellRef.current?.getBoundingClientRect();
+      if (rect && window.innerWidth < 640) {
+        setDropdownStyle({
+          position: "fixed",
+          top: rect.bottom + 8,
+          left: 12,
+          right: 12,
+          width: "auto",
+          marginTop: 0,
+        });
+      } else {
+        setDropdownStyle(undefined);
+      }
     }
     if (!subscription && isSupported) {
       // Try to subscribe when they interact with the bell
@@ -243,6 +264,7 @@ export default function NotificationBell() {
   return (
     <div className={styles.container} ref={dropdownRef}>
       <button
+        ref={bellRef}
         className={styles.bellButton}
         onClick={handleBellClick}
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
@@ -278,6 +300,7 @@ export default function NotificationBell() {
       {isOpen && (
         <div
           className={styles.dropdown}
+          style={dropdownStyle}
           role='dialog'
           aria-modal='true'
           aria-label='Notification panel'

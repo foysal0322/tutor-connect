@@ -14,7 +14,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Wallet, UserCircle2 } from "lucide-react";
+import { Wallet, UserCircle2, BookOpen, GraduationCap } from "lucide-react";
 import Tabs from "@/components/ui/Tabs";
 import { writeMemberFocus } from "@/components/layout/member-focus";
 import styles from "./dashboard.module.css";
@@ -84,8 +84,26 @@ export default function DashboardContent({
       {onboarding ?? (
         <Tabs
           tabs={[
-            { id: "learning", label: "Learning", count: learningCount },
-            { id: "teaching", label: "Teaching", count: teachingCount },
+            {
+              id: "learning",
+              label: (
+                <>
+                  <BookOpen size={16} aria-hidden='true' />
+                  Learning
+                </>
+              ),
+              count: learningCount,
+            },
+            {
+              id: "teaching",
+              label: (
+                <>
+                  <GraduationCap size={16} aria-hidden='true' />
+                  Teaching
+                </>
+              ),
+              count: teachingCount,
+            },
           ]}
           onSelect={(id) => {
             // Persist the active workflow as the member shell's focus hint.

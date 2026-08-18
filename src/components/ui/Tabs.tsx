@@ -5,7 +5,8 @@ import styles from "./Tabs.module.css";
 
 export type TabItem = {
   id: string;
-  label: string;
+  /** Plain string or a node with an icon — e.g. `<><BookOpen size={16} /> Learning</>`. */
+  label: React.ReactNode;
   /** Weight used to pick the default active tab — the highest count wins. */
   count?: number;
 };

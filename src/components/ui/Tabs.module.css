@@ -27,20 +27,39 @@
   border: 1px solid transparent;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.tab:hover:not(.active) {
-  color: var(--text, #111827);
-  background: var(--surface, #ffffff);
+.tab svg {
+  flex-shrink: 0;
 }
 
+/* Inactive tabs must read as clickable: surface fill + border + lift on hover. */
+.tab:hover:not(.tabActive) {
+  color: var(--text-main, #0f172a);
+  background: var(--surface-1, #f9fafb);
+  border-color: var(--surface-4, #d1d5db);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+.tab:active:not(.tabActive) {
+  transform: translateY(0);
+}
+
+/* Active tab: filled "pressed" pill — clearly the selected segment. */
 .tabActive,
 .tab:focus-visible {
   color: var(--primary, #4f46e5);
-  background: var(--surface, #ffffff);
-  border-color: var(--border-color, #e5e7eb);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--primary-light, #eef2ff);
+  border-color: var(--primary, #4f46e5);
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--primary, #4f46e5);
+  outline-offset: 2px;
 }
 
 .badge {
@@ -68,4 +87,37 @@
 
 .panel[hidden] {
   display: none;
+}
+
+/* ---- Touch / small screens ----
+   There is no hover to reveal affordance, so inactive tabs get a resting
+   "pill" look by default, the strip spans full width with equal segments,
+   and targets grow to a thumb-friendly 44px. */
+@media (max-width: 639px) {
+  .tabList {
+    display: flex;
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    background: var(--surface-1, #f9fafb);
+    border-color: var(--surface-4, #d1d5db);
+  }
+
+  /* Re-assert the active pill (higher specificity than the .tab rule above). */
+  .tab.tabActive {
+    color: var(--primary, #4f46e5);
+    background: var(--primary-light, #eef2ff);
+    border-color: var(--primary, #4f46e5);
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25);
+  }
+
+  /* Hover-lift is a pointer-only cue; suppress it so taps don't jitter. */
+  .tab:hover:not(.tabActive) {
+    transform: none;
+  }
 }
