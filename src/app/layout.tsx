@@ -46,6 +46,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en' suppressHydrationWarning>
+      <head>
+        {/* Set data-theme before first paint. ThemeProvider only applies the
+            attribute in a post-hydration effect — without this blocking
+            script, dark-mode users see a light flash on every page load. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("nsuone.theme")==="dark"){document.documentElement.setAttribute("data-theme","dark");document.documentElement.style.colorScheme="dark"}}catch(e){}`,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <a href='#main' className='skip-link'>
           Skip to content

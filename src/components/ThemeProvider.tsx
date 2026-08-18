@@ -57,13 +57,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Reflect theme onto <html> whenever it changes.
+  // Reflect theme onto <html> whenever it changes. (The initial dark value
+  // is applied earlier by the blocking script in app/layout.tsx <head>, so
+  // there is no flash between paint and hydration.)
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
       root.setAttribute("data-theme", "dark");
+      root.style.colorScheme = "dark";
     } else {
       root.removeAttribute("data-theme");
+      root.style.colorScheme = "light";
     }
   }, [theme]);
 
