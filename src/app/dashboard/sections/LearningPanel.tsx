@@ -3,6 +3,7 @@ import { BookOpen, CheckCircle, MessageSquare, History, Search, PlusCircle } fro
 import { prisma } from "@/lib/prisma";
 import { KPI } from "@/components/ui/KPI";
 import StudentRequestList from "@/app/(member)/student/StudentRequestList";
+import styles from "../dashboard.module.css";
 
 /**
  * Learning panel — async server component (Phase 3).
@@ -62,11 +63,18 @@ export default async function LearningPanel({
 
   return (
     <section className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className={styles.panelHeader}>
         <h2 className="mb-0">Learning</h2>
-        <Link href="/student/request-tutor" className="btn-primary">
-          New Request
-        </Link>
+        {/* Find a Tutor is the primary action — members should browse tutors
+            first and fall back to posting a request when nobody fits. */}
+        <div className={styles.panelActions}>
+          <Link href="/student/request-tutor" className="btn-secondary">
+            <PlusCircle size={16} aria-hidden="true" /> New Request
+          </Link>
+          <Link href="/find-tutor" className="btn-primary">
+            <Search size={16} aria-hidden="true" /> Find a Tutor
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
