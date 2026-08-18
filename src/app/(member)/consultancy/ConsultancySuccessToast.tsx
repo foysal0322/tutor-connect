@@ -32,6 +32,12 @@ export default function ConsultancySuccessToast() {
       toast.error(
         `Insufficient wallet balance — you need ${price} BDT but have ${balance} BDT. Recharge your wallet first.`,
       );
+    } else if (error === 'details') {
+      firedRef.current = true;
+      toast.error('Please describe what you need help with before submitting.');
+    } else if (error === 'topic') {
+      firedRef.current = true;
+      toast.error('Selected topic no longer exists. Please pick a different topic.');
     } else if (error === 'failed') {
       firedRef.current = true;
       toast.error('Failed to submit consultancy request. Please try again.');

@@ -97,8 +97,11 @@ export default async function ConsultancyPage() {
       ? await prisma.consultancyTopic.findUnique({ where: { id: topicId } })
       : null;
 
-    if (topicId && !topic) throw new Error('Selected topic no longer exists.');
-    if (!details) throw new Error('Please describe what you need help with.');
+    // Validation failures must redirect (like the INSUFFICIENT case below),
+    // not throw — a thrown error escapes the action and hits the global
+    // error boundary instead of the inline toast.
+    if (topicId && !topic) redirect('/consultancy?error=topic');
+    if (!details) redirect('/consultancy?error=details');
 
     // ---- Pricing decision (unified model) ----
     // Free quota counts ALL past sessions (free + paid), so once a student
