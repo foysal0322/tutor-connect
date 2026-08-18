@@ -496,7 +496,7 @@ export default function EarningsClient({
                         }}
                       />
                       <span style={{ display: "flex", flexDirection: "column", gap: 2, lineHeight: 1.3 }}>
-                        <span className="font-semibold" style={{ fontSize: "0.95rem", color: "#0f172a" }}>
+                        <span className="font-semibold" style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
                           {opt.title}
                         </span>
                         <span className="text-muted" style={{ fontSize: "0.78rem" }}>
