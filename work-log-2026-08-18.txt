@@ -15,3 +15,4 @@ Project Updates:
 - [Fixed] Prevent light flash on load for dark-mode users
 - [Fixed] Rename register CTA to Create Account
 - [Fixed] Show validation errors as toasts instead of error boundary
+- [Fixed] Make Shop sidebar group heading read as a clickable toggle
