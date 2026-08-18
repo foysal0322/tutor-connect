@@ -4,3 +4,4 @@ Tutor Connect - Updates (August 18, 2026)
 Project Updates:
 - [Fixed] Dashboard tab affordance, mobile bell panel, hydration-safe dates
 - [Added] Redirect signed-in users from home page to dashboard via proxy
+- [Added] Promote Find a Tutor as primary action on dashboard learning panel
