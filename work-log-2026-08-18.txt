@@ -12,3 +12,6 @@ Project Updates:
 - [Fixed] Label /wallet breadcrumb as Payment to match sidebar entry
 - [Fixed] Full-width sort/fee selects on mobile expertise toolbar
 - [Fixed] Dark-mode day picker chips and native time-picker popups
+- [Fixed] Prevent light flash on load for dark-mode users
+- [Fixed] Rename register CTA to Create Account
+- [Fixed] Show validation errors as toasts instead of error boundary
