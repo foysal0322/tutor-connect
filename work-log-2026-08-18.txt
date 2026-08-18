@@ -8,3 +8,5 @@ Project Updates:
 - [Fixed] Dark-mode contrast for forms and notification error banner
 - [Fixed] Center tab label icon with text in dashboard Learning/Teaching tabs
 - [Fixed] Dark-mode contrast for wallet hero and global light surfaces
+- [Fixed] Dark-mode surfaces on find-tutor, Select dropdowns, withdrawal method
+- [Fixed] Label /wallet breadcrumb as Payment to match sidebar entry
