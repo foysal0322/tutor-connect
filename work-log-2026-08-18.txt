@@ -10,3 +10,5 @@ Project Updates:
 - [Fixed] Dark-mode contrast for wallet hero and global light surfaces
 - [Fixed] Dark-mode surfaces on find-tutor, Select dropdowns, withdrawal method
 - [Fixed] Label /wallet breadcrumb as Payment to match sidebar entry
+- [Fixed] Full-width sort/fee selects on mobile expertise toolbar
+- [Fixed] Dark-mode day picker chips and native time-picker popups
