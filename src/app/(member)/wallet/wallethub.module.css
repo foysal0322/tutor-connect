@@ -97,7 +97,7 @@
   font-size: 1.6rem;
   font-weight: 700;
   line-height: 1.15;
-  color: var(--text, #0f172a);
+  color: var(--text-main, #0f172a);
   letter-spacing: -0.01em;
 }
 
@@ -126,4 +126,23 @@
 
 .heroPrimary .heroHint {
   color: rgba(255, 255, 255, 0.78);
+}
+
+/* Dark mode: .heroCard inherits the dark --card-bg, so the light-mode icon
+   chip colors (violet-600 / amber-700 / emerald-700) go dim. Brighten the
+   chip icons to their -400 shades. The gradient .heroPrimary card is
+   self-contained (white on violet→blue) and needs nothing. */
+:global([data-theme='dark']) .heroIcon {
+  background: rgba(167, 139, 250, 0.16);
+  color: #a78bfa;
+}
+
+:global([data-theme='dark']) .heroIconAmber {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fbbf24;
+}
+
+:global([data-theme='dark']) .heroIconGreen {
+  background: rgba(52, 211, 153, 0.16);
+  color: #34d399;
 }
