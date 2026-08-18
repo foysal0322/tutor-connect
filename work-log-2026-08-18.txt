@@ -6,3 +6,5 @@ Project Updates:
 - [Added] Redirect signed-in users from home page to dashboard via proxy
 - [Added] Promote Find a Tutor as primary action on dashboard learning panel
 - [Fixed] Dark-mode contrast for forms and notification error banner
+- [Fixed] Center tab label icon with text in dashboard Learning/Teaching tabs
+- [Fixed] Dark-mode contrast for wallet hero and global light surfaces
