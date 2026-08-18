@@ -41,7 +41,9 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!agreed) {
-      setAgreeError("You must agree to the Privacy Policy to create an account.");
+      setAgreeError(
+        "You must agree to the Privacy Policy to create an account."
+      );
       return;
     }
     setAgreeError("");
@@ -219,7 +221,9 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
           </FormSection>
 
           {/* Consent */}
-          <div className={`${consentClass} ${agreeError ? consentInvalidClass : ""}`}>
+          <div
+            className={`${consentClass} ${agreeError ? consentInvalidClass : ""}`}
+          >
             <input
               id="agreeToPolicy"
               name="agreeToPolicy"
@@ -234,12 +238,18 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             <div>
               <label htmlFor="agreeToPolicy" className={consentLabelClass}>
                 I agree to the nsuOne{" "}
-                <Link href="/privacy-policy" className={footerLinkClass} target="_blank">
+                <Link
+                  href="/privacy-policy"
+                  className={footerLinkClass}
+                  target="_blank"
+                >
                   Privacy Policy
                 </Link>{" "}
                 and Terms of Service.
               </label>
-              {agreeError && <span className={consentErrorClass}>{agreeError}</span>}
+              {agreeError && (
+                <span className={consentErrorClass}>{agreeError}</span>
+              )}
             </div>
           </div>
 
@@ -248,7 +258,7 @@ export default function RegisterForm({ departments }: { departments: any[] }) {
             loadingText="Registering..."
             icon={<GraduationCap size={18} />}
           >
-            Create Campus Account
+            Create Account
           </FormSubmit>
         </form>
       </FormCard>
