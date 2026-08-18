@@ -571,3 +571,154 @@
   transform: translateY(-2px);
   box-shadow: 0 14px 32px rgba(124, 58, 237, 0.35);
 }
+
+/* ==========================================================================
+   Dark mode overrides
+   --------------------------------------------------------------------------
+   The block above is authored against the light palette with hardcoded
+   slate text (#0f172a / #334155 / #1e293b). On dark surfaces — especially
+   .cardEmbedded, which inherits the dark --card-bg — that text is nearly
+   invisible. This block flips every hardcoded color to its dark-mode
+   counterpart (WCAG AA on #0b1120 / #111827 / #1e293b). Light mode is
+   untouched: everything here only applies under [data-theme="dark"].
+   ========================================================================== */
+
+/* Accent + field-bg custom properties flip first; descendants pick them up. */
+:global([data-theme='dark']) .page,
+:global([data-theme='dark']) .card,
+:global([data-theme='dark']) .cardEmbedded {
+  --form-accent: #a78bfa;                 /* violet-400 */
+  --form-accent-2: #60a5fa;               /* blue-400 */
+  --form-accent-focus: #a78bfa;
+  --form-accent-ring: rgba(167, 139, 250, 0.22);
+  --form-accent-soft: rgba(167, 139, 250, 0.16);
+  --form-accent-hover-border: rgba(167, 139, 250, 0.45);
+  --form-field-bg: rgba(15, 23, 42, 0.65);
+  --form-field-bg-hover: rgba(30, 41, 59, 0.85);
+}
+
+/* ---------- Page ---------- */
+:global([data-theme='dark']) .page {
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.22) 0%, transparent 40%),
+    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.22) 0%, transparent 40%),
+    #0b1120;
+}
+
+:global([data-theme='dark']) .page::before {
+  background-image:
+    linear-gradient(rgba(241, 245, 249, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(241, 245, 249, 0.03) 1px, transparent 1px);
+}
+
+/* ---------- Card surfaces ---------- */
+:global([data-theme='dark']) .card {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(241, 245, 249, 0.08);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(241, 245, 249, 0.06);
+}
+
+/* ---------- Header / sections ---------- */
+:global([data-theme='dark']) .header {
+  border-bottom-color: rgba(241, 245, 249, 0.08);
+}
+
+:global([data-theme='dark']) .headerTitle {
+  color: #f1f5f9;
+}
+
+:global([data-theme='dark']) .headerSub {
+  color: #94a3b8;
+}
+
+:global([data-theme='dark']) .sectionText {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .sectionRule {
+  background: linear-gradient(to right, rgba(241, 245, 249, 0.14), transparent);
+}
+
+/* ---------- Fields ---------- */
+:global([data-theme='dark']) .field :global(label) {
+  color: #e2e8f0 !important;
+}
+
+:global([data-theme='dark']) .field :global(.form-input),
+:global([data-theme='dark']) .field :global(.form-select),
+:global([data-theme='dark']) .field :global(.form-textarea) {
+  color: #f1f5f9;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+:global([data-theme='dark']) .field :global(.form-input)::placeholder,
+:global([data-theme='dark']) .field :global(.form-textarea)::placeholder {
+  color: #64748b;
+}
+
+:global([data-theme='dark']) .field :global(.form-input):focus,
+:global([data-theme='dark']) .field :global(.form-select):focus,
+:global([data-theme='dark']) .field :global(.form-textarea):focus {
+  background: #0f172a;
+}
+
+:global([data-theme='dark']) .field :global(.form-select option) {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+:global([data-theme='dark']) .field :global(.form-error) {
+  color: #f87171 !important;
+}
+
+/* ---------- Alerts ---------- */
+:global([data-theme='dark']) .alert {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+:global([data-theme='dark']) .alertSuccess {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* ---------- Footer / consent / success ---------- */
+:global([data-theme='dark']) .footer {
+  border-top-color: rgba(241, 245, 249, 0.08);
+  color: #94a3b8;
+}
+
+:global([data-theme='dark']) .consent {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+:global([data-theme='dark']) .consentInvalid {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+:global([data-theme='dark']) .consentCheckbox {
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+:global([data-theme='dark']) .consentLabel {
+  color: #cbd5e1;
+}
+
+:global([data-theme='dark']) .consentError {
+  color: #f87171;
+}
+
+:global([data-theme='dark']) .successBadge,
+:global([data-theme='dark']) .successTitle {
+  color: #4ade80;
+}
+
+:global([data-theme='dark']) .successText {
+  color: #94a3b8;
+}

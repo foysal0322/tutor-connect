@@ -440,6 +440,14 @@
   font-size: 0.9rem;
 }
 
+/* Dark mode: light-red box above would glow on the dark surface — swap to
+   a dark tint of the danger hue (WCAG AA on --card-bg). Light mode intact. */
+:global([data-theme='dark']) .error {
+  background-color: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
 .sentinel {
   display: flex;
   justify-content: center;
