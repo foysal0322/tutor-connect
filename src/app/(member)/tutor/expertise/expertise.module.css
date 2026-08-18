@@ -85,8 +85,10 @@
     width: 100%;
   }
 
+  /* Selects get a full row each — sharing a row truncates labels like
+     "Recently added" / "Any fee" on narrow screens. */
   .sortSelect {
-    flex: 1;
+    flex: 1 1 100%;
     min-width: 0;
   }
 }
