@@ -1,0 +1,5 @@
+Tutor Connect - Updates (August 19, 2026)
+==========================================
+
+Project Updates:
+- [Added] Pin vercel function region to sin1 near neon db
