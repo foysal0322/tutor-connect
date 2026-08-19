@@ -3,6 +3,9 @@
 # user-uploaded images (NSUOne Shop) — runtime data, never commit
 /public/uploads/
 
+# local-only cost plan (Bangla) — personal notes, never commit
+/docs/COST-PLAN-BANGLA.md
+
 # dependencies
 /node_modules
 /.pnp
