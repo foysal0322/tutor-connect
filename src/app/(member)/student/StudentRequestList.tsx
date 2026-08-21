@@ -24,28 +24,28 @@ function getStatusBadge(status: string, refundRequests?: any[]) {
   if (refundRequests && refundRequests.length > 0) {
     const ref = refundRequests[0];
     if (ref.status === 'PENDING')
-      return { label: 'Refund Pending', bg: '#fee2e2', color: '#b91c1c' };
+      return { label: 'Refund Pending', bg: 'var(--danger-light)', color: 'var(--danger-hover)' };
     if (ref.status === 'APPROVED')
-      return { label: 'Refunded', bg: '#f1f5f9', color: '#475569' };
+      return { label: 'Refunded', bg: 'var(--surface-2)', color: 'var(--text-muted)' };
     if (ref.status === 'REJECTED')
-      return { label: 'Refund Rejected', bg: '#ffedd5', color: '#ea580c' };
+      return { label: 'Refund Rejected', bg: 'var(--accent-light)', color: 'var(--accent-hover)' };
   }
 
   switch (status) {
     case 'PENDING':
-      return { label: 'Pending Admin', bg: '#fef3c7', color: '#d97706' };
+      return { label: 'Pending Admin', bg: 'var(--accent-light)', color: 'var(--accent-hover)' };
     case 'MATCHED':
-      return { label: 'Tutor Matched (Unpaid)', bg: '#dbeafe', color: '#1d4ed8' };
+      return { label: 'Tutor Matched (Unpaid)', bg: 'var(--info-light)', color: 'var(--info-hover)' };
     case 'PAYMENT_PENDING':
-      return { label: 'Payment Verifying', bg: '#e0e7ff', color: '#4f46e5' };
+      return { label: 'Payment Verifying', bg: 'var(--primary-light)', color: 'var(--primary)' };
     case 'ACCEPTED':
-      return { label: 'Active Session', bg: '#d1fae5', color: '#059669' };
+      return { label: 'Active Session', bg: 'var(--success-light)', color: 'var(--success-hover)' };
     case 'COMPLETED':
-      return { label: 'Completed', bg: '#f1f5f9', color: '#64748b' };
+      return { label: 'Completed', bg: 'var(--surface-2)', color: 'var(--text-muted)' };
     case 'CANCELLED':
-      return { label: 'Cancelled', bg: '#f1f5f9', color: '#64748b' };
+      return { label: 'Cancelled', bg: 'var(--surface-2)', color: 'var(--text-muted)' };
     default:
-      return { label: status, bg: '#e2e8f0', color: '#475569' };
+      return { label: status, bg: 'var(--surface-3)', color: 'var(--text-muted)' };
   }
 }
 
@@ -294,8 +294,8 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   return (
                     <div
                       style={{
-                        background: '#ecfdf5',
-                        border: '1px solid #a7f3d0',
+                        background: 'var(--success-light)',
+                        border: '1px solid var(--success)',
                         borderRadius: '8px',
                         padding: '0.85rem 1rem',
                         display: 'flex',
@@ -306,16 +306,16 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                       }}
                     >
                       <div>
-                        <strong style={{ color: '#047857' }}>
+                        <strong style={{ color: 'var(--success-hover)' }}>
                           Refunded {ref.amount != null ? `${ref.amount} BDT` : ''} to your wallet
                         </strong>
                         {ref.reviewNote && (
-                          <span style={{ display: 'block', fontSize: '0.85rem', color: '#065f46', marginTop: '0.15rem' }}>
+                          <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--success-hover)', marginTop: '0.15rem' }}>
                             Note: {ref.reviewNote}
                           </span>
                         )}
                       </div>
-                      <Link href="/wallet" style={{ color: '#047857', fontWeight: 600, textDecoration: 'underline' }}>
+                      <Link href="/wallet" style={{ color: 'var(--success-hover)', fontWeight: 600, textDecoration: 'underline' }}>
                         View wallet →
                       </Link>
                     </div>
@@ -325,11 +325,11 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   return (
                     <div
                       style={{
-                        background: '#fff7ed',
-                        border: '1px solid #fed7aa',
+                        background: 'var(--accent-light)',
+                        border: '1px solid var(--accent)',
                         borderRadius: '8px',
                         padding: '0.85rem 1rem',
-                        color: '#9a3412',
+                        color: 'var(--accent-hover)',
                         fontSize: '0.9rem',
                       }}
                     >
@@ -473,7 +473,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                       <button
                         onClick={() => setMode('cancel-refund')}
                         className="btn"
-                        style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
+                        style={{ background: 'var(--surface-3)', color: 'var(--text-main)', padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: 600 }}
                       >
                         Cancel Refund Request
                       </button>
@@ -498,14 +498,14 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   display: 'flex',
                   gap: '0.5rem',
                   alignItems: 'center',
-                  background: '#fef2f2',
+                  background: 'var(--danger-light)',
                   padding: '0.75rem 1rem',
                   borderRadius: '8px',
-                  border: '1px solid #fecaca',
+                  border: '1px solid var(--danger)',
                   flexWrap: 'wrap',
                 }}
               >
-                <span style={{ fontSize: '0.9rem', color: '#991b1b', flex: 1 }}>Cancel this request?</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--danger-hover)', flex: 1 }}>Cancel this request?</span>
                 <button
                   onClick={() => handleCancel(req.id)}
                   className="btn"
@@ -516,7 +516,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                 <button
                   onClick={() => setMode('details')}
                   className="btn"
-                  style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                  style={{ background: 'var(--surface-3)', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
                 >
                   Keep
                 </button>
@@ -531,7 +531,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   display: 'flex',
                   gap: '0.5rem',
                   alignItems: 'center',
-                  background: '#f8fafc',
+                  background: 'var(--surface-1)',
                   padding: '0.75rem 1rem',
                   borderRadius: '8px',
                   border: '1px solid var(--border-color)',
@@ -544,14 +544,14 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                 <button
                   onClick={() => handleCancelRefund(pendingRefund.id, req.id)}
                   className="btn"
-                  style={{ background: 'var(--text-main)', color: 'white', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                  style={{ background: 'var(--surface-3)', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
                 >
                   Yes, Cancel Refund
                 </button>
                 <button
                   onClick={() => setMode('details')}
                   className="btn"
-                  style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
+                  style={{ background: 'var(--surface-3)', color: 'var(--text-main)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}
                 >
                   Keep Refund Request
                 </button>
@@ -579,13 +579,13 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.75rem',
-                  background: '#f0fdf4',
+                  background: 'var(--success-light)',
                   padding: '1rem',
                   borderRadius: '8px',
-                  border: '1px solid #bbf7d0',
+                  border: '1px solid var(--success)',
                 }}
               >
-                <span style={{ fontSize: '1rem', color: '#166534', fontWeight: 600 }}>Rate your session (Optional)</span>
+                <span style={{ fontSize: '1rem', color: 'var(--success-hover)', fontWeight: 600 }}>Rate your session (Optional)</span>
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -625,7 +625,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                   <button
                     onClick={() => setMode('details')}
                     className="btn"
-                    style={{ background: '#e2e8f0', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.9rem' }}
+                    style={{ background: 'var(--surface-3)', color: 'var(--text-main)', padding: '0.5rem 1rem', borderRadius: '6px', fontSize: '0.9rem' }}
                   >
                     Cancel
                   </button>
@@ -639,7 +639,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                 onSubmit={(e) => handleRefundSubmit(e, req.id)}
                 style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
               >
-                <h4 style={{ margin: 0, color: '#f59e0b' }}>Request Refund</h4>
+                <h4 style={{ margin: 0, color: 'var(--accent)' }}>Request Refund</h4>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
                   Describe why you are requesting a refund according to our refund policy.
                 </p>
@@ -659,7 +659,7 @@ export default function StudentRequestList({ initialRequests, userBalance = 0 }:
                     type="button"
                     onClick={() => setMode('details')}
                     className="btn"
-                    style={{ padding: '0.5rem 1rem', background: '#e2e8f0', color: 'var(--text-main)', borderRadius: '6px' }}
+                    style={{ padding: '0.5rem 1rem', background: 'var(--surface-3)', color: 'var(--text-main)', borderRadius: '6px' }}
                   >
                     Cancel
                   </button>

@@ -21,14 +21,12 @@ export interface MfsProviderMeta {
   label: string;
   /** Primary brand color, used for selected border + text. */
   brand: string;
-  /** Soft brand tint, used for selected background. */
-  brandSoft: string;
 }
 
 export const MFS_PROVIDERS: readonly MfsProviderMeta[] = [
-  { id: 'BKASH', label: 'bKash', brand: '#d1417a', brandSoft: '#fdf2f7' },
-  { id: 'NAGAD', label: 'Nagad', brand: '#f67221', brandSoft: '#fff7ed' },
-  { id: 'ROCKET', label: 'Rocket', brand: '#8c2a8c', brandSoft: '#faf5ff' },
+  { id: 'BKASH', label: 'bKash', brand: '#d1417a' },
+  { id: 'NAGAD', label: 'Nagad', brand: '#f67221' },
+  { id: 'ROCKET', label: 'Rocket', brand: '#8c2a8c' },
 ] as const;
 
 /** Display name for a provider id, e.g. BKASH → "bKash" (for dynamic labels). */
@@ -67,7 +65,11 @@ export function MfsProviderSelect({ value, onChange, idPrefix = 'mfs' }: Props) 
               padding: 'var(--space-3)',
               borderRadius: 'var(--radius-sm)',
               border: selected ? `2px solid ${provider.brand}` : '1px solid var(--border-color)',
-              background: selected ? provider.brandSoft : 'var(--card-bg)',
+              // Translucent brand tint over the card surface so the selected
+              // fill flips correctly with the theme instead of staying light.
+              background: selected
+                ? `color-mix(in srgb, ${provider.brand} 14%, var(--card-bg))`
+                : 'var(--card-bg)',
               color: selected ? provider.brand : 'var(--text-main)',
               fontWeight: 600,
               cursor: 'pointer',

@@ -167,7 +167,7 @@ export default function PaymentForm({
       {/* Breakdown section */}
       <div
         style={{
-          background: '#f8fafc',
+          background: 'var(--surface-1)',
           padding: '0.75rem 1rem',
           borderRadius: '8px',
           border: '1px solid var(--border-color)',
@@ -257,15 +257,15 @@ export default function PaymentForm({
               opacity: userBalance <= 0 ? 0.55 : 1,
               border:
                 payMethod === 'WALLET'
-                  ? '2px solid #16a34a'
+                  ? '2px solid var(--success-hover)'
                   : '1px solid var(--border-color)',
-              background: payMethod === 'WALLET' ? '#f0fdf4' : 'var(--card-bg)',
+              background: payMethod === 'WALLET' ? 'var(--success-light)' : 'var(--card-bg)',
               color: 'var(--text-main)',
               textAlign: 'left',
               font: 'inherit',
             }}
           >
-            <span style={{ fontWeight: 700, color: payMethod === 'WALLET' ? '#166534' : 'inherit' }}>
+            <span style={{ fontWeight: 700, color: payMethod === 'WALLET' ? 'var(--success-hover)' : 'inherit' }}>
               Campus Wallet
             </span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -291,15 +291,15 @@ export default function PaymentForm({
               cursor: 'pointer',
               border:
                 payMethod === 'MFS'
-                  ? '2px solid #ea580c'
+                  ? '2px solid var(--accent-hover)'
                   : '1px solid var(--border-color)',
-              background: payMethod === 'MFS' ? '#fff7ed' : 'var(--card-bg)',
+              background: payMethod === 'MFS' ? 'var(--accent-light)' : 'var(--card-bg)',
               color: 'var(--text-main)',
               textAlign: 'left',
               font: 'inherit',
             }}
           >
-            <span style={{ fontWeight: 700, color: payMethod === 'MFS' ? '#9a3412' : 'inherit' }}>
+            <span style={{ fontWeight: 700, color: payMethod === 'MFS' ? 'var(--accent-hover)' : 'inherit' }}>
               bKash / Nagad / Rocket
             </span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -313,12 +313,12 @@ export default function PaymentForm({
       {payMethod === 'WALLET' && (
         <div
           style={{
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #86efac',
+            backgroundColor: 'var(--success-light)',
+            border: '1px solid var(--success)',
             padding: '1rem',
             borderRadius: '8px',
             fontSize: '0.9rem',
-            color: '#15803d',
+            color: 'var(--success-hover)',
           }}
         >
           {userBalance >= totalPayable ? (
@@ -338,9 +338,9 @@ export default function PaymentForm({
       {!useWallet || userBalance < totalPayable ? (
         <>
           <div
-            style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '1.25rem', borderRadius: '8px' }}
+            style={{ backgroundColor: 'var(--accent-light)', border: '1px solid var(--accent)', padding: '1.25rem', borderRadius: '8px' }}
           >
-            <p style={{ fontSize: '1.05rem', color: '#9a3412', margin: 0, fontWeight: 600 }}>
+            <p style={{ fontSize: '1.05rem', color: 'var(--accent-hover)', margin: 0, fontWeight: 600 }}>
               Step 1: Send Money to{' '}
               <span
                 onClick={() => {
@@ -349,22 +349,22 @@ export default function PaymentForm({
                 }}
                 title="Click to copy"
                 style={{
-                  backgroundColor: '#ffedd5',
+                  backgroundColor: 'color-mix(in srgb, var(--accent) 18%, var(--card-bg))',
                   padding: '0.2rem 0.5rem',
                   borderRadius: '4px',
                   fontSize: '1.2rem',
                   fontWeight: 800,
-                  color: '#ea580c',
+                  color: 'var(--accent-hover)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.25rem',
                   margin: '0 0.25rem',
-                  border: '1px solid #fdba74',
+                  border: '1px solid var(--accent)',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#fed7aa')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#ffedd5')}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--accent) 32%, var(--card-bg))')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--accent) 18%, var(--card-bg))')}
               >
                 01785872142
                 <svg
@@ -384,7 +384,7 @@ export default function PaymentForm({
               </span>{' '}
               (bKash, Nagad, or Rocket)
             </p>
-            <p style={{ fontSize: '0.9rem', color: '#c2410c', margin: '0.5rem 0 0 0' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--accent-hover)', margin: '0.5rem 0 0 0' }}>
               Step 2: Choose your service below and submit the transaction details for{' '}
               {useWallet ? (totalPayable - userBalance).toFixed(2) : totalPayable.toFixed(2)} BDT.
             </p>
@@ -439,17 +439,17 @@ export default function PaymentForm({
       ) : (
         <div
           style={{
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #6ee7b7',
+            backgroundColor: 'var(--success-light)',
+            border: '1px solid var(--success)',
             padding: '1.25rem',
             borderRadius: '8px',
             textAlign: 'center',
           }}
         >
-          <p style={{ fontSize: '1.1rem', color: '#047857', margin: 0, fontWeight: 700 }}>
+          <p style={{ fontSize: '1.1rem', color: 'var(--success-hover)', margin: 0, fontWeight: 700 }}>
             100% Wallet Payment Ready!
           </p>
-          <p style={{ fontSize: '0.9rem', color: '#065f46', margin: '0.5rem 0 0 0' }}>
+          <p style={{ fontSize: '0.9rem', color: 'var(--success-hover)', margin: '0.5rem 0 0 0' }}>
             Click the button below to deduct {totalPayable.toFixed(2)} BDT from your Campus Wallet
             and activate this tutoring session instantly.
           </p>
@@ -464,7 +464,7 @@ export default function PaymentForm({
             setPayMethod('MFS');
           }}
           className="btn"
-          style={{ padding: '0.5rem 1rem', background: '#e2e8f0', color: 'var(--text-main)', borderRadius: '6px' }}
+          style={{ padding: '0.5rem 1rem', background: 'var(--surface-3)', color: 'var(--text-main)', borderRadius: '6px' }}
         >
           Cancel
         </button>
