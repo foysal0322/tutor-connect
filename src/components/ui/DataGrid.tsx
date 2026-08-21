@@ -838,14 +838,25 @@ export default function DataGrid<T extends Record<string, any>>({
               const isEditing = editingRowId === rowId;
               // Bespoke mobile card replaces the generic card entirely.
               if (!isEditing && renderMobileCard) {
-                return <div key={rowId}>{renderMobileCard(item)}</div>;
+                return (
+                  <div
+                    key={rowId}
+                    onClick={() => onRowClick?.(item)}
+                    className={onRowClick ? "cursor-pointer" : undefined}
+                  >
+                    {renderMobileCard(item)}
+                  </div>
+                );
               }
               return (
                 <div
                   key={rowId}
+                  onClick={() => {
+                    if (!isEditing) onRowClick?.(item);
+                  }}
                   className={`card p-4 border border-color rounded-md bg-white shadow-sm flex flex-col gap-2 ${
                     isEditing ? styles.editingRow : ""
-                  }`}
+                  } ${onRowClick && !isEditing ? "cursor-pointer" : ""}`}
                 >
                   {selectable && (
                     <div className="flex items-center gap-2">
@@ -887,6 +898,19 @@ export default function DataGrid<T extends Record<string, any>>({
                   {!isEditing && hasActions && rowActions && (
                     <div className="flex justify-end pt-2 border-t border-color">
                       <RowActionsCell item={item} getActions={rowActions} />
+                    </div>
+                  )}
+                  {!isEditing && onRowClick && !hasActions && (
+                    <div
+                      className="flex items-center justify-center gap-1 mt-1 pt-2 border-t border-color text-sm font-semibold text-primary bg-primary-light"
+                      style={{
+                        borderRadius: "var(--radius-sm)",
+                        padding: "0.5rem 0.75rem",
+                      }}
+                      aria-hidden="true"
+                    >
+                      <span>Tap for details</span>
+                      <ChevronRight size={16} />
                     </div>
                   )}
                 </div>
