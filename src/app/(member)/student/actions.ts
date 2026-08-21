@@ -377,6 +377,40 @@ export async function submitPayment(formData: FormData) {
       }).catch((err) => {
         console.error('Failed to send student payment receipt:', err);
       });
+
+      // 100% wallet payments skip admin verification and go straight to
+      // ACCEPTED — notify the assigned tutor here, mirroring the
+      // tutor.payment_verified dispatch in admin verifyPaymentAction.
+      if (instantlyVerified) {
+        try {
+          const req = await prisma.tutorRequest.findUnique({
+            where: { id: requestId },
+            select: {
+              topic: true,
+              courseId: true,
+              assignedTutorId: true,
+              course: { select: { name: true } },
+            },
+          });
+          if (req?.assignedTutorId) {
+            await dispatch({
+              event: 'tutor.payment_verified',
+              userId: req.assignedTutorId,
+              title: 'Student Payment Verified — Session Active',
+              message: `${studentName}'s wallet payment for ${req.topic || req.course.name} (${req.course.name}) was auto-verified. You can start teaching now.`,
+              actionUrl: '/tutor',
+              type: 'SUCCESS',
+              category: 'PAYMENT',
+              priority: 'HIGH',
+              actorUserId: studentId,
+              recipientRoleHint: 'TUTOR',
+              metadata: { requestId, courseId: req.courseId, studentId },
+            });
+          }
+        } catch (err) {
+          console.error('Failed to notify tutor of auto-verified payment:', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to send payment discord notification', err);
     }
