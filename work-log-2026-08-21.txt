@@ -3,3 +3,4 @@ Tutor Connect - Updates (August 21, 2026)
 
 Project Updates:
 - [Fixed] Replace hardcoded colors with theme tokens for dark-mode support
+- [Fixed] Wire onRowClick on mobile cards with visible tap affordance
