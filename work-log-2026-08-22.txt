@@ -6,3 +6,4 @@ Project Updates:
 - [Added] Add SMS channel for payment and request updates
 - [Added] Friendlier tutor allocation message naming the student
 - [Fixed] Stop unread badge reappearing after mark-all-read
+- [Added] Tutor-side request detail sheet for assigned students
