@@ -1,16 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import DataGrid, { type ColumnDef } from '@/components/ui/DataGrid';
+import AssignedStudentDetailSheet from './AssignedStudentDetailSheet';
 
 export interface AssignedStudent {
   id: string;
   studentName: string;
   courseName: string;
   topic: string;
+  facultyName: string | null;
   preferredMode: string;
   preferredDateTime: string | null;
   budget: number;
   status: string;
+  createdAt: string;
+  rating: number | null;
+  review: string | null;
+  student: {
+    nsuId: string;
+    gender: string | null;
+    cgpa: number | null;
+    departmentName: string | null;
+    /** Null unless the session is ACCEPTED — stripped server-side. */
+    email: string | null;
+    contact: string | null;
+  };
 }
 
 const STATUS_CLASS: Record<string, string> = {
@@ -77,6 +92,8 @@ export default function AssignedStudentsTable({
 }: {
   rows: AssignedStudent[];
 }) {
+  const [selected, setSelected] = useState<AssignedStudent | null>(null);
+
   if (rows.length === 0) {
     return (
       <div
@@ -94,14 +111,21 @@ export default function AssignedStudentsTable({
   }
 
   return (
-    <DataGrid
-      data={rows}
-      columns={columns}
-      getRowId={(r) => r.id}
-      searchable
-      searchKeys={['studentName', 'courseName', 'topic', 'status']}
-      itemsPerPage={10}
-      emptyMessage="No assigned students found."
-    />
+    <>
+      <DataGrid
+        data={rows}
+        columns={columns}
+        getRowId={(r) => r.id}
+        onRowClick={(r) => setSelected(r)}
+        searchable
+        searchKeys={['studentName', 'courseName', 'topic', 'status']}
+        itemsPerPage={10}
+        emptyMessage="No assigned students found."
+      />
+      <AssignedStudentDetailSheet
+        request={selected}
+        onClose={() => setSelected(null)}
+      />
+    </>
   );
 }

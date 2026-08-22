@@ -47,10 +47,17 @@ export default async function TeachingPanel({
     prisma.tutorRequest.findMany({
       where: { assignedTutorId: userId },
       select: {
-        id: true, topic: true, preferredMode: true, preferredDateTime: true,
-        budget: true, status: true, createdAt: true,
+        id: true, topic: true, facultyName: true, preferredMode: true,
+        preferredDateTime: true, budget: true, status: true,
+        rating: true, review: true, createdAt: true,
         course: { select: { name: true } },
-        student: { select: { name: true } },
+        student: {
+          select: {
+            name: true, nsuId: true, gender: true, cgpa: true, hideCgpa: true,
+            email: true, contact: true,
+            department: { select: { name: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -233,16 +240,36 @@ export default async function TeachingPanel({
   }
 
   // -------- Assigned students (capped for the table) --------
-  const assignedStudents = assignedRequestsRaw.slice(0, 10).map((r) => ({
-    id: r.id,
-    studentName: r.student.name,
-    courseName: r.course.name,
-    topic: r.topic,
-    preferredMode: r.preferredMode,
-    preferredDateTime: r.preferredDateTime,
-    budget: r.budget,
-    status: r.status,
-  }));
+  // Student contact (email/phone) is stripped server-side unless the session
+  // is ACCEPTED (payment verified). Gating in the UI alone would leak the
+  // contact in the RSC payload — symmetric with the student side, where the
+  // tutor's contact only appears on an active session.
+  const assignedStudents = assignedRequestsRaw.slice(0, 10).map((r) => {
+    const contactUnlocked = r.status === "ACCEPTED";
+    return {
+      id: r.id,
+      studentName: r.student.name,
+      courseName: r.course.name,
+      topic: r.topic,
+      facultyName: r.facultyName,
+      preferredMode: r.preferredMode,
+      preferredDateTime: r.preferredDateTime,
+      budget: r.budget,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+      rating: r.rating,
+      review: r.review,
+      student: {
+        nsuId: r.student.nsuId,
+        gender: r.student.gender,
+        // Respect the student's hideCgpa privacy flag.
+        cgpa: r.student.hideCgpa ? null : r.student.cgpa,
+        departmentName: r.student.department?.name ?? null,
+        email: contactUnlocked ? r.student.email : null,
+        contact: contactUnlocked ? r.student.contact : null,
+      },
+    };
+  });
 
   const data: TeachingData = {
     activeStudents: activeStudentsCount,
