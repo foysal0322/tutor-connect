@@ -86,7 +86,7 @@ export default async function Home() {
           </p>
           <p className={styles.contactPhone}>
             For any urgent query call:{' '}
-            <a href="tel:01711223344" className={styles.contactPhoneLink}>01711223344</a>
+            <a href="tel:01785872142" className={styles.contactPhoneLink}>01785872142</a>
           </p>
           <SupportForm />
         </div>

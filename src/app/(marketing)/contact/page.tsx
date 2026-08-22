@@ -83,6 +83,23 @@ export default async function ContactPage({
         title="Contact Us"
         subtitle="Have any questions? We're here to help!"
       >
+        <p
+          style={{
+            color: 'var(--text-main)',
+            fontWeight: 600,
+            fontSize: 'var(--text-base)',
+            margin: 0,
+            marginBottom: 'var(--space-6)',
+          }}
+        >
+          For any urgent query call:{' '}
+          <a
+            href="tel:01785872142"
+            style={{ color: 'var(--primary)', fontWeight: 700 }}
+          >
+            01785872142
+          </a>
+        </p>
         {isSuccess ? (
           <FormSuccess title="Message Sent!">
             Thank you for reaching out. We have sent a confirmation email to your inbox and our
