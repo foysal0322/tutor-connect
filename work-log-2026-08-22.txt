@@ -1,0 +1,6 @@
+Tutor Connect - Updates (August 22, 2026)
+==========================================
+
+Project Updates:
+- [Added] Show support hotline 01785872142 on contact and support pages
+- [Added] Add SMS channel for payment and request updates
