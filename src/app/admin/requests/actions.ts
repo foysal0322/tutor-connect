@@ -96,6 +96,7 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
           priority: 'HIGH',
           actorUserId: (session.user as any).id,
           recipientRoleHint: 'TUTOR',
+          channels: ['IN_APP', 'PUSH', 'SMS'],
           metadata: {
             requestId: request.id,
             courseId: request.courseId,
@@ -219,6 +220,7 @@ export async function verifyPaymentAction(requestId: string, approve: boolean) {
               priority: 'HIGH',
               actorUserId: (session.user as any).id,
               recipientRoleHint: 'TUTOR',
+              channels: ['IN_APP', 'PUSH', 'SMS'],
               metadata: { requestId: request.id, courseId: request.courseId, studentId: request.studentId },
             });
           } catch (err) {
@@ -374,6 +376,7 @@ export async function verifyRefundAction(
           priority: 'CRITICAL',
           actorUserId: adminId,
           recipientRoleHint: 'STUDENT',
+          channels: ['IN_APP', 'PUSH', 'SMS'],
           metadata: {
             refundRequestId: refundRequest.id,
             requestId: refundRequest.requestId,
@@ -409,6 +412,7 @@ export async function verifyRefundAction(
           priority: 'HIGH',
           actorUserId: adminId,
           recipientRoleHint: 'STUDENT',
+          channels: ['IN_APP', 'PUSH', 'SMS'],
           metadata: {
             refundRequestId: refundRequest.id,
             requestId: refundRequest.requestId,

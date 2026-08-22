@@ -348,6 +348,7 @@ export async function submitPayment(formData: FormData) {
         category: 'PAYMENT',
         priority: 'HIGH',
         actorUserId: studentId,
+        channels: ['IN_APP', 'PUSH', 'SMS'],
         metadata: { requestId, transactionId: sanitizedTransactionId, amount: totalPaid, method: finalMfsType },
       });
 
@@ -404,6 +405,7 @@ export async function submitPayment(formData: FormData) {
               priority: 'HIGH',
               actorUserId: studentId,
               recipientRoleHint: 'TUTOR',
+              channels: ['IN_APP', 'PUSH', 'SMS'],
               metadata: { requestId, courseId: req.courseId, studentId },
             });
           }

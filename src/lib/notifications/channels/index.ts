@@ -12,6 +12,7 @@ import { InAppChannel } from "./inApp";
 import { PushChannel } from "./push";
 import { EmailChannel } from "./email";
 import { DiscordChannel } from "./discord";
+import { SmsChannel } from "./sms";
 import type { NotificationChannel, ChannelName } from "./types";
 
 const registry = new Map<ChannelName, NotificationChannel>([
@@ -19,6 +20,7 @@ const registry = new Map<ChannelName, NotificationChannel>([
   [PushChannel.name, PushChannel],
   [EmailChannel.name, EmailChannel],
   [DiscordChannel.name, DiscordChannel],
+  [SmsChannel.name, SmsChannel],
 ]);
 
 export function getChannel(name: ChannelName): NotificationChannel | undefined {
