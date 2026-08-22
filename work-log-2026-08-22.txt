@@ -7,3 +7,6 @@ Project Updates:
 - [Added] Friendlier tutor allocation message naming the student
 - [Fixed] Stop unread badge reappearing after mark-all-read
 - [Added] Tutor-side request detail sheet for assigned students
+- [Documented] Production health/usage audit and hosting comparison notes
+- [Added] Replace visitor tracking with Vercel Web Analytics
+- [Fixed] Disable SSE stream that exhausted Vercel/Neon allowances
