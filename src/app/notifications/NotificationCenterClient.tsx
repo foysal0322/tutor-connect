@@ -190,7 +190,8 @@ export default function NotificationCenterClient({
       ),
     );
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      const res = await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     } catch (e) {
       console.error('markRead failed', e);
       setItems(prev);
@@ -203,7 +204,10 @@ export default function NotificationCenterClient({
       cur.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() })),
     );
     try {
-      await fetch('/api/notifications/read-all', { method: 'PUT' });
+      const res = await fetch('/api/notifications/read-all', { method: 'PUT' });
+      // fetch resolves even on 401/500 — throw so the optimistic update
+      // rolls back instead of silently reverting on the next reload.
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     } catch (e) {
       console.error('markAllRead failed', e);
       setItems(prev);
@@ -219,7 +223,8 @@ export default function NotificationCenterClient({
       return next;
     });
     try {
-      await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     } catch (e) {
       console.error('archive failed', e);
       setItems(prev);
@@ -238,11 +243,12 @@ export default function NotificationCenterClient({
       ),
     );
     try {
-      await fetch('/api/notifications/bulk', {
+      const res = await fetch('/api/notifications/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, action: 'mark_read' }),
       });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     } catch (e) {
       console.error('bulkMarkRead failed', e);
       setItems(prev);
@@ -256,11 +262,12 @@ export default function NotificationCenterClient({
     setItems((cur) => cur.filter((n) => !ids.includes(n.id)));
     setSelected(new Set());
     try {
-      await fetch('/api/notifications/bulk', {
+      const res = await fetch('/api/notifications/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, action: 'archive' }),
       });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
     } catch (e) {
       console.error('bulkArchive failed', e);
       setItems(prev);

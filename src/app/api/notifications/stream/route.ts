@@ -114,14 +114,25 @@ export async function GET(req: NextRequest) {
           });
 
           if (rows.length > 0) {
-            // Newest first ships the highest createdAt so subsequent polls
-            // start from there.
-            for (const row of rows) {
-              send(controller, 'notification', row);
-            }
             const newest = rows[0].createdAt;
-            if (!lastSeenAt || newest > lastSeenAt) {
+            if (!lastSeenAt) {
+              // Baseline poll: these rows predate the connection, so the
+              // client already has them from its own GET plus the `ready`
+              // count we sent on connect. Emitting them as `notification`
+              // events would make the bell double-count unread rows (its
+              // handler increments the badge for each unread event). Just
+              // anchor lastSeenAt so only genuinely new rows stream after
+              // this.
               lastSeenAt = newest;
+            } else {
+              // Newest first ships the highest createdAt so subsequent polls
+              // start from there.
+              for (const row of rows) {
+                send(controller, 'notification', row);
+              }
+              if (newest > lastSeenAt) {
+                lastSeenAt = newest;
+              }
             }
           } else if (!lastSeenAt) {
             // No rows at all — anchor lastSeenAt to now so we only push rows

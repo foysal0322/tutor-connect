@@ -196,10 +196,16 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch("/api/notifications/read-all", { method: "PUT" });
+      const res = await fetch("/api/notifications/read-all", {
+        method: "PUT",
+      });
+      // fetch resolves even on 401/500 — only trust the update when the
+      // server confirmed it, otherwise the badge would clear here but
+      // reappear on the next refresh / SSE unread push.
+      if (!res.ok) throw new Error(`read-all failed: ${res.status}`);
       setUnreadCount(0);
-      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
-      // Phase 12: optimistic cache update.
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      // Phase 12: cache update, server-confirmed.
       setBadgeCount(0);
       lastObservedCount.current = 0;
     } catch (error) {
@@ -210,7 +216,10 @@ export default function NotificationBell() {
   const markAsRead = async (id: string, isRead: boolean) => {
     if (isRead) return;
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: "PUT" });
+      const res = await fetch(`/api/notifications/${id}/read`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error(`mark-read failed: ${res.status}`);
       setUnreadCount(Math.max(0, unreadCount - 1));
       setNotifications(
         notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
