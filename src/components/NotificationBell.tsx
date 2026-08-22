@@ -140,7 +140,13 @@ export default function NotificationBell() {
   );
 
   const { connected: streamConnected } = useNotificationStream({
-    enabled: true,
+    // Disabled 2026-08-22: each SSE connection holds a Vercel function open
+    // for the life of the browser tab and polls Postgres twice every 10s,
+    // which exhausted Vercel Fluid memory/CPU and Neon's monthly compute
+    // allowance (see PRODUCTION_HEALTH_AND_USAGE_AUDIT.md). Badge updates
+    // fall back to Web Push + the 30s unread-count poll below, both of
+    // which this component already implements.
+    enabled: false,
     onEvent: onStreamEvent,
   });
 
