@@ -26,7 +26,6 @@ import {
   GraduationCap,
   TicketPercent,
   Settings,
-  Eye,
   Flag,
   Scale,
   Tag,
@@ -91,7 +90,6 @@ export const ADMIN_NAV: NavGroup[] = [
     heading: "Growth",
     items: [
       { id: "coupons", label: "Coupons", href: "/admin/coupons", icon: TicketPercent },
-      { id: "visitors", label: "Visitors", href: "/admin/visitors", icon: Eye },
     ],
   },
   {

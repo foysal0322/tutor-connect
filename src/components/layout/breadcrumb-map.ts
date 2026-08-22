@@ -33,7 +33,6 @@ export const ROUTE_TITLES: Record<string, string> = {
   "/admin/courses": "Courses",
   "/admin/coupons": "Coupons",
   "/admin/settings": "Settings",
-  "/admin/visitors": "Visitors",
   "/admin/profile": "Profile",
 
   // Member shell

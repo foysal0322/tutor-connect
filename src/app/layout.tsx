@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/react";
 import { ToastProvider } from "@/components/ToastProvider";
-import VisitorTracker from "@/components/VisitorTracker";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import GlobalInstallBanner from "@/components/GlobalInstallBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -63,7 +63,12 @@ export default function RootLayout({
         <ErrorBoundary context='Root Layout'>
           <ThemeProvider>
             <ToastProvider>
-              <VisitorTracker />
+              {/* Vercel Web Analytics replaced the custom VisitorTracker →
+                  /api/track-visitor → VisitorLog pipeline (2026-08-22).
+                  See PRODUCTION_HEALTH_AND_USAGE_AUDIT.md: per-pageview DB
+                  writes kept Neon compute awake and the table grew unbounded.
+                  Zero server cost; enable in Vercel → project → Analytics. */}
+              <Analytics />
               <ServiceWorkerRegister />
               <NextTopLoader color='var(--primary)' showSpinner={false} />
               <GlobalInstallBanner />

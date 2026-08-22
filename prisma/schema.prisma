@@ -395,15 +395,9 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VisitorLog {
-  id        String   @id @default(cuid())
-  ip        String?
-  userAgent String?
-  path      String?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-}
+// VisitorLog removed 2026-08-22 — visitor analytics moved to Vercel Web
+// Analytics (see PRODUCTION_HEALTH_AND_USAGE_AUDIT.md). NOTE: the physical
+// table still exists in the Neon database until the next migration drops it.
 
 model WalletTransaction {
   id          String   @id @default(cuid())
