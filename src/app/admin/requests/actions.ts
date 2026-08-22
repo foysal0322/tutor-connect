@@ -88,8 +88,8 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
         await dispatch({
           event: 'tutor.allocated',
           userId: tutorId,
-          title: 'New Tuition Allocation!',
-          message: `You have been assigned a new tuition request for ${request.topic} (${request.course.name}). Session fee: ${finalFee} BDT.`,
+          title: 'You got a new student!',
+          message: `${request.student.name} wants to learn ${request.topic} (${request.course.name}) with you. Session fee: ${finalFee} BDT. Check your dashboard to get started.`,
           actionUrl: '/tutor',
           type: 'SUCCESS',
           category: 'BOOKING',
@@ -111,15 +111,15 @@ export async function assignTutorToRequest(requestId: string, tutorId: string) {
       try {
         await sendNoReplyEmail({
           to: tutor.email,
-          subject: `New Tuition Allocation: ${request.course.name} (${request.topic})`,
+          subject: `You got a new student: ${request.course.name} (${request.topic})`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #10b981;">New Student Allocation!</h2>
+              <h2 style="color: #10b981;">You got a new student!</h2>
               <p>Hello ${tutor.name},</p>
-              <p>You have been allocated a new tuition request for <strong>${request.topic} (${request.course.name})</strong>.</p>
+              <p>Great news! <strong>${request.student.name}</strong> wants to learn <strong>${request.topic} (${request.course.name})</strong> with you.</p>
               <p><strong>Student Name:</strong> ${request.student.name}</p>
               <p><strong>Session Fee:</strong> ${finalFee} BDT</p>
-              <p>Please sign in to your tutor dashboard to review the request details.</p>
+              <p>Sign in to your tutor dashboard to see the details and get started.</p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
               <p style="color: #64748b; font-size: 0.9em;">This is an automated message from NSUone. Please do not reply to this email.</p>
             </div>
